@@ -20,20 +20,24 @@ zero-dependency conformance suite, and a proposal path to upstream standards.
 
 ## Name
 
-This project was published as `gates-spec` through v0.1 and is now **SYCEE**.
-GitHub redirects the old repository URL, so links written before the rename
-still resolve. Two identifiers changed with it and are not interchangeable:
+This project was published as `gates-spec` through v0.1 and is now **SYCEE**,
+at [`ruiruii/sycee`](https://github.com/ruiruii/sycee). The move was a push into
+a separate repository rather than a GitHub rename, so **old `gates-spec` URLs do
+not redirect** — links written before the move point at a repository that is no
+longer maintained. Two identifiers changed with it and are not interchangeable:
 
 | was | is |
 |-----|-----|
 | `gates-spec/v0.1` (receipt `schema_version`) | `sycee/v0.1` |
 | `@gates-spec/{core,middleware,agent-sdk,conformance,adapter-automaton,probe}` | `@sycee/{...}` |
 
-Because the version string is one of the inputs to a vector fingerprint, every
-conformance vector hash changed when it moved. The twelve vectors were
-regenerated with the repository's own generator, not patched by hand, and the
-three rejection paths survived: schema-rejected, signature-rejected, and
-semantic (`level: invalid`).
+Receipts carrying `gates-spec/v0.1` were signed under the old string and remain
+valid **as signed artifacts**; they are a distinct version identifier, not an
+alias of `sycee/v0.1`. Because the version string is one of the inputs to a
+vector fingerprint, every conformance vector hash changed when it moved. The
+twelve vectors were regenerated with the repository's own generator rather than
+patched by hand, and the three rejection paths survived: schema-rejected,
+signature-rejected, and semantic (`level: invalid`).
 
 ---
 
