@@ -3,11 +3,16 @@ import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { mkdtemp, writeFile, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { EMPTY_DATA_HASH, deriveRedeemCount } from '@sycee/adapter-automaton';
 
-const BIN = join(import.meta.dirname, '..', 'bin', 'gates-probe.mjs');
+// `import.meta.dirname` is Node 20.11+. This package still runs on 18.x in CI,
+// where it is undefined and path.join throws ERR_INVALID_ARG_TYPE at import
+// time — a failure that looks like a test failure but is a load failure.
+const HERE = dirname(fileURLToPath(import.meta.url));
+const BIN = join(HERE, '..', 'bin', 'gates-probe.mjs');
 const reHash = (s) => createHash('sha256').update(s, 'utf8').digest('hex');
 const SHA = (hex) => `sha256:${hex}`;
 const FP = SHA('a'.repeat(64));
