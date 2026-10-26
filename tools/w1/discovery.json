@@ -12,11 +12,11 @@
     }
   ],
   "total_listed": 150,
-  "distinct_origins": 58,
+  "distinct_origins": 59,
   "sellers": [
     {
       "origin": "https://api.onesource.io",
-      "resourceCount": 23,
+      "resourceCount": 24,
       "sampleResource": "https://api.onesource.io/api/chain/erc20-balance",
       "facilitators": []
     },
@@ -39,15 +39,9 @@
       "facilitators": []
     },
     {
-      "origin": "https://x402.ottoai.services",
-      "resourceCount": 6,
-      "sampleResource": "https://x402.ottoai.services/crypto-news",
-      "facilitators": []
-    },
-    {
       "origin": "https://www.api-xpay.com",
-      "resourceCount": 5,
-      "sampleResource": "https://www.api-xpay.com/x402/ping",
+      "resourceCount": 9,
+      "sampleResource": "https://www.api-xpay.com/x402/quote",
       "facilitators": []
     },
     {
@@ -57,21 +51,15 @@
       "facilitators": []
     },
     {
-      "origin": "https://api.oblique.markets",
-      "resourceCount": 4,
-      "sampleResource": "https://api.oblique.markets/api/v1/paid/time",
-      "facilitators": []
-    },
-    {
-      "origin": "https://ausca.com",
-      "resourceCount": 4,
-      "sampleResource": "https://ausca.com/v1/open-inbox",
-      "facilitators": []
-    },
-    {
       "origin": "https://blockrun.ai",
       "resourceCount": 4,
       "sampleResource": "https://blockrun.ai/api/v1/chat/completions",
+      "facilitators": []
+    },
+    {
+      "origin": "https://x402.ottoai.services",
+      "resourceCount": 4,
+      "sampleResource": "https://x402.ottoai.services/crypto-news",
       "facilitators": []
     },
     {
@@ -81,21 +69,21 @@
       "facilitators": []
     },
     {
+      "origin": "https://api.oblique.markets",
+      "resourceCount": 3,
+      "sampleResource": "https://api.oblique.markets/api/v1/paid/time",
+      "facilitators": []
+    },
+    {
+      "origin": "https://www.cultos.dev",
+      "resourceCount": 3,
+      "sampleResource": "https://www.cultos.dev/services/http-header-audit",
+      "facilitators": []
+    },
+    {
       "origin": "https://api.exa.ai",
       "resourceCount": 2,
       "sampleResource": "https://api.exa.ai/search",
-      "facilitators": []
-    },
-    {
-      "origin": "https://api.kadec0.xyz",
-      "resourceCount": 2,
-      "sampleResource": "https://api.kadec0.xyz/v1/serp",
-      "facilitators": []
-    },
-    {
-      "origin": "https://api.nansen.ai",
-      "resourceCount": 2,
-      "sampleResource": "https://api.nansen.ai/api/v1/profiler/address/current-balance",
       "facilitators": []
     },
     {
@@ -107,13 +95,19 @@
     {
       "origin": "https://laso.finance",
       "resourceCount": 2,
-      "sampleResource": "https://laso.finance/get-card",
+      "sampleResource": "https://laso.finance/auth",
       "facilitators": []
     },
     {
       "origin": "https://rubric-protocol.com",
       "resourceCount": 2,
       "sampleResource": "https://rubric-protocol.com/v1/x402/hedera-facts/exchange-rate",
+      "facilitators": []
+    },
+    {
+      "origin": "https://search.cyberwarex.com",
+      "resourceCount": 2,
+      "sampleResource": "https://search.cyberwarex.com/search",
       "facilitators": []
     },
     {
@@ -126,12 +120,6 @@
       "origin": "https://vibesprings.net",
       "resourceCount": 2,
       "sampleResource": "https://vibesprings.net/api/price/btc-usd",
-      "facilitators": []
-    },
-    {
-      "origin": "https://www.cultos.dev",
-      "resourceCount": 2,
-      "sampleResource": "https://www.cultos.dev/services/http-header-audit",
       "facilitators": []
     },
     {
@@ -213,9 +201,9 @@
       "facilitators": []
     },
     {
-      "origin": "https://api.loyalspark.online",
+      "origin": "https://api.nansen.ai",
       "resourceCount": 1,
-      "sampleResource": "https://api.loyalspark.online/x402-gateway/recipient-api/offers",
+      "sampleResource": "https://api.nansen.ai/api/v1/profiler/address/current-balance",
       "facilitators": []
     },
     {
@@ -225,9 +213,9 @@
       "facilitators": []
     },
     {
-      "origin": "https://api.solenrich.com",
+      "origin": "https://api.urbangametheory.xyz",
       "resourceCount": 1,
-      "sampleResource": "https://api.solenrich.com/entrypoints/stonk-yield/invoke",
+      "sampleResource": "https://api.urbangametheory.xyz/agent/oracle/facts",
       "facilitators": []
     },
     {
@@ -252,6 +240,12 @@
       "origin": "https://glim.sh",
       "resourceCount": 1,
       "sampleResource": "https://glim.sh/api/v1/twitter/search",
+      "facilitators": []
+    },
+    {
+      "origin": "https://headers.use.x402atlas.com",
+      "resourceCount": 1,
+      "sampleResource": "https://headers.use.x402atlas.com/",
       "facilitators": []
     },
     {
@@ -303,9 +297,9 @@
       "facilitators": []
     },
     {
-      "origin": "https://sat.ipintel.ai",
+      "origin": "https://scvd.store",
       "resourceCount": 1,
-      "sampleResource": "https://sat.ipintel.ai/satellite-observe",
+      "sampleResource": "https://scvd.store/api/buy/spot_check",
       "facilitators": []
     },
     {
@@ -333,6 +327,12 @@
       "facilitators": []
     },
     {
+      "origin": "https://web.cyberwarex.com",
+      "resourceCount": 1,
+      "sampleResource": "https://web.cyberwarex.com/fetch",
+      "facilitators": []
+    },
+    {
       "origin": "https://websearch.use.x402atlas.com",
       "resourceCount": 1,
       "sampleResource": "https://websearch.use.x402atlas.com/search",
@@ -345,15 +345,21 @@
       "facilitators": []
     },
     {
-      "origin": "https://www.getbags.app",
+      "origin": "https://x402.aispace.bot",
       "resourceCount": 1,
-      "sampleResource": "https://www.getbags.app/api/v1",
+      "sampleResource": "https://x402.aispace.bot/api/v1/image/generate",
       "facilitators": []
     },
     {
       "origin": "https://x402.botsmith.dev",
       "resourceCount": 1,
       "sampleResource": "https://x402.botsmith.dev/x/search",
+      "facilitators": []
+    },
+    {
+      "origin": "https://x402.clashofcoins.com",
+      "resourceCount": 1,
+      "sampleResource": "https://x402.clashofcoins.com/x402/cheap-health",
       "facilitators": []
     },
     {
