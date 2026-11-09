@@ -12,11 +12,11 @@
     }
   ],
   "total_listed": 150,
-  "distinct_origins": 56,
+  "distinct_origins": 54,
   "sellers": [
     {
       "origin": "https://api.onesource.io",
-      "resourceCount": 28,
+      "resourceCount": 31,
       "sampleResource": "https://api.onesource.io/api/chain/erc20-balance",
       "facilitators": []
     },
@@ -27,15 +27,21 @@
       "facilitators": []
     },
     {
-      "origin": "https://api.aisa.one",
-      "resourceCount": 19,
-      "sampleResource": "https://api.aisa.one/apis/v2/agentmail/drafts/{draft_id}",
-      "facilitators": []
-    },
-    {
       "origin": "https://www.api-xpay.com",
       "resourceCount": 13,
       "sampleResource": "https://www.api-xpay.com/x402/quote",
+      "facilitators": []
+    },
+    {
+      "origin": "https://agents.allium.so",
+      "resourceCount": 12,
+      "sampleResource": "https://agents.allium.so/api/v1/developer/prices",
+      "facilitators": []
+    },
+    {
+      "origin": "https://api.aisa.one",
+      "resourceCount": 10,
+      "sampleResource": "https://api.aisa.one/apis/v2/agentmail/api-keys",
       "facilitators": []
     },
     {
@@ -45,21 +51,21 @@
       "facilitators": []
     },
     {
+      "origin": "https://api.bitrefill.com",
+      "resourceCount": 3,
+      "sampleResource": "https://api.bitrefill.com/x402/gift-cards/search",
+      "facilitators": []
+    },
+    {
       "origin": "https://blockrun.ai",
-      "resourceCount": 4,
+      "resourceCount": 3,
       "sampleResource": "https://blockrun.ai/api/v1/chat/completions",
       "facilitators": []
     },
     {
-      "origin": "https://agents.allium.so",
-      "resourceCount": 3,
-      "sampleResource": "https://agents.allium.so/api/v1/developer/tokens",
-      "facilitators": []
-    },
-    {
-      "origin": "https://api.bitrefill.com",
-      "resourceCount": 3,
-      "sampleResource": "https://api.bitrefill.com/x402/gift-cards/search",
+      "origin": "https://agent.pocket.network",
+      "resourceCount": 2,
+      "sampleResource": "https://agent.pocket.network/v1/meadow",
       "facilitators": []
     },
     {
@@ -78,12 +84,6 @@
       "origin": "https://api.nansen.ai",
       "resourceCount": 2,
       "sampleResource": "https://api.nansen.ai/api/v1/profiler/address/current-balance",
-      "facilitators": []
-    },
-    {
-      "origin": "https://keyring-agent.blockchhub.link",
-      "resourceCount": 2,
-      "sampleResource": "https://keyring-agent.blockchhub.link/api/send-native",
       "facilitators": []
     },
     {
@@ -132,12 +132,6 @@
       "origin": "https://africa.lonestaroracle.xyz",
       "resourceCount": 1,
       "sampleResource": "https://africa.lonestaroracle.xyz/pulse",
-      "facilitators": []
-    },
-    {
-      "origin": "https://agent.pocket.network",
-      "resourceCount": 1,
-      "sampleResource": "https://agent.pocket.network/v1/meadow",
       "facilitators": []
     },
     {
@@ -201,27 +195,9 @@
       "facilitators": []
     },
     {
-      "origin": "https://api.oblique.markets",
-      "resourceCount": 1,
-      "sampleResource": "https://api.oblique.markets/api/v1/paid/time",
-      "facilitators": []
-    },
-    {
-      "origin": "https://api.run402.com",
-      "resourceCount": 1,
-      "sampleResource": "https://api.run402.com/tiers/v1/prototype",
-      "facilitators": []
-    },
-    {
       "origin": "https://cheaptokens.ai",
       "resourceCount": 1,
       "sampleResource": "https://cheaptokens.ai/api/buy",
-      "facilitators": []
-    },
-    {
-      "origin": "https://coil.trade",
-      "resourceCount": 1,
-      "sampleResource": "https://coil.trade/api/crypto/gate",
       "facilitators": []
     },
     {
@@ -243,6 +219,12 @@
       "facilitators": []
     },
     {
+      "origin": "https://headers.use.x402atlas.com",
+      "resourceCount": 1,
+      "sampleResource": "https://headers.use.x402atlas.com/",
+      "facilitators": []
+    },
+    {
       "origin": "https://hyperliquid-predict.use.x402atlas.com",
       "resourceCount": 1,
       "sampleResource": "https://hyperliquid-predict.use.x402atlas.com/outcomes",
@@ -255,9 +237,9 @@
       "facilitators": []
     },
     {
-      "origin": "https://lionx402.com",
+      "origin": "https://keyring-agent.blockchhub.link",
       "resourceCount": 1,
-      "sampleResource": "https://lionx402.com/api/x402/wallet-screen-json",
+      "sampleResource": "https://keyring-agent.blockchhub.link/api/send-native",
       "facilitators": []
     },
     {
@@ -279,21 +261,27 @@
       "facilitators": []
     },
     {
-      "origin": "https://rpc.nodeflare.app",
-      "resourceCount": 1,
-      "sampleResource": "https://rpc.nodeflare.app/base/x402",
-      "facilitators": []
-    },
-    {
       "origin": "https://scvd.store",
       "resourceCount": 1,
       "sampleResource": "https://scvd.store/api/buy/spot_check",
       "facilitators": []
     },
     {
+      "origin": "https://skycast.clawca.sh",
+      "resourceCount": 1,
+      "sampleResource": "https://skycast.clawca.sh/weather",
+      "facilitators": []
+    },
+    {
       "origin": "https://stableupload.dev",
       "resourceCount": 1,
       "sampleResource": "https://stableupload.dev/api/upload",
+      "facilitators": []
+    },
+    {
+      "origin": "https://tenjin.sh",
+      "resourceCount": 1,
+      "sampleResource": "https://tenjin.sh/api/x402-router/route",
       "facilitators": []
     },
     {
@@ -327,12 +315,6 @@
       "facilitators": []
     },
     {
-      "origin": "https://www.ax1.vc",
-      "resourceCount": 1,
-      "sampleResource": "https://www.ax1.vc/api/dashboard/q-verdict/resource",
-      "facilitators": []
-    },
-    {
       "origin": "https://x402.clashofcoins.com",
       "resourceCount": 1,
       "sampleResource": "https://x402.clashofcoins.com/x402/cheap-health",
@@ -342,6 +324,12 @@
       "origin": "https://x402.ottoai.services",
       "resourceCount": 1,
       "sampleResource": "https://x402.ottoai.services/crypto-news",
+      "facilitators": []
+    },
+    {
+      "origin": "https://x402.tbs-digital.com",
+      "resourceCount": 1,
+      "sampleResource": "https://x402.tbs-digital.com/weather/current",
       "facilitators": []
     },
     {
