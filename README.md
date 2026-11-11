@@ -99,6 +99,7 @@ cd sycee
 npm install          # links the local workspaces, no external dependencies
 npm test             # 142 tests across all six packages
 npm run verify       # 12 signed conformance vectors, expectations enforced
+npm run matrix       # same 12 verdicts as one page (conformance/vectors/matrix.svg)
 npm run demo         # one payable server + one buyer, end to end
 npm run demo:refusal # five attempts, one ledger, four claims checked offline
 ```
@@ -117,6 +118,12 @@ offline. Nothing touches the network.
 
 To run the vectors level by level: `npm run verify:l0`, `:l1`, `:l2`
 (1 / 3 / 4 vectors respectively; the remaining four are the `invalid` ones).
+
+[`conformance/vectors/matrix.svg`](./conformance/vectors/matrix.svg) is the same twelve
+verdicts as one page: what each vector is meant to prove, what the checker returned, and the
+SHA-256 of each file so a copy can be checked against it. The table is printed from
+`manifest.json`, not maintained by hand — `node conformance/vectors/print-matrix.mjs` writes
+it, and a vector that starts passing when it should fail changes that page (`npm run matrix`).
 
 ### Merchant middleware (Node/Express-style)
 

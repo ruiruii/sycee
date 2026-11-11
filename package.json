@@ -16,6 +16,7 @@
     "verify:l1": "node packages/conformance/src/cli.mjs verify --level=L1",
     "verify:l2": "node packages/conformance/src/cli.mjs verify --level=L2",
     "demo": "node examples/walkthrough.mjs",
-    "demo:refusal": "node examples/refusal-walkthrough.mjs"
+    "demo:refusal": "node examples/refusal-walkthrough.mjs",
+    "matrix": "node conformance/vectors/print-matrix.mjs"
   }
 }
