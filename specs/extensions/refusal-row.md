@@ -187,13 +187,16 @@ contradiction cases.
 - `reason_detail` is a fixed sentence per reason, not a message from the seller. A seller
   that wants to say more can attach a `_vendor` field; nothing in a `_vendor` field is
   covered by the evidence ceiling.
-- **One attempt can leave two identifiers and contradict itself.** §3 forbids a row from
+- **One attempt can leave two rows and a wrong claim.** §4's ceiling forbids a row from
   claiming more evidence than its reason allows, but an issuer can get the same effect by
-  recording the same attempt twice: once with the true, low-ceiling reason, and once with a
-  reason whose ceiling is higher but which is not true. Under §5 that is not a contradiction
-  (§12), so a reader who holds both rows is free to quote the flattering one. Bounding what
-  one row may say does not bound what two rows may say together, and nothing in this version
-  detects it. See §12 for why no fix belongs in this section.
+  recording one attempt twice: once with the true, low-ceiling reason, and once with a reason
+  whose ceiling is higher but which is not true. Each row is internally consistent, so §6's
+  checks all pass on both; and because the two presentations of one payload carry different
+  `attempt_identity` values (§5.5.4 of the companion spec), the contradiction rule — which
+  compares `decision` within one identity — never fires either. A reader who holds both is
+  free to quote the flattering one. Bounding what one row may say does not bound what two
+  rows may say together, and nothing in this version detects it. See §12 for
+  why no fix belongs in this section.
 
 ## 11. Reference: the collision this document's binding must avoid
 
@@ -220,11 +223,12 @@ it twice rather than by over-claiming once. The obvious fix is to compare rows s
 `attempt_binding` and require them to agree. That fix cannot live in this document, and the
 reason is worth stating rather than hiding behind scope:
 
-- **Rows about one attempt are legitimately plural.** Each presentation of a payload is its
+- **Rows about one payload are legitimately plural.** Each presentation of a payload is its
   own attempt with its own reason; a first submission refused for `insufficient_funds` and a
   retry refused for `facilitator_timeout` are two rows and neither is wrong. Requiring
-  agreement would either forbid that or force one row per payload, which is the collapse this
-  extension exists to prevent.
+  agreement across them would either forbid that or force one row per payload, which is the
+  collapse this extension exists to prevent. The attack lives precisely in that gap: it needs
+  rows that are allowed to differ, and supplies a reason that is not true as one of them.
 - **The comparison is between issuers, not inside one.** The attack needs two documents, and
   the second is only persuasive because it is signed by the same issuer — but durably
   recording that "these two were issued and they disagree" needs a substrate that outlives
