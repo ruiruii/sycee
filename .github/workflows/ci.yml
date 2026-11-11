@@ -37,3 +37,6 @@ jobs:
             echo "::error::conformance vectors changed; run 'npm run vectors' and commit"
             exit 1
           }
+
+      - name: Assert the published matrix still describes the vectors
+        run: node conformance/vectors/print-matrix.mjs --check

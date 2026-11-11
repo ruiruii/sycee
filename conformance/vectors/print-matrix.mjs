@@ -119,6 +119,26 @@ for (const [line, gap] of [
 out.push('</svg>');
 
 const svg = out.join('\n');
+if (process.argv.includes('--check')) {
+  // The page is only evidence if it still describes the vectors. Regenerating and
+  // comparing is the cheapest way to notice that someone edited a vector and did not
+  // rerun this: the digests change, the verdicts change, and the copy on disk goes stale
+  // while still looking authoritative.
+  let onDisk = '';
+  try {
+    onDisk = readFileSync(resolve(HERE, 'matrix.svg'), 'utf8');
+  } catch {
+    process.stderr.write('check: matrix.svg is missing; run npm run matrix\n');
+    process.exit(1);
+  }
+  if (onDisk !== svg + '\n') {
+    process.stderr.write('check: matrix.svg is stale -- run npm run matrix and commit the result\n');
+    process.exit(1);
+  }
+  const bad = rows.filter((r) => !r.pass);
+  process.stdout.write(`check: matrix.svg matches (${rows.length} rows, ${bad.length} not matching)\n`);
+  process.exit(bad.length ? 1 : 0);
+}
 if (process.argv.includes('--stdout')) {
   process.stdout.write(svg + '\n');
 } else {
