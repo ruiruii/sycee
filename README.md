@@ -82,7 +82,7 @@ SYCEE/
 │   ├── agent-sdk/              # agent-runtime SDK (records consumption)
 │   ├── conformance/            # test suite, validator, CLI
 │   ├── adapter-automaton/      # binds a hash-chained attestation ledger (RW-001 origin)
-│   └── probe/                  # gates-probe: evidence-layer CLI (probe/verify/batch, signed reports)
+│   └── probe/                  # evidence-layer CLI (probe/verify/batch, signed reports)
 ├── upstream/                   # ready-to-send proposals to x402-receipts, Vauban, ERC-8004
 └── examples/                   # minimal runnable demos
 ```
@@ -95,12 +95,20 @@ All packages are **zero-dependency** and use Node native Ed25519 (`crypto`).
 
 ```bash
 git clone https://github.com/ruiruii/sycee.git
-cd SYCEE
-npm install          # links local workspaces
-npm test             # runs conformance + e2e tests
-npm run vectors      # regenerates conformance/vectors/*.json
-npm run verify conformance/vectors/*.json
+cd sycee
+npm install          # links the local workspaces, no external dependencies
+npm test             # 95 tests across all six packages
+npm run verify       # 12 signed conformance vectors, expectations enforced
+npm run demo         # one payable server + one buyer, end to end
 ```
+
+`npm run demo` starts a server on a random local port, has a buyer pay twice
+with the same proof, and prints what each side recorded. Expected output ends
+with the two receipts linking (`completeness=bilateral`) and both verifying
+offline. Nothing touches the network.
+
+To run the vectors level by level: `npm run verify:l0`, `:l1`, `:l2`
+(1 / 3 / 4 vectors respectively; the remaining four are the `invalid` ones).
 
 ### Merchant middleware (Node/Express-style)
 
@@ -143,6 +151,13 @@ const spend = createSpend({
 const res = await spend.fetch('https://api.example/search?q=ai');
 const receipt = res.gates.consumedBy('task_4829'); // signs consumed=yes
 ```
+
+### Wire headers and receipt fields
+
+The middleware emits `x-gates-*` headers and the receipt carries a `gates_spec`
+field in its challenge body. Those are wire-format names kept for compatibility
+with already-integrated transports, not package names — the packages themselves
+are `@sycee/*`. Both spellings refer to the same project.
 
 ### Offline verification
 
