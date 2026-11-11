@@ -5,8 +5,19 @@
   "license": "Apache-2.0",
   "type": "module",
   "main": "./src/index.mjs",
-  "exports": { ".": "./src/index.mjs" },
-  "dependencies": { "@sycee/core": "*" },
-  "files": ["src"],
-  "engines": { "node": ">=18" }
+  "exports": {
+    ".": "./src/index.mjs"
+  },
+  "dependencies": {
+    "@sycee/core": "*"
+  },
+  "files": [
+    "src"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  }
 }

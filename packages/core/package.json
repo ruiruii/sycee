@@ -9,7 +9,21 @@
     ".": "./src/index.mjs",
     "./schema": "../schema/vsr-v0.1.schema.json"
   },
-  "files": ["src"],
-  "engines": { "node": ">=18" },
-  "keywords": ["SYCEE", "vsr", "agent-payments", "x402", "ed25519", "otel"]
+  "files": [
+    "src"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "SYCEE",
+    "vsr",
+    "agent-payments",
+    "x402",
+    "ed25519",
+    "otel"
+  ],
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  }
 }
