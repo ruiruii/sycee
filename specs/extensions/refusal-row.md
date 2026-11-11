@@ -187,3 +187,52 @@ contradiction cases.
 - `reason_detail` is a fixed sentence per reason, not a message from the seller. A seller
   that wants to say more can attach a `_vendor` field; nothing in a `_vendor` field is
   covered by the evidence ceiling.
+- **One attempt can leave two identifiers and contradict itself.** §3 forbids a row from
+  claiming more evidence than its reason allows, but an issuer can get the same effect by
+  recording the same attempt twice: once with the true, low-ceiling reason, and once with a
+  reason whose ceiling is higher but which is not true. Under §5 that is not a contradiction
+  (§12), so a reader who holds both rows is free to quote the flattering one. Bounding what
+  one row may say does not bound what two rows may say together, and nothing in this version
+  detects it. See §12 for why no fix belongs in this section.
+
+## 11. Reference: the collision this document's binding must avoid
+
+`attempt_binding` here is a digest of the payment payload and the requirements. If a future
+revision adds an ordinal — the price a content-addressed binding cannot tell a settled
+attempt from its refused replay — the field must go into a canonical object, not be appended
+to a string before hashing:
+
+```js
+sha256(payload + String(n))                        // wrong: ('A:1', 2) and ('A:', 12) collide
+sha256(canonicalJSON({ payload: sha256(payload),
+                       requirements: sha256(req),
+                       presentation: String(n) })) // right: the fields cannot be spliced
+```
+
+The first line is not hypothetical. `packages/core/test/refusal.test.mjs` pins the collision
+and the fix side by side, because the easy way to add an ordinal is the one that breaks the
+property the ordinal was added for.
+
+## 12. Why the surviving hole is not fixed here
+
+Section 10 names a hole: an issuer can say something worse than the ceiling allows by saying
+it twice rather than by over-claiming once. The obvious fix is to compare rows sharing an
+`attempt_binding` and require them to agree. That fix cannot live in this document, and the
+reason is worth stating rather than hiding behind scope:
+
+- **Rows about one attempt are legitimately plural.** Each presentation of a payload is its
+  own attempt with its own reason; a first submission refused for `insufficient_funds` and a
+  retry refused for `facilitator_timeout` are two rows and neither is wrong. Requiring
+  agreement would either forbid that or force one row per payload, which is the collapse this
+  extension exists to prevent.
+- **The comparison is between issuers, not inside one.** The attack needs two documents, and
+  the second is only persuasive because it is signed by the same issuer — but durably
+  recording that "these two were issued and they disagree" needs a substrate that outlives
+  the issuer's own database, which is a transparency log.
+- **A local check would be a false comfort.** An implementation comparing rows it happens to
+  hold would pass the check while the attack is entirely outside its view.
+
+So the honest statement is the one in §10: a bounded reason set bounds one row, and this
+version does not bound a set of rows. A verifier holding two rows for one attempt should
+prefer the lower-ceiling reason when it has no independent way to tell which is true — that
+is a reader's rule, not a format requirement, and it is offered as advice, not as a check.
