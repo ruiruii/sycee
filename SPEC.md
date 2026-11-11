@@ -231,7 +231,136 @@ incremented **before** the seller decides whether to accept the payment, so a re
 is still recorded. Conforming implementations MUST record this and MUST NOT silently
 normalize it to `1`.
 
-### 5.5 Completeness (informative)
+### 5.5 Refusal attributes — **the missing half of the record**
+
+§5.4 counts a proof presented again. It does not define what the seller says when it
+declines that presentation. Without a refusal record, a buyer whose attempt was rejected
+holds only its own account of the attempt, and "it paid / I refused" has nothing to
+reconcile against.
+
+A refusal record is **not** a receipt for a settlement. It is a signed statement about one
+decision, and it carries three obligations.
+
+#### 5.5.1 Every decision is recorded, default on
+
+A conforming implementation MUST record one row per decision it makes about an attempt:
+`accepted` or `refused`. Recording is the default, not an opt-in: an implementation that
+records only accepted attempts MUST NOT claim conformance to this section.
+
+| Attribute | Type | Definition | Requirement |
+|-----------|------|------------|-------------|
+| `agent.spend.refusal.decision` | enum | `accepted` \| `refused` | **MUST** |
+| `agent.spend.refusal.reason` | enum | One of the closed reasons in §5.5.3; absent when `decision = accepted` | **MUST** when refused |
+| `agent.spend.refusal.evidence_class` | enum | `issuer_asserted` \| `client_verifiable` \| `chain_verifiable` \| `independently_witnessed` | **MUST** when refused |
+| `agent.spend.refusal.settlement` | enum | `not_submitted` \| `pending` \| `settled` \| `unknown` | **MUST** |
+| `agent.spend.refusal.final` | bool | `false` whenever `settlement = pending` | **MUST** |
+| `agent.spend.refusal.attempt_identity` | string | `sha256:<hex>` over the attempt, not over the payload alone (§5.5.4) | **MUST** |
+
+#### 5.5.2 Evidence class is a ceiling, not a field
+
+A signature proves **who signed**, never that the statement is true. A seller can sign a
+false reason as easily as a true one. What this section constrains is not honesty but
+**overclaiming**: a reason may not present itself as more provable than it is.
+
+Each reason maps to the highest evidence class that is honest for it. A record MAY claim
+that class or lower, and MUST NOT claim higher. An unrecognised reason closes at
+`issuer_asserted`, the weakest class, so a reason nobody reviewed never sounds rigorous.
+
+| `reason` | Highest honest `evidence_class` | Why |
+|----------|-------------------------------|-----|
+| `invalid_signature` | `client_verifiable` | the buyer holds the payload and can re-check it |
+| `wrong_amount` | `client_verifiable` | price and authorization are both in the buyer's hands |
+| `wrong_recipient` | `client_verifiable` | same |
+| `malformed_payload` | `client_verifiable` | same |
+| `authorization_expired` | `chain_verifiable` | the window is public |
+| `authorization_not_yet_valid` | `chain_verifiable` | same |
+| `insufficient_funds` | `chain_verifiable` | balance and transfer are public ledger state |
+| `duplicate_payment` | `chain_verifiable` | the earlier settlement is public |
+| `nonce_already_used` | `chain_verifiable` | the nonce is public |
+| `facilitator_timeout` | `issuer_asserted` | only the seller saw the timeout |
+| `risk_policy_rejected` | `issuer_asserted` | the policy is not disclosed |
+| `commercial_refusal` | `issuer_asserted` | a business decision, with no technical cause |
+| `internal_error` | `issuer_asserted` | a failure the seller cannot characterise |
+| anything else | `issuer_asserted` | fail closed |
+
+`independently_witnessed` exists in the enum and no reason in this version may point at it:
+nothing here produces a witness.
+
+#### 5.5.3 The two refusals are different facts
+
+A comparison that could not be made is not a comparison that came out equal. The record
+MUST distinguish:
+
+- `could_not_compare` — a prior attempt for this proof exists, but its settlement state could
+  not be read. Settlement claim: `unknown`.
+- `replay_already_settled` — a prior attempt for this proof settled. Settlement claim:
+  `settled`.
+- `replay_in_flight` — a prior attempt is still unresolved. Settlement claim: `pending`,
+  and `final` MUST be `false`.
+
+Collapsing these into one reason erases the only information a buyer needs in order to tell
+"my retry was legitimate and the seller's deduplication was wrong" from "my retry was a
+duplicate and the seller was right".
+
+#### 5.5.4 One payload is not one attempt
+
+`attempt_identity` MUST be derived from a frozen ingress snapshot **and** from which
+presentation this is. A settled attempt and its refused replay carry the same payload and
+the same requirements, so any identifier derived from the payload alone resolves both to one
+value — and the receipt for the refusal then cannot be tied to the replay rather than to the
+original.
+
+A verifier that holds the payload can recompute the identity and confirm the binding.
+
+#### 5.5.5 Mutual contradiction
+
+Two rows about the same `attempt_identity` MUST NOT disagree on `decision`. An
+implementation that receives a second, contradictory decision MUST report the contradiction
+and MUST NOT overwrite the first row. A replay refusal is not a contradiction: it concerns a
+different `attempt_identity` (§5.5.4).
+
+#### 5.5.6 The signing key is never the payee
+
+`signer.public_key` MUST NOT be the address funds are paid to. One compromise must not both
+authenticate records and move money, and a record identity that follows a payout rotation
+cannot serve as a stable identity.
+
+Where an implementation does not know the payee address at the time of the check, it MUST
+report `not_measured`. Not measured is not passed.
+
+#### 5.5.7 The portable claim
+
+A row is server-internal. To be useful to a buyer it must be exportable as a claim the buyer
+can hold and show to a third party without contacting the seller:
+
+```json
+{ "type": "x402-refusal-claim", "version": 1,
+  "refusal": { "...": "the signed row" },
+  "signature": "<ed25519 base64url over the canonical row>",
+  "claim_id": "sha256:<hex of the canonical claim body>",
+  "issued_at": "<ISO 8601>" }
+```
+
+A verifier MUST check: the signature against a key it resolves itself, never a key the
+claim supplies; the evidence class against the ceiling (§5.5.2); the finality constraint
+(§5.5.1); and the signing key against the payee where known (§5.5.6).
+
+Reference implementation: `packages/core/src/refusal.mjs`, `refusalLedger()` in
+`packages/middleware`, and `npm run demo:refusal`.
+
+#### 5.5.8 What this does not cover
+
+- A seller that never records anything. This section constrains the content of a record; it
+  cannot make one appear.
+- A buyer that never sent the request. A buyer-signed intent, sent before the attempt, is
+  what would distinguish "refused a request I made" from "refused a request I never made".
+  Not built here.
+- A seller holding two contradictory claims about one attempt. Detecting that needs the
+  buyer to hold both, and nothing guarantees it receives the second.
+
+---
+
+### 5.6 Completeness (informative)
 
 | Attribute | Type | Definition |
 |-----------|------|------------|
@@ -366,6 +495,11 @@ contacting the seller, the buyer, the rail, or the spec author. Verification MUS
 - Historical public keys MUST remain retrievable for at least 90 days past rotation.
 - `signer.agent_id` SHOULD resolve to a legal-entity-stable identifier (e.g. ERC-8004
   `agentId`), never to a natural person.
+- **Signing key ≠ payee address (MUST).** The key that signs a record MUST NOT be the
+  address funds are paid to (§5.5.6). This is checked in code, not recommended in prose:
+  `signingKeyCheck()` in `packages/core/src/refusal.mjs` returns `signing_key_is_payee` and
+  the record is refused. Where the payee is unknown the result is `not_measured`, which is
+  reported as such rather than as a pass.
 
 ---
 
@@ -422,6 +556,12 @@ A conforming implementation MUST:
 4. produce offline-verifiable Ed25519 signatures over the VSR envelope;
 5. map `agent.spend.protocol` to a registered value;
 6. confine vendor extensions to a `_vendor.*` namespace, never redefining core fields.
+
+### Refusal rows
+
+Refusal rows (§5.5) sit beside the levels above rather than inside them. A row is signed or
+it is telemetry; there is no separate level. What §5.5 adds to a conforming implementation
+is a MUST to record refusals at all, which no level previously required.
 
 ### 10.1 Real-world vectors
 

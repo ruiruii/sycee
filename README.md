@@ -97,10 +97,18 @@ All packages are **zero-dependency** and use Node native Ed25519 (`crypto`).
 git clone https://github.com/ruiruii/sycee.git
 cd sycee
 npm install          # links the local workspaces, no external dependencies
-npm test             # 95 tests across all six packages
+npm test             # 141 tests across all six packages
 npm run verify       # 12 signed conformance vectors, expectations enforced
 npm run demo         # one payable server + one buyer, end to end
+npm run demo:refusal # five attempts, one ledger, four claims checked offline
 ```
+
+`npm run demo:refusal` is the other half of the record: four refused attempts and one
+accepted one, every decision on one ledger, each refusal handed to the buyer as a signed
+claim and verified offline — including the two things a claim must never be able to do
+(claim a stronger evidence class than its reason allows, present an unsettled payment as
+final). Specified in [`SPEC.md` §5.5](./SPEC.md) and
+[`specs/extensions/refusal-row.md`](./specs/extensions/refusal-row.md).
 
 `npm run demo` starts a server on a random local port, has a buyer pay twice
 with the same proof, and prints what each side recorded. Expected output ends

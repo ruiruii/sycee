@@ -1,0 +1,189 @@
+# Refusal Row Extension
+
+> **Status:** Draft · **Depends on:** nothing outside this extension · **Companion to:** §5.5 of
+> the settlement/refusal identity proposal
+
+## 1. Summary
+
+When a resource server declines a payment attempt, the buyer is left holding nothing it can
+point at. The 402 response is gone as soon as it is read. Even where a transport carries a
+plain-language reason, that reason lives for one response cycle and is signed by nobody.
+
+This extension adds the missing statement: **one recorded row per decision, refusals
+included, with a bounded reason and an evidence class the row cannot exceed.** A row is
+server-internal by default and exportable as a claim the buyer can carry.
+
+It is deliberately small. It does not define a payment scheme, does not change settlement or
+verification semantics, does not add a discovery layer, and does not give a seller an
+incentive to write honest rows. It gives a seller a place to write rows and a buyer something
+to check.
+
+## 2. What this is not
+
+Stated first, because a bounded scope is easier to check than a claim of completeness.
+
+- **Not a receipt for a settlement.** It says nothing about whether funds moved, except for
+  the one settlement value it reports about itself.
+- **Not a proof that the reason is true.** A signature proves who signed. Nothing more.
+- **Not a witness.** No transparency log, no third party. `independently_witnessed` exists in
+  the enum; no reason in this version may claim it.
+- **Not a cure for silence.** A seller that records nothing cannot be caught by any format.
+
+Two gaps worth naming, both real:
+
+1. A buyer never sends the request it claims was refused. Without a buyer-signed intent sent
+   before the attempt, "refused a request I made" and "refused a request I never made" are
+   indistinguishable. Not built here.
+2. Detecting two contradictory claims about one attempt requires the buyer to hold both.
+   Nothing guarantees it receives the second.
+
+## 3. Relationship to adjacent work
+
+- **§5.5 of the settlement/refusal identity proposal.** That section defines when two paths
+  must resolve to the same `attempt_identity`, and it keeps three identifiers apart —
+  operation identity, captured-artifact digest, signed-content identifier. This extension
+  consumes the first: `attempt_identity` here is the operation identity, derived from a
+  frozen ingress snapshot **and** from which presentation this is (§3.3). It does not
+  redefine, narrow or extend that invariant.
+
+  The distinction matters for a concrete case. One signed payload presented twice — accepted
+  and settled, then declined as `duplicate_payment` — carries one payload, one set of
+  requirements, and two attempts. An identifier derived from the payload alone resolves both
+  to a single value, and the row for the refusal then binds to "this payload was refused"
+  rather than "this presentation was refused after that one settled". The second statement is
+  the one a buyer can reconcile against its own ledgers.
+
+- **A signed rejection artifact, proposer-side.** A format that issues a signed document at
+  refusal time is complementary and could be derived from these rows. This extension does not
+  define such a document; it defines what gets recorded and what a recorded row may claim.
+
+- **Plain-text 402 error bodies.** Useful, ephemeral, unsigned. Not a record.
+
+## 4. Row structure
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `schema_version` | string | Yes | `sycee/refusal/v0.1` |
+| `decision` | string | Yes | `accepted` or `refused` |
+| `reason` | string | When refused | One of the closed set in §5 |
+| `reason_detail` | string | When refused | The fixed sentence for that reason |
+| `evidence_class` | string | When refused | `issuer_asserted`, `client_verifiable`, `chain_verifiable`, `independently_witnessed` |
+| `attempt_identity` | string | Yes | `sha256:<64 hex>`, derived per §3 |
+| `settlement` | string | Yes | `not_submitted`, `pending`, `settled`, `unknown` |
+| `final` | boolean | Yes | MUST be `false` when `settlement` is `pending` |
+| `proof_hash` | string | No | Hash of the presented proof. The proof itself is never stored |
+| `resource_id` | string | Yes | What was requested |
+| `protocol` | string | Yes | Transport the attempt arrived on |
+| `observed_at` | string | Yes | ISO 8601 |
+| `signer.public_key` | string | Yes | `ed25519:<base64url>` |
+| `signer.role` | string | Yes | `merchant` or `agent` |
+| `key_check` | string | Yes | `distinct`, or `not_measured` when the payee is unknown |
+
+`key_check` records what the implementation was able to check about its own signing key,
+rather than implying it checked. A verifier that knows the payee re-checks it independently.
+
+## 5. The closed reason set
+
+A reason is not free text. Free text cannot be compared across sellers, cannot be bounded by
+an evidence class, and drifts into marketing.
+
+| `reason` | Ceiling | Meaning |
+|---|---|---|
+| `invalid_signature` | `client_verifiable` | the payload's authorization signature does not verify |
+| `wrong_amount` | `client_verifiable` | authorized amount ≠ price |
+| `wrong_recipient` | `client_verifiable` | authorized recipient ≠ this merchant |
+| `malformed_payload` | `client_verifiable` | the payload could not be decoded |
+| `authorization_expired` | `chain_verifiable` | the authorization window has closed |
+| `authorization_not_yet_valid` | `chain_verifiable` | the window has not opened |
+| `insufficient_funds` | `chain_verifiable` | balance does not cover the authorized amount |
+| `duplicate_payment` | `chain_verifiable` | the proof was already settled |
+| `nonce_already_used` | `chain_verifiable` | the authorization nonce is consumed |
+| `facilitator_timeout` | `issuer_asserted` | the facilitator did not answer in budget |
+| `risk_policy_rejected` | `issuer_asserted` | declined by an undisclosed policy |
+| `commercial_refusal` | `issuer_asserted` | declined on business grounds, no technical cause |
+| `internal_error` | `issuer_asserted` | the seller failed and is not claiming a cause |
+| anything else | `issuer_asserted` | fail closed: an unreviewed reason never sounds rigorous |
+
+Six reasons also exist to describe a repeat presentation, and they are not the same fact:
+
+| `reason` | Settlement claimed | Meaning |
+|---|---|---|
+| `replay_already_settled` | `settled` | a prior presentation of this proof settled |
+| `replay_in_flight` | `pending`, `final = false` | a prior presentation is unresolved |
+| `could_not_compare` | `unknown` | a prior row exists, its settlement state was unreadable |
+
+**A comparison that did not happen is not a comparison that came out equal.** Collapsing
+`could_not_compare` into `replay_already_settled` tells a buyer its retry was a duplicate
+when the seller in fact could not tell. Collapsing it into `accepted` tells a buyer nothing
+at all.
+
+## 6. Verification
+
+A verifier of a single row, or of a claim carrying one, checks:
+
+1. `decision` is one of the two values.
+2. When refused, `reason` is in the closed set. An unknown reason means the row was not
+   produced by a conforming implementation; the row is not silently reinterpreted.
+3. `evidence_class` does not exceed the ceiling for its reason.
+4. `settlement` is one of the four values; `final` is `false` whenever `settlement` is
+   `pending`.
+5. The signature verifies against a key the verifier resolves itself — never against a key
+   the row supplies.
+6. `signer.public_key` is not the payee address, where the verifier knows the payee. Where it
+   does not, the result is `not_measured`, reported as such.
+
+Two rows about one `attempt_identity` that disagree on `decision` are a contradiction. An
+implementation reports it and keeps both; it does not overwrite.
+
+## 7. The portable claim
+
+A row is internal. A claim is what a buyer carries away:
+
+```json
+{
+  "type": "x402-refusal-claim",
+  "version": 1,
+  "refusal": { "...": "the signed row" },
+  "signature": "<ed25519 base64url over the RFC 8785 canonical row>",
+  "claim_id": "sha256:<hex of the canonical claim body>",
+  "issued_at": "2026-11-11T08:04:28.000Z"
+}
+```
+
+Claims are checked with §6. Nothing about a claim depends on contacting the seller.
+
+## 8. Key separation
+
+`signer.public_key` MUST NOT be the address funds are paid to.
+
+Two reasons, and the second is the one that matters for this specification: one compromise
+should not both authenticate records and move money, and a record identity that rotates with
+a payout address cannot be a stable identity for the merchant across years. §7.4 of the base
+specification already recommends separation for the payment key; this extension makes it a
+checked rule, in code, with a distinguishable result when the check cannot run.
+
+## 9. Reference implementation
+
+`sycee` (Apache-2.0), no network, no wallet:
+
+- `packages/core/src/refusal.mjs` — ceilings, row construction, claim export and
+  verification, as pure functions.
+- `packages/middleware` — `refusalLedger()`, and a resource handler that records on both the
+  accepted and the refused path.
+- `npm run demo:refusal` — five attempts, one ledger, four claims verified offline, and the
+  two things a claim is not allowed to do.
+
+Test coverage as of this draft: 42 tests over the core rules and 21 over the handler
+behaviour, including the overclaim, the pending-finality, the key/payee collision and the
+contradiction cases.
+
+## 10. Known limitations
+
+- Silence is not covered (§2).
+- No buyer-signed intent (§2).
+- No witness mode; `independently_witnessed` is unreachable by construction (§2).
+- The reason table is this extension's own. If a transport later publishes its own refusal
+  codes, this table maps onto that list; it does not claim to be that list.
+- `reason_detail` is a fixed sentence per reason, not a message from the seller. A seller
+  that wants to say more can attach a `_vendor` field; nothing in a `_vendor` field is
+  covered by the evidence ceiling.
