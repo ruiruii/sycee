@@ -514,3 +514,24 @@ export function freshnessSeconds(deliveredAt, consumedAt) {
   if (Number.isNaN(a) || Number.isNaN(b)) return 0;
   return Math.max(0, Math.round((b - a) / 1000));
 }
+
+export {
+  REFUSAL_SCHEMA_VERSION,
+  REFUSAL_REASONS,
+  REASON_CEILING,
+  EVIDENCE_ORDER,
+  DECISIONS,
+  SETTLEMENT_STATES,
+  ceilingFor,
+  withinCeiling,
+  signingKeyCheck,
+  finalityCheck,
+  classifyRepeat,
+  attemptIdentity,
+  refusalRow,
+  signRefusal,
+  mergeRow,
+  refusalLedger,
+  exportClaim,
+  verifyClaim,
+} from './refusal.mjs';
