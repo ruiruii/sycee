@@ -16,6 +16,7 @@ import {
   withinCeiling,
   generateKeyPair,
   canonicalJSON,
+  sha256,
   EVIDENCE_ORDER,
 } from '../src/index.mjs';
 
@@ -163,6 +164,19 @@ test('attemptIdentity is sha256:<64 hex> and refuses empty input', () => {
   assert.match(ATTEMPT, /^sha256:[0-9a-f]{64}$/);
   assert.throws(() => attemptIdentity({ payload: '', requirements: 'r' }), /payload required/);
   assert.throws(() => attemptIdentity({ payload: 'p' }), /requirements required/);
+});
+
+test('the payload and the presentation ordinal cannot be spliced into one value', () => {
+  // The obvious way to add the ordinal is to append it to the string before
+  // hashing. That collides: ("A:1", 2) and ("A:", 12) become the same bytes,
+  // so two different attempts derive one identity and the invariant is gone.
+  // This test pins the fix, not the bug.
+  const spliced = (payload, n) => sha256(payload + String(n));
+  assert.equal(spliced('A:1', 2), spliced('A:', 12), 'the flattening really does collide');
+
+  const a = attemptIdentity({ payload: 'A:1', requirements: 'r', presentation: 2 });
+  const b = attemptIdentity({ payload: 'A:', requirements: 'r', presentation: 12 });
+  assert.notEqual(a, b, 'the derivation must keep the two fields apart');
 });
 
 /* ---------------------------------------------------------------- *

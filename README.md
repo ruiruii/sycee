@@ -97,7 +97,7 @@ All packages are **zero-dependency** and use Node native Ed25519 (`crypto`).
 git clone https://github.com/ruiruii/sycee.git
 cd sycee
 npm install          # links the local workspaces, no external dependencies
-npm test             # 141 tests across all six packages
+npm test             # 142 tests across all six packages
 npm run verify       # 12 signed conformance vectors, expectations enforced
 npm run demo         # one payable server + one buyer, end to end
 npm run demo:refusal # five attempts, one ledger, four claims checked offline
