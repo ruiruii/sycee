@@ -22,17 +22,17 @@ const ROOT = resolve(HERE, '../..');
 const PROVES = {
   // [warning the checker emits, what the vector is for]
   'valid-consumed-yes.json': ['—', 'buyer confirms the result was used'],
-  'valid-consumed-unknown.json': ['—', 'buyer runtime not instrumented — unknown, not false'],
+  'valid-consumed-unknown.json': ['—', 'runtime not instrumented; unknown'],
   'valid-consumed-no-idle-spend.json': ['idle spend', 'delivered, never referenced'],
   'valid-redeem-count-3.json': ['redeem_count = 3', 'one proof, three completions'],
   'valid-agent-side-bilateral.json': ['—', 'agent attests consumption'],
   'valid-settlement-in-flight.json': ['in_flight is not finality', 'delivered before finality'],
-  'valid-settlement-settled-undelivered.json': ['—', 'paid without fulfilment — dispute material'],
-  'invalid-settlement-absent-delivered.json': ['contradiction: absent + delivered', 'bytes claimed for a payment that never happened'],
-  'invalid-missing-consumed.json': ['schema: result.consumed missing', 'no claim about whether the result was used'],
-  'invalid-tampered-redeem-count.json': ['signature fails', 'one field changed after signing; shape still valid'],
-  'invalid-embedded-proof.json': ['red line: embedded credential', 'the raw payment credential is inside the envelope'],
-  'invalid-unsigned-l0.json': ['no signature', 'L0 telemetry; cannot be a receipt'],
+  'valid-settlement-settled-undelivered.json': ['—', 'paid, never fulfilled'],
+  'invalid-settlement-absent-delivered.json': ['contradiction: absent + delivered', 'bytes claimed, payment never happened'],
+  'invalid-missing-consumed.json': ['schema: result.consumed missing', 'no claim whether result was used'],
+  'invalid-tampered-redeem-count.json': ['signature fails', 'one field changed after signing'],
+  'invalid-embedded-proof.json': ['red line: embedded credential', 'raw payment credential inside envelope'],
+  'invalid-unsigned-l0.json': ['no signature', 'L0 telemetry, not a receipt'],
 };
 
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -48,13 +48,23 @@ const rows = manifest.cases.map((c) => {
     report.schemaValid === c.schemaValid &&
     report.signatureValid === c.signatureValid;
   const [why, what] = PROVES[basename(c.file)] ?? [null, c.note ?? ''];
+  // Which check produced the verdict. The interesting column is not "did it fail" but
+  // "what had to be implemented for it to fail" -- a shape-only validator passes two of
+  // these four.
+  const caughtBy = report.schemaErrors.length
+    ? 'schema'
+    : !report.signatureValid
+      ? 'signature'
+      : report.semanticErrors.length
+        ? 'semantic'
+        : '—';
   return { name: basename(c.file, '.json'), expect: c.level, got: report.level,
            schema: report.schemaValid, signature: report.signatureValid, pass, why, what,
-           sha: digest(file) };
+           caughtBy, sha: digest(file) };
 });
 
 const W = 1180;
-const H = 210 + rows.length * 30 + 106;
+const H = 210 + rows.length * 30 + 170;
 const out = [];
 const t = (x, y, s, { size = 11.5, fill = '#374151', weight = 400, mono = false, anchor } = {}) =>
   out.push(`  <text x="${x}" y="${y}" font-size="${size}" fill="${fill}" font-weight="${weight}"` +
@@ -69,7 +79,7 @@ t(40, 99, 'Reproduce: npm run verify (exit 0 means every row matched). Generated
 
 const hy = 132;
 out.push(`  <rect x="40" y="${hy - 24}" width="${W - 80}" height="30" fill="#111827"/>`);
-for (const [x, label] of [[52, 'vector'], [368, 'expected'], [452, 'got'], [512, 'schema'], [578, 'signature'], [664, 'what it proves'], [1044, 'sha256']]) {
+for (const [x, label] of [[52, 'vector'], [368, 'expected'], [452, 'got'], [512, 'schema'], [578, 'signature'], [664, 'caught by'], [770, 'what it proves'], [1044, 'sha256']]) {
   t(x, hy - 4, label, { size: 11, weight: 600, fill: '#ffffff' });
 }
 
@@ -81,7 +91,12 @@ rows.forEach((r, i) => {
   t(452, y, r.got, { weight: 600, fill: r.pass ? '#15803d' : '#b91c1c' });
   t(512, y, r.schema ? 'pass' : 'fail', { fill: r.schema ? '#15803d' : '#b91c1c' });
   t(578, y, r.signature ? 'pass' : 'fail', { fill: r.signature ? '#15803d' : '#b91c1c' });
-  t(664, y, (r.why && r.why !== '—' ? r.why : r.what) || '—');
+  const cb = r.caughtBy;
+  t(664, y, cb === '—' ? '—' : cb, {
+    weight: cb === 'semantic' ? 600 : 400,
+    fill: cb === 'schema' ? '#b45309' : cb === 'signature' ? '#b91c1c' : cb === 'semantic' ? '#1d4ed8' : '#9ca3af',
+  });
+  t(770, y, r.what || '—');
   t(1044, y, r.sha, { size: 10.5, fill: '#9ca3af', mono: true });
   y += 30;
 });
@@ -90,13 +105,16 @@ out.push(`  <line x1="40" y1="${y + 4}" x2="${W - 40}" y2="${y + 4}" stroke="#e5
 y += 34;
 t(40, y, 'Why the four invalid ones are the point', { size: 13, weight: 600, fill: '#111827' });
 y += 22;
-for (const line of [
-  'Each invalid vector changes one thing a signed envelope must not survive, and keeps the rest valid. An implementation that checks shape and stops there passes invalid-tampered-redeem-count.',
-  'invalid-unsigned-l0 is not a failure of the format: it reports L0, telemetry an implementation may emit without a key. It is listed so that "no signature" reads as a limit, not a pass.',
-  'Repeat the tamper yourself: change any byte of a valid vector and run the checker on that one file. It must stop matching its manifest entry.',
+for (const [line, gap] of [
+  ['Read the "caught by" column as a map of what a checker must implement. A validator that checks shape and stops there passes every row that says semantic.', 8],
+  ['signature: every field still type-checks; only recomputing the digest over the canonical body notices the change.', 0],
+  ['semantic: well-formed and correctly signed, and still refused. A valid signature says who signed, never that the claim is true.', 0],
+  ['schema (a required field is absent): the least interesting row, and the only one where no conforming writer could have produced the document.', 8],
+  ['invalid-unsigned-l0 is not a failure of the format: it reports L0, telemetry an implementation may emit without a key. It is listed so that "no signature" reads as a limit, not a pass.', 8],
+  ['Repeat the tamper yourself: change any byte of a valid vector and run the checker on that one file. It must stop matching its manifest entry.', 0],
 ]) {
   t(40, y, line, { size: 12, fill: '#4b5563' });
-  y += 19;
+  y += 19 + gap;
 }
 out.push('</svg>');
 
