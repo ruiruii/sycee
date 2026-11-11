@@ -11,6 +11,10 @@
   "scripts": {
     "test": "node --test packages/*/test/*.test.mjs",
     "vectors": "node packages/conformance/src/cli.mjs gen-vectors",
-    "verify": "node packages/conformance/src/cli.mjs verify --manifest conformance/vectors/valid-*.json conformance/vectors/invalid-*.json"
+    "verify": "node packages/conformance/src/cli.mjs verify --manifest conformance/vectors/valid-*.json conformance/vectors/invalid-*.json",
+    "verify:l0": "node packages/conformance/src/cli.mjs verify --level=L0",
+    "verify:l1": "node packages/conformance/src/cli.mjs verify --level=L1",
+    "verify:l2": "node packages/conformance/src/cli.mjs verify --level=L2",
+    "demo": "node examples/walkthrough.mjs"
   }
 }

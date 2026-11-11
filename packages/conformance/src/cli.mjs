@@ -8,7 +8,7 @@
  */
 
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { basename, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { checkEnvelope } from './index.mjs';
 import { buildVSR, generateKeyPairFromSeed, sha256, signVSR } from '@sycee/core';
@@ -36,36 +36,58 @@ switch (cmd) {
 
 function runVerify(args) {
   const useManifest = args.includes('--manifest');
-  const files = args.filter((a) => !a.startsWith('--'));
-  if (!files.length) {
-    process.stderr.write('verify: no input files\n');
-    process.exit(1);
-  }
+  const levelArg = args.find((a) => a.startsWith('--level='));
+  const level = levelArg ? levelArg.slice('--level='.length) : null;
+  let files = args.filter((a) => !a.startsWith('--'));
+
   /** @type {Map<string, any>} */
-  let expectations = new Map();
-  if (useManifest) {
+  const expectations = new Map();
+  if (useManifest || level) {
+    let m;
     try {
-      const m = JSON.parse(readFileSync(resolve(process.cwd(), 'conformance/vectors/manifest.json'), 'utf8'));
-      for (const c of m.cases) expectations.set(c.file, c);
-    } catch {}
+      m = JSON.parse(readFileSync(resolve(process.cwd(), 'conformance/vectors/manifest.json'), 'utf8'));
+    } catch (e) {
+      process.stderr.write(`verify: cannot read manifest.json: ${e.message}\n`);
+      process.exit(1);
+    }
+    // The manifest stores bare file names; the CLI is normally handed
+    // `conformance/vectors/<name>.json`. Key on the basename on both sides, or
+    // every lookup misses and every vector is reported as passing.
+    for (const c of m.cases) expectations.set(basename(c.file), c);
+    if (level) {
+      const selected = m.cases.filter((c) => c.level === level);
+      if (!selected.length) {
+        const known = [...new Set(m.cases.map((c) => c.level))].join(', ');
+        process.stderr.write(`verify: no vectors at level ${level} (known levels: ${known})\n`);
+        process.exit(1);
+      }
+      files = selected.map((c) => `conformance/vectors/${basename(c.file)}`);
+    }
+  }
+  if (!files.length) {
+    process.stderr.write(`verify: no input files (level=${level ?? 'all'})\n`);
+    process.exit(1);
   }
 
   let failed = 0;
+  let uncompared = 0;
   for (const file of files) {
     const envelope = JSON.parse(readFileSync(resolve(process.cwd(), file), 'utf8'));
     const report = checkEnvelope(envelope);
-    const exp = expectations.get(file);
-    const expectedValid = exp
-      ? exp.schemaValid && exp.signatureValid && exp.level !== 'invalid'
-      : true;
+    const exp = expectations.get(basename(file));
     const actualValid = report.schemaValid && report.signatureValid && report.level !== 'invalid';
+    // With no manifest entry there is nothing to compare against, so fall back to
+    // the envelope's own validity. Returning `true` here would make a tampered
+    // vector indistinguishable from a good one whenever the lookup misses.
     const matches =
-      !exp ||
-      (report.schemaValid === exp.schemaValid &&
-        report.signatureValid === exp.signatureValid &&
-        report.level === exp.level);
+      exp
+        ? report.schemaValid === exp.schemaValid &&
+          report.signatureValid === exp.signatureValid &&
+          report.level === exp.level
+        : actualValid;
     const status = matches ? 'PASS' : 'FAIL';
     if (!matches) failed++;
+    if (!exp) uncompared++;
     process.stdout.write(
       `${status}  ${file}\n` +
         `      level=${report.level} schema=${report.schemaValid} signature=${report.signatureValid}\n`,
@@ -74,10 +96,18 @@ function runVerify(args) {
       process.stdout.write(
         `      expected level=${exp.level} schema=${exp.schemaValid} signature=${exp.signatureValid}\n`,
       );
+    } else {
+      process.stdout.write(`      expected level=(none in manifest)\n`);
     }
     for (const e of report.schemaErrors) process.stdout.write(`      schema:   ${e}\n`);
     for (const e of report.semanticErrors) process.stdout.write(`      semantic: ${e}\n`);
     for (const w of report.warnings) process.stdout.write(`      warning:  ${w}\n`);
+  }
+  if (uncompared) {
+    process.stdout.write(
+      `\nverify: ${uncompared}/${files.length} file(s) had no manifest entry; ` +
+        `judged on envelope validity alone\n`,
+    );
   }
   process.exit(failed ? 1 : 0);
 }
