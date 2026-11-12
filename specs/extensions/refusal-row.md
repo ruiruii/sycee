@@ -240,3 +240,49 @@ So the honest statement is the one in §10: a bounded reason set bounds one row,
 version does not bound a set of rows. A verifier holding two rows for one attempt should
 prefer the lower-ceiling reason when it has no independent way to tell which is true — that
 is a reader's rule, not a format requirement, and it is offered as advice, not as a check.
+
+## 13. Crosswalk: the four loser branches of x402#4198
+
+x402's [#4198](https://github.com/x402-foundation/x402/issues/4198) pre-registers a
+claim-race battery against a caller-supplied idempotency key. Its H2 row was amended before
+freeze (comment of 2026-11-11T15:22:32Z) from a two-valued loser observation to a
+registered range of four, pinned to `claimIdempotentPurchase()` / `beginVerifiedPurchaseIntent()`
+at commit `56d6db340505dec2fec9d89780a498ff9ba37bfb`. Those four are the only public
+enumeration of "what a duplicate looks like from the seller's side" that does not assume the
+answer is binary, which makes them worth mapping against §5 rather than leaving to a thread.
+
+This is a mapping, not an endorsement, and not evidence that anything here has been adopted.
+The battery runs an offline re-implementation with settlement mocked and carries the
+platform's single-writer guarantee as a pinned assumption; its verdicts are self-attested
+and scoped to that boundary.
+
+| #4198 loser branch | prior record state | Output here | Same decision? |
+|---|---|---|---|
+| `Original purchase admission pending` | prior claimed, not yet persisted | `could_not_compare` (`unknown`) | yes — refused |
+| `settlement_unknown` | prior persisted, state unreadable | `could_not_compare` (`unknown`) | yes — refused |
+| `purchase_recovery_pending` | prior settled, recovery in progress | `replay_already_settled` (`settled`) | yes — refused, different follow-up |
+| `purchase_not_settled` | prior persisted, not settled | `accepted` (`not_submitted`) | no — different question |
+
+Three things this table costs us to admit:
+
+- **The first two branches share one code here, deliberately.** §5 requires that a
+  comparison that did not happen not be reported as one that came out equal; it does not
+  require the format to say *why* it did not happen. A reader that needs the distinction —
+  wait for admission, versus go query settlement — reads it from the seller's own status
+  surface, not from the reason code.
+- **Branch 3 matches a decision, not an action.** `replay_already_settled` tells a buyer its
+  proof already settled; `purchase_recovery_pending` tells it a recovery is underway and
+  where to look. Same refusal, different instruction, and a seller adopting this extension
+  still has to choose the instruction.
+- **Branch 4 is not the same question.** #4198's loser is the second of two *concurrent*
+  signatures under one key; `accepted` here means the earlier presentation never reached the
+  rail, so this one is not a replay — a claim about a *sequence*, not about a *window*. The
+  two do not conflict, and neither covers the other: a seller that adopts this extension
+  still needs its own rule for the concurrent case, which is exactly what #4198 proposes to
+  put in the claim layer.
+
+The reason this is written down rather than left in a thread: a reader holding both documents
+will otherwise conclude that four branches contradict three codes. They do not. The first
+three are a coarser answer to the same question; the fourth is a different question. Which of
+the four a tightly-raced loser actually lands in is registered there as timing-sensitive
+behaviour — this table maps the range, not an observed run.
