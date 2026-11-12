@@ -21,5 +21,5 @@ jobs:
         # to repo secrets to enable it — then this step turns green on its own.
         continue-on-error: true
         env:
-          GATES_RW001_FINGERPRINT: ${{ secrets.RW001_FINGERPRINT }}
+          SYCEE_RW001_FINGERPRINT: ${{ secrets.RW001_FINGERPRINT }}
         run: node conformance/real-world/verify-rw001.mjs

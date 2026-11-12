@@ -1,7 +1,7 @@
 # Proposal: extend x402-receipts with `consumed` / `redeem_count`
 
 **To:** maintainers of `x402-receipts` (stelardigital)  
-**From:** gates-spec contributors  
+**From:** SYCEE contributors  
 **Subject:** Upstream alignment — two semantic fields your schema currently omits
 
 ## Summary
@@ -64,7 +64,7 @@ model and should live in the same signed receipt.
 ## Offer
 
 We have a reference implementation and conformance vectors at
-`https://github.com/ruiruii/gates-spec`. We are happy to submit a PR that:
+`https://github.com/ruiruii/sycee`. We are happy to submit a PR that:
 
 1. Adds `consumed` / `consumed_by` / `consumed_at` / `freshness_s` to the `delivery` block.
 2. Adds `redeem_count` / `redeem_resources` to the `payment` block.
@@ -72,7 +72,7 @@ We have a reference implementation and conformance vectors at
 4. Includes conformance test vectors.
 
 The long-term goal is **not to fork** the receipt format, but to make sure these two
-semantic fields have the same names across x402-receipts, gates-spec, and any future
+semantic fields have the same names across x402-receipts, SYCEE, and any future
 IETF draft.
 
 ---

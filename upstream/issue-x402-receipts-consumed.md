@@ -1,3 +1,5 @@
+> **Name note.** This was sent when the project was called `gates-spec` (posted as [StelarDigital/x402-receipts#6](https://github.com/StelarDigital/x402-receipts/issues/6)). The project is now **SYCEE**: https://github.com/ruiruii/sycee. The text below is unchanged.
+
 Hi — first, credit where it's due: `x402-receipts` v0.5.1 is the most rigorous receipt spec in the x402 ecosystem. The §5 split of *delivery truth* vs *settlement truth* (and the explicit fail-closed enumeration) is exactly the kind of normative clarity this space needs. RFC 8785 JCS canonicalization, EAS batch anchoring, and the ERC-8183 binding are all things I'd rather build on than reinvent.
 
 I'd like to propose **a third, independent predicate** — and two fields that go with it.

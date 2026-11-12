@@ -1,3 +1,5 @@
+> **Name note.** This was sent when the project was called `gates-spec` (posted as [predgeAI/erc8004-outcome-validator#13](https://github.com/predgeAI/erc8004-outcome-validator/issues/13)). The project is now **SYCEE**: https://github.com/ruiruii/sycee. The text below is unchanged.
+
 I read through this repo after finding it via [erc-8004/erc-8004-contracts#99](https://github.com/erc-8004/erc-8004-contracts/issues/99). Two things made me want to reach out:
 
 1. You signed-attest **ed25519 over canonical JSON** and bind `responseHash = keccak256(signed bytes)` on-chain. That's the same construction I standardize on.

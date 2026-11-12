@@ -1,8 +1,8 @@
 # Liaison: `consumed` / `redeem_count` as x402 receipt extensions
 
 **To:** Vauban Research / IETF x402 community  
-**From:** gates-spec contributors  
-**Subject:** Field-level alignment between Vauban x402 receipts and gates-spec v0.1
+**From:** SYCEE contributors  
+**Subject:** Field-level alignment between Vauban x402 receipts and SYCEE v0.1
 
 ## Context
 
@@ -15,7 +15,7 @@ define a receipt format, post-quantum signatures, chain anchors, and an `action_
 field binding a receipt to a unit of work. They are, by our reading, the most advanced
 x402 receipt standardization effort.
 
-We are publishing `gates-spec v0.1` to define two semantic fields that the x402 / receipt
+We are publishing `SYCEE v0.1` to define two semantic fields that the x402 / receipt
 layer currently does not:
 
 - `consumed` — was the delivered result referenced in downstream context?
@@ -30,7 +30,7 @@ and one set of semantics.
 Your `action_ref` binds a receipt to work. `consumed` answers a different question:
 whether the **buyer runtime** actually referenced that work after delivery.
 
-| Vauban field | Question | gates-spec complement |
+| Vauban field | Question | SYCEE complement |
 |--------------|----------|----------------------|
 | `payment_hash` / `tx_hash` | Which payment? | `proof_hash` (same idea, hash of proof) |
 | `action_ref` | Which work unit? | `consumed_by` / `consumed_at` / `freshness_s` |
@@ -65,9 +65,9 @@ generic receipt extensions rather than x402-only fields.
 
 ## Reference materials
 
-- Specification: `https://github.com/ruiruii/gates-spec/blob/main/SPEC.md`
-- JSON Schema: `https://github.com/ruiruii/gates-spec/blob/main/schema/vsr-v0.1.schema.json`
-- Conformance vectors: `https://github.com/ruiruii/gates-spec/tree/main/conformance/vectors`
+- Specification: `https://github.com/ruiruii/sycee/blob/main/SPEC.md`
+- JSON Schema: `https://github.com/ruiruii/sycee/blob/main/schema/vsr-v0.1.schema.json`
+- Conformance vectors: `https://github.com/ruiruii/sycee/tree/main/conformance/vectors`
 - Reference implementation: Ed25519 offline verification in TypeScript/Node.
 
 ## Requested next step
@@ -77,9 +77,9 @@ A 30-minute alignment call before your draft expiry on **2026-11-29**.
 Agenda:
 1. Field-name consensus (`outcome` block vs `delivery` + `payment`).
 2. Whether `consumed = unknown` default is acceptable for Vauban implementers.
-3. How to keep gates-spec a non-competing complement.
+3. How to keep SYCEE a non-competing complement.
 
 ---
 
-**Contact:** gates-spec@sycee.dev  
+**Contact:** sycee.rachel@gmail.com  
 **License:** All text in this liaison is Apache-2.0.

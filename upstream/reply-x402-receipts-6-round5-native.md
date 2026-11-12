@@ -1,3 +1,5 @@
+> **Name note.** This was sent when the project was called `gates-spec` (comment on [StelarDigital/x402-receipts#6](https://github.com/StelarDigital/x402-receipts/issues/6#issuecomment-6084046338)). The project is now **SYCEE**: https://github.com/ruiruii/sycee. The comment below is unchanged.
+
 # Round 5 — native-English rewrite (in place of the original comment)
 
 > This is the language-polished version of `reply-x402-receipts-6-round5.md`. The

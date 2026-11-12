@@ -1,3 +1,5 @@
+> **Name note.** This was sent when the project was called `gates-spec` (posted as [billiondollarapps/counterra#10](https://github.com/billiondollarapps/counterra/issues/10)). The project is now **SYCEE**: https://github.com/ruiruii/sycee. The text below is unchanged.
+
 # Outreach — Counterra (demand side)
 
 Posted 2026-10-09 12:52 UTC as issue #10:

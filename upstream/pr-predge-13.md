@@ -1,3 +1,5 @@
+> **Name note.** This was sent when the project was called `gates-spec` (posted as [predgeAI/erc8004-outcome-validator#14](https://github.com/predgeAI/erc8004-outcome-validator/pull/14), which closes issue #13). The project is now **SYCEE**: https://github.com/ruiruii/sycee. The text below is unchanged.
+
 Opening PR body for predgeAI/erc8004-outcome-validator#13.
 
 ---

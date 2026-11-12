@@ -1,3 +1,5 @@
+> **Name note.** This was sent when the project was called `gates-spec`. The project is now **SYCEE**: https://github.com/ruiruii/sycee. The text below is unchanged. The commit link is the URL recorded at send time. The same commit is in this repository: https://github.com/ruiruii/sycee/commit/d015c76e99aebaf68a5b96ab9e6b1fe0533578fb
+
 # Reply — x402-receipts #6, round 2 (settlement codomain shipped)
 
 Status: **POSTED 2026-10-09 12:21 UTC**
