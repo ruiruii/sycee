@@ -35,8 +35,8 @@ export default {
         settlementFor: (txHash) => verifyPaymentOnChain(env, txHash),
         store: d1GuardStore(env.DB),
         cap: {
-          perPayerPerWindow: Number(env.GATES_CAP_PER_PAYER ?? 5),
-          windowMs: Number(env.GATES_CAP_WINDOW_MS ?? 60_000),
+          perPayerPerWindow: Number(env.SYCEE_CAP_PER_PAYER ?? 5),
+          windowMs: Number(env.SYCEE_CAP_WINDOW_MS ?? 60_000),
         },
       });
 

@@ -31,6 +31,11 @@ jobs:
         with:
           node-version: '20'
 
+      # The harness imports workspace packages (`@sycee/adapter-automaton`).
+      # A clean runner has no node_modules until this link step.
+      - name: Install
+        run: npm install
+
       - name: Verify RW-001 against the live origin
         id: verify
         run: |

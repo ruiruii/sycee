@@ -36,10 +36,13 @@ const RPC = 'https://mainnet.base.org';
  * gated off. So the binding half cannot be tested end-to-end until the origin
  * publishes the fingerprint for this payment (or for any payment).
  *
- * Supply it via `--fingerprint <sha256:...>` or `GATES_RW001_FINGERPRINT`.
+ * Supply it via `--fingerprint <sha256:...>` or `SYCEE_RW001_FINGERPRINT`.
  * Once it is set in CI, the red half turns green by itself on the next run.
+ * `GATES_RW001_FINGERPRINT` is still read so an environment set before the
+ * rename keeps working. It is the previous variable name, not the project name.
  */
 const FINGERPRINT =
+  process.env.SYCEE_RW001_FINGERPRINT?.trim() ||
   process.env.GATES_RW001_FINGERPRINT?.trim() ||
   (() => {
     const i = process.argv.indexOf('--fingerprint');
@@ -177,7 +180,7 @@ if (binding.empty > 0) {
 // would call — not a re-implementation of it.
 if (!FINGERPRINT) {
   console.log('  [PENDING] no request fingerprint published for this payment — binding cannot be tested yet.');
-  console.log('            Supply --fingerprint <sha256:...> or GATES_RW001_FINGERPRINT to enable this half.');
+  console.log('            Supply --fingerprint <sha256:...> or SYCEE_RW001_FINGERPRINT to enable this half.');
   console.log('            The harness cannot derive it: it never makes a paid request (spend is gated off).');
 } else {
   const attempts = [{ txHash: TX, resourceId: 'search.v1', settled: true }];

@@ -1,3 +1,5 @@
+> **Name note.** This was sent when the project was called `gates-spec` (posted as [erc-8004/erc-8004-contracts#102](https://github.com/erc-8004/erc-8004-contracts/issues/102)). The project is now **SYCEE**: https://github.com/ruiruii/sycee. The text below is unchanged.
+
 Following up on [#99](https://github.com/erc-8004/erc-8004-contracts/issues/99) (Predge's grounding primitive) — that thread solves a real problem I want to extend by one layer, not compete with.
 
 ## Where #99 lands, and what's one layer below it

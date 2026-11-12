@@ -1,3 +1,5 @@
+> **Name note.** The header below still says "Posted: pending". The reply was sent as [this comment](https://github.com/StelarDigital/x402-receipts/issues/6#issuecomment-6081826670) while the project was called `gates-spec`. The project is now **SYCEE**: https://github.com/ruiruii/sycee. The text below is unchanged. The commit link is the URL recorded with this note. The same commit is in this repository: https://github.com/ruiruii/sycee/commit/2489ce1ee6b059f8c7dd7dc6a2923c78a404676c
+
 # Round 4 — reply to x402-receipts #6
 
 Posted: pending

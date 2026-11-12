@@ -1,3 +1,5 @@
+> **Name note.** This was sent when the project was called `gates-spec` (posted as [brave/bx402#141](https://github.com/brave/bx402/issues/141)). The project is now **SYCEE**: https://github.com/ruiruii/sycee. The text below is unchanged.
+
 I read [#102](https://github.com/brave/bx402/issues/102) (concurrent replay of one x402 payment → N unpaid upstream searches) and the fix that closed it. Nice catch, and the MPP-vs-x402 asymmetry you documented — mppx's pre-broadcast `tryClaimHash` vs. x402's stateless verify→search→settle — is the most precise writeup of this gap I've seen.
 
 I'm raising a follow-up rather than reopening it, because I think the fix and what I'm proposing solve **different halves** of the problem.

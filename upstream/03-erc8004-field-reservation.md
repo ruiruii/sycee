@@ -1,7 +1,7 @@
 # ERC-8004 v2 field reservation request: `consumed` / `redeem_count`
 
 **To:** ERC-8004 authors / agent identity standard maintainers  
-**From:** gates-spec contributors  
+**From:** SYCEE contributors  
 **Subject:** Reserve two fields in the ERC-8004 v2 payment-proof / agent-identity schema
 
 ## Background
@@ -40,13 +40,13 @@ history. If the schema does not reserve these names now, the ecosystem will frag
 By reserving the names early, ERC-8004 v2 can:
 
 - remain neutral (no scoring, no fund movement);
-- interoperate with x402-receipts, Vauban IETF drafts, and gates-spec;
+- interoperate with x402-receipts, Vauban IETF drafts, and SYCEE;
 - give wallet implementers one attribute namespace to instrument.
 
 ## Proposed OTel mapping
 
 These fields are emitted as OpenTelemetry span attributes on a span named
-`agent.spend`. They are also valid inside the gates-spec VSR envelope.
+`agent.spend`. They are also valid inside the SYCEE VSR envelope.
 
 ```json
 {
@@ -70,7 +70,7 @@ These fields do **not**:
 
 ## Offer
 
-We will provide a reference mapping between ERC-8004 v2 and gates-spec v0.1, plus
+We will provide a reference mapping between ERC-8004 v2 and SYCEE v0.1, plus
 test vectors, if the reservation is accepted.
 
 ---
