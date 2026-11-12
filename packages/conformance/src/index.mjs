@@ -2,15 +2,16 @@
  * Combined conformance entry point: JSON Schema validation + semantic verification.
  */
 
+import { createRequire } from 'node:module';
 import { readFileSync } from 'node:fs';
 import { validateInstance } from './validate.mjs';
 import { verifyVSR, toSpanAttributes } from '@sycee/core';
 
-const SCHEMA_URL = new URL('../../../schema/vsr-v0.1.schema.json', import.meta.url);
+const require = createRequire(import.meta.url);
 
-/** Load the bundled VSR JSON Schema. */
+/** Load the VSR JSON Schema shipped on `@sycee/core/schema`. */
 export function loadSchema() {
-  return JSON.parse(readFileSync(SCHEMA_URL, 'utf8'));
+  return JSON.parse(readFileSync(require.resolve('@sycee/core/schema'), 'utf8'));
 }
 
 /**
