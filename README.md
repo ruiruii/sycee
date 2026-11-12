@@ -1,5 +1,7 @@
 # SYCEE
 
+[![CI](https://github.com/ruiruii/sycee/actions/workflows/ci.yml/badge.svg)](https://github.com/ruiruii/sycee/actions/workflows/ci.yml)
+
 > **We record. Others score.**  
 > **记录消费与兑现实；不评分、不托管、不触碰资金。**
 
@@ -104,7 +106,7 @@ All packages are **zero-dependency** and use Node native Ed25519 (`crypto`).
 git clone https://github.com/ruiruii/sycee.git
 cd sycee
 npm install          # links the local workspaces, no external dependencies
-npm test             # 142 tests across all six packages
+npm test             # 144 tests across all six packages
 npm run verify       # 12 signed conformance vectors, expectations enforced
 npm run matrix       # same 12 verdicts as one page (conformance/vectors/matrix.svg)
 npm run demo         # one payable server + one buyer, end to end

@@ -7,7 +7,7 @@
   "main": "./src/index.mjs",
   "exports": {
     ".": "./src/index.mjs",
-    "./schema": "../schema/vsr-v0.1.schema.json",
+    "./schema": "./src/vsr-v0.1.schema.json",
     "./refusal": "./src/refusal.mjs"
   },
   "files": [

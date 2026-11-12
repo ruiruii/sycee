@@ -1,0 +1,233 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:sycee:schema:vsr:v0.1",
+  "title": "Verifiable Spend Receipt (VSR) v0.1",
+  "description": "Signed envelope recording agent spend outcome semantics: consumption and redemption counts. Contains no payment proof bodies, request bodies, or response bodies.",
+  "type": "object",
+  "required": [
+    "vsr",
+    "signature"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "vsr": {
+      "$ref": "#/$defs/vsr"
+    },
+    "signature": {
+      "type": "string",
+      "description": "base64url-encoded Ed25519 signature over the canonical JSON of the vsr object (RFC 4648 section 5, no padding).",
+      "pattern": "^[A-Za-z0-9_-]+$"
+    }
+  },
+  "$defs": {
+    "vsr": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "protocol",
+        "resource_id",
+        "payment",
+        "delivery",
+        "result",
+        "signer"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "string",
+          "const": "sycee/v0.1"
+        },
+        "protocol": {
+          "type": "string",
+          "enum": [
+            "x402",
+            "mpp",
+            "ap2",
+            "alipay-a2m",
+            "apop",
+            "a2p2",
+            "card-a2a",
+            "other"
+          ]
+        },
+        "resource_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Stable seller-assigned resource identifier, e.g. search.v1"
+        },
+        "request_fingerprint": {
+          "$ref": "#/$defs/hash"
+        },
+        "payment": {
+          "type": "object",
+          "required": [
+            "proof_hash",
+            "redeem_count"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "proof_hash": {
+              "$ref": "#/$defs/hash"
+            },
+            "redeem_count": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Number of distinct complete events accepted for this proof_hash within the seller namespace."
+            },
+            "redeem_resources": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "settlement_status": {
+              "type": "string",
+              "enum": [
+                "settled",
+                "in_flight",
+                "absent"
+              ],
+              "description": "Settlement predicate: settled = confirmed, in_flight = observed but not yet confirmed, absent = no transaction for the claimed proof. Default in_flight."
+            },
+            "proof_seen_at": {
+              "$ref": "#/$defs/timestamp"
+            },
+            "complete_seen_at": {
+              "$ref": "#/$defs/timestamp"
+            },
+            "trade_no": {
+              "type": "string"
+            }
+          }
+        },
+        "amount": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "value": {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+              "description": "Decimal string to avoid floating point representation drift."
+            },
+            "currency": {
+              "type": "string",
+              "description": "ISO 4217 code (CNY, USD) or token symbol (USDC)."
+            }
+          }
+        },
+        "delivery": {
+          "type": "object",
+          "required": [
+            "status"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": [
+                "delivered",
+                "partial",
+                "failed",
+                "timeout"
+              ]
+            },
+            "delivered_at": {
+              "$ref": "#/$defs/timestamp"
+            },
+            "bytes": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "result": {
+          "type": "object",
+          "required": [
+            "consumed"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "consumed": {
+              "type": "string",
+              "enum": [
+                "yes",
+                "no",
+                "unknown"
+              ],
+              "description": "Whether the delivered result was referenced in downstream context. HTTP 200 is delivery, not consumption."
+            },
+            "consumed_by": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "description": "Downstream task_id / message_id / conversation_id values that referenced the result."
+            },
+            "consumed_at": {
+              "$ref": "#/$defs/timestamp"
+            },
+            "freshness_s": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "signer": {
+          "type": "object",
+          "required": [
+            "public_key",
+            "role"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "agent_id": {
+              "type": "string",
+              "description": "Legal-entity-stable identifier, e.g. erc8004:8453:0x... Never a natural person."
+            },
+            "public_key": {
+              "type": "string",
+              "pattern": "^ed25519:[A-Za-z0-9_-]+$"
+            },
+            "key_id": {
+              "type": "string"
+            },
+            "role": {
+              "type": "string",
+              "enum": [
+                "merchant",
+                "agent",
+                "observer"
+              ]
+            }
+          }
+        },
+        "completeness": {
+          "type": "string",
+          "enum": [
+            "bilateral",
+            "unilateral_merchant",
+            "unilateral_agent",
+            "unknown"
+          ],
+          "description": "Instrumentation completeness: bilateral means both merchant and agent co-signed."
+        },
+        "_vendor": {
+          "type": "object",
+          "description": "Vendor extension namespace. Core fields must never be redefined here."
+        }
+      }
+    },
+    "hash": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "SHA-256 hex digest with sha256: prefix."
+    },
+    "timestamp": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$",
+      "description": "ISO 8601 UTC, millisecond precision."
+    }
+  }
+}
