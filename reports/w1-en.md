@@ -1,3 +1,5 @@
+> This English report is out of date (data from 2026-10-10). The current weekly census is reports/w1.md.
+
 # x402 Evidence-Layer Census · W1
 
 **Generated:** 2026-10-10 18:26 UTC · **Tool:** gates-probe · **Method version:** `v1.1`

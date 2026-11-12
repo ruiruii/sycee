@@ -21,10 +21,12 @@ zero-dependency conformance suite, and a proposal path to upstream standards.
 ## Name
 
 This project was published as `gates-spec` through v0.1 and is now **SYCEE**,
-at [`ruiruii/sycee`](https://github.com/ruiruii/sycee). The move was a push into
-a separate repository rather than a GitHub rename, so **old `gates-spec` URLs do
-not redirect** — links written before the move point at a repository that is no
-longer maintained. Two identifiers changed with it and are not interchangeable:
+at [`ruiruii/sycee`](https://github.com/ruiruii/sycee). The previous repository
+name, [`ruiruii/gates-spec`](https://github.com/ruiruii/gates-spec), redirects
+to a stub at
+[`ruiruii/gates-spec-migrated`](https://github.com/ruiruii/gates-spec-migrated),
+which points here. Receipts and packages under the old `gates-spec` identifiers
+are not aliases of `sycee/v0.1`.
 
 | was | is |
 |-----|-----|
@@ -32,11 +34,10 @@ longer maintained. Two identifiers changed with it and are not interchangeable:
 | `@gates-spec/{core,middleware,agent-sdk,conformance,adapter-automaton,probe}` | `@sycee/{...}` |
 
 Receipts carrying `gates-spec/v0.1` were signed under the old string and remain
-valid **as signed artifacts**; they are a distinct version identifier, not an
-alias of `sycee/v0.1`. Because the version string is one of the inputs to a
-vector fingerprint, every conformance vector hash changed when it moved. The
-twelve vectors were regenerated with the repository's own generator rather than
-patched by hand, and the three rejection paths survived: schema-rejected,
+valid **as signed artifacts**. Because the version string is one of the inputs
+to a vector fingerprint, every conformance vector hash changed when it moved.
+The twelve vectors were regenerated with the repository's own generator rather
+than patched by hand, and the three rejection paths survived: schema-rejected,
 signature-rejected, and semantic (`level: invalid`).
 
 ---
@@ -234,9 +235,9 @@ These rules are structural, not policy.
 |-------|------|-------|----------|
 | 1 | Publish `SYCEE v0.1` repo + SPEC.md | Sycee | **DONE** |
 | 2 | Propose field alignment to x402-receipts, Vauban, ERC-8004 v2 | Sycee | **DONE** (see below) |
-| 3 | First independent implementation adopts `consumed` / `redeem_count` names | x402-receipts / minia2a | **D+30** |
-| 4 | Run merchant + agent SDK against Brave / bx402#102 test case | Sycee | **D+30** |
-| 5 | Cross-rail support: APOP, alipay-a2m, a2p2 | Sycee / partners | **D+90** |
+| 3 | First independent implementation adopts `consumed` / `redeem_count` names | x402-receipts / minia2a | **no date set** |
+| 4 | Run merchant + agent SDK against Brave / bx402#102 test case | Sycee | **no date set** |
+| 5 | Cross-rail support: APOP, alipay-a2m, a2p2 | Sycee / partners | **no date set** |
 
 ## Upstream outreach
 
@@ -245,7 +246,7 @@ field names, SYCEE adopts theirs.
 
 | Target | Channel | Status |
 |--------|---------|--------|
-| x402-receipts (StelarDigital) | GitHub issue | [StelarDigital/x402-receipts#6](https://github.com/StelarDigital/x402-receipts/issues/6) — converged; invariants internalized in SPEC §3.1 + RW-001 credit (this PR) |
+| x402-receipts (StelarDigital) | GitHub issue | [StelarDigital/x402-receipts#6](https://github.com/StelarDigital/x402-receipts/issues/6) — converged; invariants internalized in SPEC §3.1; RW-001 credit in SPEC §10.1 |
 | ERC-8004 v2 | GitHub issue | [erc-8004/erc-8004-contracts#102](https://github.com/erc-8004/erc-8004-contracts/issues/102) — open |
 | Vauban Research (IETF) | email | `research@vauban.tech` — draft in [`upstream/email-vauban-liaison.md`](./upstream/email-vauban-liaison.md) |
 | Predge (`erc8004-outcome-validator`) | GitHub issue | [predgeAI/erc8004-outcome-validator#13](https://github.com/predgeAI/erc8004-outcome-validator/issues/13) — open |

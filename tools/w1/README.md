@@ -1,7 +1,9 @@
 # tools/w1 — x402 证据层现状普查（W1）
 
 `gates-probe` 驱动的自动化证据层普查管线。每周一由 GitHub Actions 官方
-runner 真实跑出数据并回写 `reports/w1.md`。
+runner 真实跑出数据并回写 `reports/w1.md` 与 `reports/w1.json`（`report.mjs`
+同时写出这两份）。`reports/w1-en.md` 是 2026-10-10 扫描的手写英文页，仓库里
+没有英文渲染器，周任务不覆盖它。
 
 ## 它在测什么
 
