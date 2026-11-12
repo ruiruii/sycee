@@ -46,6 +46,12 @@ signature-rejected, and semantic (`level: invalid`).
 > "Others prove delivery; we prove consumption."
 > （别人证明“送到了”；我们证明“被用了”。）
 
+## Hosted evidence service (proposed, in pilot)
+
+The packages in this repository are free and Apache-2.0. An optional hosted service would keep an independent, third-party copy of already-signed receipts (phase 1: `redeem_count` only; agent-signed `consumed` later). It is being developed with pilot partners; it is not a live product. We are offering a free two-week pilot in exchange for feedback. Pricing after the pilot is set with those partners; we are not publishing a price here. No scoring, no custody, no fund movement.
+
+Contact: The SYCEE team · sycee.rachel@gmail.com
+
 ---
 
 ## Why this matters

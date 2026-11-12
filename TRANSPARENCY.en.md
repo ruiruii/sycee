@@ -48,7 +48,7 @@ Published honestly, because **selectively publishing only what we can prove is i
 | 5 | **The signed-receipt form is assessed more shallowly** | Ledgers get the full seven predicates; the receipt form needs sample receipts or format documentation for deep assessment (e.g. bsvkey: 6 of 7 dimensions unverified — stated plainly, not hidden) |
 | 6 | **`settlementLinkage` / `redeemCountDerivable` are often `pending`** | Both depend on the party publishing a request fingerprint. Absent it, we report `pending`: that is a gap in **our** information, not a defect in their implementation |
 | 7 | **No identity or attribution judgement** | We judge endpoint behaviour, not who operates it or whether they are trustworthy |
-| 8 | **No composite quality score (as of v1.1)** | This version outputs coverage and per-predicate verdicts. A composite quality score is under construction; until it ships, **we do not publish a total score** |
+| 8 | **No composite score, trust rating, or certification mark** | We publish per-predicate measurements of public evidence surfaces. We do not produce a composite score, a trust rating, or a certification mark, and we are not selling scores. |
 
 > Item 2 matters most. **"3% coverage" means 3% of what we can see.** The true ecosystem may be larger, which would make real coverage even lower. We will not blur this to make the narrative tidier.
 
@@ -68,7 +68,7 @@ Published honestly, because **selectively publishing only what we can prove is i
    - If the verdict **stands**: publish the re-examination and its basis, and keep the verdict.
 5. **Keep the record** — every appeal and outcome enters the public correction log (§6). **Historic verdicts are never deleted**; corrected ones are marked as corrected, so the time series stays auditable.
 
-**What we do not promise:** we do not change a verdict because of payment, partnership, or commercial pressure. **Public scores are unaffected by payment** — this is an explicit term of every certification agreement, and the reason we exist at all.
+**What we do not promise:** we do not change a published measurement because of payment, partnership, or commercial pressure. Payment, partnership, or a pilot does not change a published measurement. A measured party may appeal via a public issue.
 
 ---
 
@@ -107,4 +107,4 @@ Artifacts:
 
 ## 8. In one line
 
-> **We sell reproducible verdicts, so we have to be reproducible first: verdicts carry their measurements, blind spots are published up front, verdicts can be appealed, and the method carries a version. Without those four, there is no referee position.**
+> **We publish per-predicate measurements of public evidence surfaces, so we have to be reproducible first: measurements carry their evidence, blind spots are published up front, a measured party may appeal via a public issue, and the method carries a version. We do not produce a composite score, a trust rating, or a certification mark, and we are not selling scores.**
