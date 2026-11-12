@@ -2,7 +2,10 @@ name: w1-evidence-scan
 
 # Automated x402 evidence-layer status scan (route B / "裁判位" content asset).
 # Runs weekly + on demand. Discovers public ledgers via CDP discovery, probes
-# each with gates-probe, and commits the rendered report back to the repo.
+# each with gates-probe, and commits reports/w1.md and reports/w1.json.
+# report.mjs writes both of those from the raw scan. reports/w1-en.md is a
+# hand-written English page (data from 2026-10-10) and this job does not
+# rewrite it — there is no English renderer in tools/w1.
 # Real scans need a normal egress (GitHub-hosted runner); the sandbox cannot
 # reach the ledger host, so this is the only place the live data is produced.
 
@@ -45,6 +48,6 @@ jobs:
           git config user.name "SYCEE bot"
           git config user.email "bot@sycee.local"
           git pull --rebase --autostash
-          git add reports/w1.md tools/w1/w1-raw.json tools/w1/endpoints.txt tools/w1/sellers.txt tools/w1/discovery.json
+          git add reports/w1.md reports/w1.json tools/w1/w1-raw.json tools/w1/endpoints.txt tools/w1/sellers.txt tools/w1/discovery.json
           git diff --cached --quiet || git commit -m "chore(w1): automated evidence-layer scan [skip ci]"
           git push

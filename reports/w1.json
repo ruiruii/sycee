@@ -1,6 +1,6 @@
 {
   "method_version": "1.1",
-  "generated_at": "2026-10-10T18:26:01.486Z",
+  "generated_at": "2026-11-09T13:00:43.699Z",
   "tool": "gates-probe",
   "ecosystem": {
     "sources": [
@@ -16,11 +16,11 @@
       }
     ],
     "total_listed": 150,
-    "distinct_origins": 60,
+    "distinct_origins": 54,
     "sellers": [
       {
         "origin": "https://api.onesource.io",
-        "resourceCount": 30,
+        "resourceCount": 31,
         "sampleResource": "https://api.onesource.io/api/chain/erc20-balance",
         "facilitators": []
       },
@@ -28,6 +28,12 @@
         "origin": "https://agentres.dev",
         "resourceCount": 19,
         "sampleResource": "https://agentres.dev/api/account",
+        "facilitators": []
+      },
+      {
+        "origin": "https://www.api-xpay.com",
+        "resourceCount": 13,
+        "sampleResource": "https://www.api-xpay.com/x402/quote",
         "facilitators": []
       },
       {
@@ -43,33 +49,27 @@
         "facilitators": []
       },
       {
-        "origin": "https://x402.ottoai.services",
-        "resourceCount": 7,
-        "sampleResource": "https://x402.ottoai.services/crypto-news",
-        "facilitators": []
-      },
-      {
         "origin": "https://agent.atinamos.co.uk",
         "resourceCount": 4,
         "sampleResource": "https://agent.atinamos.co.uk/agent/buyer-check",
         "facilitators": []
       },
       {
-        "origin": "https://ausca.com",
-        "resourceCount": 4,
-        "sampleResource": "https://ausca.com/v1/open-inbox",
+        "origin": "https://api.bitrefill.com",
+        "resourceCount": 3,
+        "sampleResource": "https://api.bitrefill.com/x402/gift-cards/search",
         "facilitators": []
       },
       {
         "origin": "https://blockrun.ai",
         "resourceCount": 3,
-        "sampleResource": "https://blockrun.ai/api/v1/pm/polymarket/markets",
+        "sampleResource": "https://blockrun.ai/api/v1/chat/completions",
         "facilitators": []
       },
       {
-        "origin": "https://google-trends.use.x402atlas.com",
-        "resourceCount": 3,
-        "sampleResource": "https://google-trends.use.x402atlas.com/related-queries",
+        "origin": "https://agent.pocket.network",
+        "resourceCount": 2,
+        "sampleResource": "https://agent.pocket.network/v1/meadow",
         "facilitators": []
       },
       {
@@ -79,15 +79,21 @@
         "facilitators": []
       },
       {
-        "origin": "https://api.oblique.markets",
+        "origin": "https://api.gondola-ai.com",
         "resourceCount": 2,
-        "sampleResource": "https://api.oblique.markets/api/v1/paid/time",
+        "sampleResource": "https://api.gondola-ai.com/v1/chat/completions",
+        "facilitators": []
+      },
+      {
+        "origin": "https://api.nansen.ai",
+        "resourceCount": 2,
+        "sampleResource": "https://api.nansen.ai/api/v1/profiler/address/current-balance",
         "facilitators": []
       },
       {
         "origin": "https://laso.finance",
         "resourceCount": 2,
-        "sampleResource": "https://laso.finance/get-card",
+        "sampleResource": "https://laso.finance/auth",
         "facilitators": []
       },
       {
@@ -97,15 +103,15 @@
         "facilitators": []
       },
       {
-        "origin": "https://stableenrich.dev",
+        "origin": "https://search.cyberwarex.com",
         "resourceCount": 2,
-        "sampleResource": "https://stableenrich.dev/api/fullenrich/people-search",
+        "sampleResource": "https://search.cyberwarex.com/search",
         "facilitators": []
       },
       {
-        "origin": "https://stableupload.dev",
+        "origin": "https://stableenrich.dev",
         "resourceCount": 2,
-        "sampleResource": "https://stableupload.dev/api/upload",
+        "sampleResource": "https://stableenrich.dev/api/fullenrich/people-search",
         "facilitators": []
       },
       {
@@ -133,12 +139,6 @@
         "facilitators": []
       },
       {
-        "origin": "https://agentpay.tools",
-        "resourceCount": 1,
-        "sampleResource": "https://agentpay.tools/tools/pre_trade_check/call",
-        "facilitators": []
-      },
-      {
         "origin": "https://agi.apify.com",
         "resourceCount": 1,
         "sampleResource": "https://agi.apify.com/protocols/x402/prepaid-tokens",
@@ -157,6 +157,12 @@
         "facilitators": []
       },
       {
+        "origin": "https://api-dev-v2.ixs.finance",
+        "resourceCount": 1,
+        "sampleResource": "https://api-dev-v2.ixs.finance/x402/vaults",
+        "facilitators": []
+      },
+      {
         "origin": "https://api.402rates.com",
         "resourceCount": 1,
         "sampleResource": "https://api.402rates.com/v1/ping",
@@ -169,9 +175,21 @@
         "facilitators": []
       },
       {
-        "origin": "https://api.bitrefill.com",
+        "origin": "https://api.arkm.com",
         "resourceCount": 1,
-        "sampleResource": "https://api.bitrefill.com/x402/gift-cards/search",
+        "sampleResource": "https://api.arkm.com/x402/intelligence/address",
+        "facilitators": []
+      },
+      {
+        "origin": "https://api.chit402.com",
+        "resourceCount": 1,
+        "sampleResource": "https://api.chit402.com/v1/chat/completions",
+        "facilitators": []
+      },
+      {
+        "origin": "https://api.clawfetch.ai",
+        "resourceCount": 1,
+        "sampleResource": "https://api.clawfetch.ai/fetch",
         "facilitators": []
       },
       {
@@ -181,51 +199,15 @@
         "facilitators": []
       },
       {
-        "origin": "https://api.kadec0.xyz",
-        "resourceCount": 1,
-        "sampleResource": "https://api.kadec0.xyz/v1/serp",
-        "facilitators": []
-      },
-      {
-        "origin": "https://api.loyalspark.online",
-        "resourceCount": 1,
-        "sampleResource": "https://api.loyalspark.online/x402-gateway/recipient-api/offers",
-        "facilitators": []
-      },
-      {
-        "origin": "https://api.solenrich.com",
-        "resourceCount": 1,
-        "sampleResource": "https://api.solenrich.com/entrypoints/stonk-yield/invoke",
-        "facilitators": []
-      },
-      {
-        "origin": "https://cars2026.vercel.app",
-        "resourceCount": 1,
-        "sampleResource": "https://cars2026.vercel.app/api/cars",
-        "facilitators": []
-      },
-      {
         "origin": "https://cheaptokens.ai",
         "resourceCount": 1,
         "sampleResource": "https://cheaptokens.ai/api/buy",
         "facilitators": []
       },
       {
-        "origin": "https://coinflip402.vercel.app",
-        "resourceCount": 1,
-        "sampleResource": "https://coinflip402.vercel.app/api/coinflip",
-        "facilitators": []
-      },
-      {
         "origin": "https://crypto.apitoll.cloud",
         "resourceCount": 1,
         "sampleResource": "https://crypto.apitoll.cloud/v1/crypto/price",
-        "facilitators": []
-      },
-      {
-        "origin": "https://dicex402.vercel.app",
-        "resourceCount": 1,
-        "sampleResource": "https://dicex402.vercel.app/api/dice",
         "facilitators": []
       },
       {
@@ -241,9 +223,9 @@
         "facilitators": []
       },
       {
-        "origin": "https://horrorstoryapi.vercel.app",
+        "origin": "https://headers.use.x402atlas.com",
         "resourceCount": 1,
-        "sampleResource": "https://horrorstoryapi.vercel.app/api/horror-story",
+        "sampleResource": "https://headers.use.x402atlas.com/",
         "facilitators": []
       },
       {
@@ -265,21 +247,9 @@
         "facilitators": []
       },
       {
-        "origin": "https://ladyfortunalx402.vercel.app",
+        "origin": "https://minifetch.com",
         "resourceCount": 1,
-        "sampleResource": "https://ladyfortunalx402.vercel.app/api/fortune",
-        "facilitators": []
-      },
-      {
-        "origin": "https://memegeneratorx402.vercel.app",
-        "resourceCount": 1,
-        "sampleResource": "https://memegeneratorx402.vercel.app/api/generate-meme",
-        "facilitators": []
-      },
-      {
-        "origin": "https://omniterminal.app",
-        "resourceCount": 1,
-        "sampleResource": "https://omniterminal.app/api/x402/v1/news",
+        "sampleResource": "https://minifetch.com/api/v1/x402/preflight/url-check",
         "facilitators": []
       },
       {
@@ -295,27 +265,33 @@
         "facilitators": []
       },
       {
-        "origin": "https://randomfactsx402.vercel.app",
+        "origin": "https://scvd.store",
         "resourceCount": 1,
-        "sampleResource": "https://randomfactsx402.vercel.app/api/random-fact",
+        "sampleResource": "https://scvd.store/api/buy/spot_check",
         "facilitators": []
       },
       {
-        "origin": "https://roastx402endpoint.vercel.app",
+        "origin": "https://skycast.clawca.sh",
         "resourceCount": 1,
-        "sampleResource": "https://roastx402endpoint.vercel.app/api/roast",
+        "sampleResource": "https://skycast.clawca.sh/weather",
         "facilitators": []
       },
       {
-        "origin": "https://sat.ipintel.ai",
+        "origin": "https://stableupload.dev",
         "resourceCount": 1,
-        "sampleResource": "https://sat.ipintel.ai/satellite-observe",
+        "sampleResource": "https://stableupload.dev/api/upload",
         "facilitators": []
       },
       {
-        "origin": "https://stablestudio.dev",
+        "origin": "https://tenjin.sh",
         "resourceCount": 1,
-        "sampleResource": "https://stablestudio.dev/api/upload",
+        "sampleResource": "https://tenjin.sh/api/x402-router/route",
+        "facilitators": []
+      },
+      {
+        "origin": "https://theartillerist.com",
+        "resourceCount": 1,
+        "sampleResource": "https://theartillerist.com/api/v1/x402-trial",
         "facilitators": []
       },
       {
@@ -325,9 +301,9 @@
         "facilitators": []
       },
       {
-        "origin": "https://wallets-demo-seller-server.calebgcarithers.workers.dev",
+        "origin": "https://web.cyberwarex.com",
         "resourceCount": 1,
-        "sampleResource": "https://wallets-demo-seller-server.calebgcarithers.workers.dev/weather",
+        "sampleResource": "https://web.cyberwarex.com/fetch",
         "facilitators": []
       },
       {
@@ -337,45 +313,33 @@
         "facilitators": []
       },
       {
-        "origin": "https://www.ax1.vc",
+        "origin": "https://wiki.use.x402atlas.com",
         "resourceCount": 1,
-        "sampleResource": "https://www.ax1.vc/api/dashboard/q-verdict/resource",
+        "sampleResource": "https://wiki.use.x402atlas.com/summary",
         "facilitators": []
       },
       {
-        "origin": "https://www.getbags.app",
+        "origin": "https://x402.clashofcoins.com",
         "resourceCount": 1,
-        "sampleResource": "https://www.getbags.app/api/v1",
+        "sampleResource": "https://x402.clashofcoins.com/x402/cheap-health",
         "facilitators": []
       },
       {
-        "origin": "https://x402.botsmith.dev",
+        "origin": "https://x402.ottoai.services",
         "resourceCount": 1,
-        "sampleResource": "https://x402.botsmith.dev/x/search",
+        "sampleResource": "https://x402.ottoai.services/crypto-news",
         "facilitators": []
       },
       {
-        "origin": "https://x402lifeadvice.vercel.app",
+        "origin": "https://x402.tbs-digital.com",
         "resourceCount": 1,
-        "sampleResource": "https://x402lifeadvice.vercel.app/api/life-advice",
+        "sampleResource": "https://x402.tbs-digital.com/weather/current",
         "facilitators": []
       },
       {
         "origin": "https://x402tap.com",
         "resourceCount": 1,
         "sampleResource": "https://x402tap.com/api/weather",
-        "facilitators": []
-      },
-      {
-        "origin": "https://x402uselessfacts.vercel.app",
-        "resourceCount": 1,
-        "sampleResource": "https://x402uselessfacts.vercel.app/api/useless-fact",
-        "facilitators": []
-      },
-      {
-        "origin": "https://x402wordoftheday.vercel.app",
-        "resourceCount": 1,
-        "sampleResource": "https://x402wordoftheday.vercel.app/api/word-of-the-day",
         "facilitators": []
       }
     ],
@@ -392,10 +356,10 @@
     }
   },
   "seller": {
-    "scanned": 60,
-    "reachable": 60,
+    "scanned": 54,
+    "reachable": 54,
     "posture": {
-      "no-evidence": 60
+      "no-evidence": 54
     }
   },
   "verdicts": [
@@ -406,11 +370,11 @@
       "level": "L0",
       "substantiated": true,
       "evidence": {
-        "matched": 34,
-        "total": 34,
+        "matched": 55,
+        "total": 55,
         "badIndices": []
       },
-      "message": "All 34 entries recompute."
+      "message": "All 55 entries recompute."
     },
     {
       "origin": "https://api.automaton-sovereign.workers.dev",
@@ -423,10 +387,10 @@
         "brokenIndices": [],
         "span": [
           0,
-          33
+          54
         ]
       },
-      "message": "Indices 0..33 contiguous; all prevHash links hold."
+      "message": "Indices 0..54 contiguous; all prevHash links hold."
     },
     {
       "origin": "https://api.automaton-sovereign.workers.dev",
@@ -447,9 +411,9 @@
       "level": "L0",
       "substantiated": true,
       "evidence": {
-        "total": 34,
-        "empty": 22,
-        "bound": 12,
+        "total": 55,
+        "empty": 42,
+        "bound": 13,
         "emptyIndices": [
           12,
           13,
@@ -472,11 +436,31 @@
           30,
           31,
           32,
-          33
+          33,
+          34,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54
         ],
-        "ratio": 0.35294117647058826
+        "ratio": 0.23636363636363636
       },
-      "message": "22/34 entries sign an empty object (bound 12, ratio 0.353) at indices 12..33."
+      "message": "42/55 entries sign an empty object (bound 13, ratio 0.236) at indices 12..54."
     },
     {
       "origin": "https://api.automaton-sovereign.workers.dev",

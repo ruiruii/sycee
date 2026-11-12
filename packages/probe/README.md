@@ -13,33 +13,43 @@ fingerprint and runs the same predicate set.
 
 ## Install
 
+`@sycee/probe` is not published on npm. Clone this repository and install the
+workspaces, then run the checked-in bin. `package.json` maps the `gates-probe`
+command to `bin/gates-probe.mjs`, which from the repository root is
+`packages/probe/bin/gates-probe.mjs`.
+
 ```bash
-npm install @sycee/probe
-# or, from the monorepo:
-node packages/probe/bin/gates-probe.mjs --help
+git clone https://github.com/ruiruii/sycee.git
+cd sycee && npm install
+# packages are not yet published to npm; use the workspaces in this repo
+node packages/probe/bin/gates-probe.mjs
 ```
+
+With no command, that prints usage and exits 0. A real run is `probe`, `verify`, or `batch`, as below.
 
 ## Quick start
 
+Commands below are run from the repository root.
+
 ```bash
 # Live probe of a public ledger
-node bin/gates-probe.mjs probe https://api.automaton-sovereign.workers.dev
+node packages/probe/bin/gates-probe.mjs probe https://api.automaton-sovereign.workers.dev
 
 # Machine-readable output
-node bin/gates-probe.mjs probe https://example.org --json --out report.json
+node packages/probe/bin/gates-probe.mjs probe https://example.org --json --out report.json
 
 # Exercise the settlement-binding half (needs the request fingerprint)
-node bin/gates-probe.mjs probe https://example.org --fingerprint sha256:<64hex> --attempts '[{"txHash":"0x…","resourceId":"search.v1","settled":true}]'
+node packages/probe/bin/gates-probe.mjs probe https://example.org --fingerprint sha256:<64hex> --attempts '[{"txHash":"0x…","resourceId":"search.v1","settled":true}]'
 
 # Offline: analyze a captured ledger file
-node bin/gates-probe.mjs probe --from-file ./ledger.json
+node packages/probe/bin/gates-probe.mjs probe --from-file ./ledger.json
 
 # Sign the report (your observer key) and verify it later
-node bin/gates-probe.mjs probe https://example.org --sign --key ./observer.json --out report.signed.json
-node bin/gates-probe.mjs verify ./report.signed.json
+node packages/probe/bin/gates-probe.mjs probe https://example.org --sign --key ./observer.json --out report.signed.json
+node packages/probe/bin/gates-probe.mjs verify ./report.signed.json
 
 # Batch: probe every URL in a newline-separated file
-node bin/gates-probe.mjs batch --list ./endpoints.txt --json
+node packages/probe/bin/gates-probe.mjs batch --list ./endpoints.txt --json
 ```
 
 ## Predicates

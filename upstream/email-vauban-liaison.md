@@ -1,6 +1,6 @@
 To: research@vauban.tech
 Cc: (x402 WG / IETF list)
-Subject: gates-spec v0.1 — proposing `consumed` / `redeem_count` as optional extensions to draft-vauban-x402-stark-receipts
+Subject: SYCEE v0.1 — proposing `consumed` / `redeem_count` as optional extensions to draft-vauban-x402-stark-receipts
 
 ---
 
@@ -34,7 +34,7 @@ upstream calls") for a live instance.
 
 ### What I published
 
-**gates-spec v0.1** — https://github.com/ruiruii/gates-spec
+**SYCEE v0.1** — https://github.com/ruiruii/sycee
 
 - `SPEC.md` defining two semantic fields and nothing else:
   - `agent.spend.result.consumed` — `yes` | `no` | `unknown`, plus `consumed_by`,
@@ -73,8 +73,8 @@ Thank you for the draft — it made this proposal much easier to write precisely
 Best regards,
 
 [Your name]
-Sycee — gates-spec contributor
-https://github.com/ruiruii/gates-spec
+SYCEE
+https://github.com/ruiruii/sycee
 
 ---
 

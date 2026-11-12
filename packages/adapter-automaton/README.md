@@ -38,8 +38,17 @@ subject, `subjectDataHash()` returns `sha256("{}")` =
 
 ## Install
 
+`@sycee/adapter-automaton` is not published on npm. Clone this repository and
+install the workspaces. The package has no `bin`. `package.json` `exports["."]`
+is `./src/index.mjs`, so from the repository root the module is
+`packages/adapter-automaton/src/index.mjs`, and a script in this repo imports
+the workspace name.
+
 ```bash
-npm i @sycee/adapter-automaton
+git clone https://github.com/ruiruii/sycee.git
+cd sycee && npm install
+# packages are not yet published to npm; use the workspaces in this repo
+node --input-type=module -e "import { createAutomatonAdapter } from '@sycee/adapter-automaton'"
 ```
 
 ---
