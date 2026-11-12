@@ -197,7 +197,7 @@ node tools/w1/report.mjs
 - One snapshot per week; transient states are missed.
 - Reachability is judged from GitHub-hosted runners and may differ from other vantage points.
 - The signed-receipt form is assessed more shallowly than ledgers: deep receipt-level assessment requires sample receipts or format documentation.
-- This version reports coverage and per-predicate verdicts. A composite quality score is under construction; until it ships, **we publish no total score**.
+- This version reports coverage and per-predicate verdicts. We do not produce a composite score, a trust rating, or a certification mark, and we are not selling scores.
 
 Full list: [`TRANSPARENCY.en.md`](https://github.com/ruiruii/sycee/blob/main/TRANSPARENCY.en.md) — including the appeals process, under which any measured party may contest any verdict about itself.
 
