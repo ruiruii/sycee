@@ -1,0 +1,194 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080" role="img">
+  <title>SYCEE architecture</title>
+  <desc>An agent pays a merchant over x402. The merchant and the agent SDK sign a receipt. SYCEE fingerprints that receipt and a restricted key anchors the fingerprint on NEAR. Anyone can verify it. The hosted evidence service is planned. No custody, no fund movement, no scoring.</desc>
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="0%" r="75%">
+      <stop offset="0%" stop-color="#5a4318" stop-opacity="0.45"/>
+      <stop offset="42%" stop-color="#070605" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="cardFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1a1610"/>
+      <stop offset="100%" stop-color="#100e0b"/>
+    </linearGradient>
+    <linearGradient id="bandFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#14110c"/>
+      <stop offset="100%" stop-color="#0c0b09"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1920" height="1080" fill="#070605"/>
+  <rect width="1920" height="1080" fill="url(#glow)"/>
+  <rect x="20" y="20" width="1880" height="1040" fill="none" stroke="#E2BE62" stroke-opacity="0.28" stroke-width="1"/>
+
+  <text x="48" y="52" fill="#E2BE62" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="600" letter-spacing="3.2">ARCHITECTURE</text>
+  <text x="48" y="98" fill="#F3D48A" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="46" font-weight="600" letter-spacing="0.5">SYCEE</text>
+  <text x="48" y="134" fill="#F6F0E4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="18">A signed receipt for an agent payment, fingerprinted on NEAR, so anyone can verify it.</text>
+
+  <g font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="14" fill="#F6F0E4">
+    <rect x="1508" y="40" width="14" height="14" rx="3" fill="#12100C" stroke="#E2BE62" stroke-width="1.5"/>
+    <text x="1532" y="52">In this repository</text>
+    <rect x="1508" y="68" width="14" height="14" rx="3" fill="#0c0b09" stroke="#E2BE62" stroke-width="1.5" stroke-dasharray="3 2"/>
+    <text x="1532" y="80">Planned hosted service</text>
+    <rect x="1508" y="96" width="14" height="14" rx="3" fill="none" stroke="#C4B08A" stroke-width="1.5"/>
+    <text x="1532" y="108">Payment rail, outside SYCEE</text>
+  </g>
+
+  <!-- Column 1. Pay -->
+  <g>
+    <rect x="40" y="168" width="346" height="500" rx="16" fill="url(#cardFill)" stroke="#E2BE62" stroke-width="1.5"/>
+    <text x="62" y="200" fill="#E2BE62" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="600" letter-spacing="2">01</text>
+    <text x="62" y="234" fill="#F6F0E4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="26" font-weight="600">Pay</text>
+    <text x="62" y="276" fill="#F3D48A" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="600">AI agent</text>
+    <rect x="140" y="260" width="58" height="20" rx="10" fill="#E2BE62"/>
+    <text x="169" y="274" fill="#1A1408" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="700" text-anchor="middle">BUILT</text>
+    <text x="62" y="302" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">Buyer runtime.</text>
+    <text x="62" y="324" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">@sycee/agent-sdk</text>
+    <text x="62" y="346" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">Calls a merchant over x402.</text>
+    <text x="62" y="368" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">Co-signs what was used.</text>
+
+    <rect x="58" y="392" width="310" height="210" rx="12" fill="#0c0b09" stroke="#C4B08A" stroke-width="1.25"/>
+    <text x="76" y="420" fill="#C4B08A" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" letter-spacing="1.6">PAYMENT RAIL</text>
+    <text x="76" y="450" fill="#F6F0E4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="16" font-weight="600">x402 facilitator</text>
+    <text x="76" y="478" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">Verifies and settles.</text>
+    <text x="76" y="502" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">The merchant calls it.</text>
+    <text x="76" y="526" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">The NEAR demo mocks it.</text>
+    <text x="76" y="558" fill="#F3D48A" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">SYCEE does not move funds.</text>
+    <text x="62" y="648" fill="#D9CBAE" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="14">packages/agent-sdk</text>
+  </g>
+
+  <path d="M392 400 L406 414 L392 428" fill="none" stroke="#E2BE62" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Column 2. Merchant receipt -->
+  <g>
+    <rect x="414" y="168" width="346" height="500" rx="16" fill="url(#cardFill)" stroke="#E2BE62" stroke-width="1.5"/>
+    <text x="436" y="200" fill="#E2BE62" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="600" letter-spacing="2">02</text>
+    <rect x="678" y="184" width="62" height="22" rx="11" fill="#E2BE62"/>
+    <text x="709" y="199" fill="#1A1408" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="700" text-anchor="middle">BUILT</text>
+    <text x="436" y="234" fill="#F6F0E4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="26" font-weight="600">Merchant receipt</text>
+    <text x="436" y="278" fill="#F3D48A" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="600">Signed by the seller</text>
+    <text x="436" y="308" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">@sycee/middleware</text>
+    <text x="436" y="332" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">Ed25519, role merchant.</text>
+    <text x="436" y="356" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">consumed stays unknown.</text>
+    <text x="436" y="380" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">redeem_count counts each</text>
+    <text x="436" y="404" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">presentation of one proof.</text>
+    <text x="436" y="436" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">Returned as</text>
+    <text x="436" y="460" fill="#F3D48A" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">x-gates-receipt</text>
+    <text x="436" y="500" fill="#F3D48A" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="600">Demo merchant</text>
+    <text x="436" y="528" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">Answers 402, then the paid call.</text>
+    <text x="436" y="552" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">Resource GET /v1/base/tip.</text>
+    <text x="436" y="584" fill="#D9CBAE" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="14">Does not hold the payment.</text>
+    <text x="436" y="632" fill="#D9CBAE" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="14">examples/demo-merchant</text>
+  </g>
+
+  <path d="M766 400 L780 414 L766 428" fill="none" stroke="#E2BE62" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Column 3. Agent receipt -->
+  <g>
+    <rect x="788" y="168" width="346" height="500" rx="16" fill="url(#cardFill)" stroke="#E2BE62" stroke-width="1.5"/>
+    <text x="810" y="200" fill="#E2BE62" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="600" letter-spacing="2">03</text>
+    <rect x="1052" y="184" width="62" height="22" rx="11" fill="#E2BE62"/>
+    <text x="1083" y="199" fill="#1A1408" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="700" text-anchor="middle">BUILT</text>
+    <text x="810" y="234" fill="#F6F0E4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="26" font-weight="600">Agent receipt</text>
+    <text x="810" y="278" fill="#F3D48A" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="600">Co-signed by the buyer</text>
+    <text x="810" y="308" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">@sycee/agent-sdk</text>
+    <text x="810" y="332" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">consumedBy records yes.</text>
+    <text x="810" y="356" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">notConsumed records no.</text>
+    <text x="810" y="380" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">Signer role is agent.</text>
+    <text x="810" y="420" fill="#F3D48A" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="600">Both sides together</text>
+    <text x="810" y="448" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">linkReceipts binds them</text>
+    <text x="810" y="472" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">when the proof hash matches.</text>
+    <text x="810" y="512" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">The demo accepts the agent</text>
+    <text x="810" y="536" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">receipt at /v1/agent-receipt.</text>
+    <text x="810" y="576" fill="#D9CBAE" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="14">Only the buyer runtime can</text>
+    <text x="810" y="598" fill="#D9CBAE" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="14">say the result was used.</text>
+    <text x="810" y="632" fill="#D9CBAE" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="14">packages/agent-sdk</text>
+  </g>
+
+  <path d="M1140 400 L1154 414 L1140 428" fill="none" stroke="#E2BE62" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Column 4. Anchor -->
+  <g>
+    <rect x="1162" y="168" width="346" height="500" rx="16" fill="url(#cardFill)" stroke="#E2BE62" stroke-width="1.5"/>
+    <text x="1184" y="200" fill="#E2BE62" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="600" letter-spacing="2">04</text>
+    <rect x="1426" y="184" width="62" height="22" rx="11" fill="#E2BE62"/>
+    <text x="1457" y="199" fill="#1A1408" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="700" text-anchor="middle">BUILT</text>
+    <text x="1184" y="234" fill="#F6F0E4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="26" font-weight="600">Anchor on NEAR</text>
+    <text x="1184" y="274" fill="#F3D48A" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="600">Fingerprint</text>
+    <text x="1184" y="298" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">sha256 of canonical JSON</text>
+    <text x="1184" y="320" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">of the signed envelope.</text>
+    <text x="1184" y="342" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">Not the payment proof.</text>
+    <text x="1184" y="374" fill="#F3D48A" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="600">Restricted key</text>
+    <text x="1184" y="398" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">Function-call key only.</text>
+    <text x="1184" y="420" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">anchor and anchor_batch.</text>
+    <text x="1184" y="442" fill="#F3D48A" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">Cannot move funds.</text>
+    <text x="1184" y="474" fill="#F3D48A" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="600">Contract</text>
+    <text x="1184" y="498" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">sycee-anchor.testnet</text>
+    <text x="1184" y="520" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">Hash, chain, merchant id,</text>
+    <text x="1184" y="542" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">block height, and time.</text>
+    <text x="1184" y="564" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">Written once. No receipt body.</text>
+    <text x="1184" y="586" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">Batch of up to 32 hashes.</text>
+    <text x="1184" y="608" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">The contract computes the root.</text>
+    <text x="1184" y="640" fill="#D9CBAE" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="14">examples/near-anchor</text>
+  </g>
+
+  <path d="M1514 400 L1528 414 L1514 428" fill="none" stroke="#E2BE62" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Column 5. Verify -->
+  <g>
+    <rect x="1536" y="168" width="346" height="500" rx="16" fill="url(#cardFill)" stroke="#E2BE62" stroke-width="1.5"/>
+    <text x="1558" y="200" fill="#E2BE62" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="600" letter-spacing="2">05</text>
+    <rect x="1800" y="184" width="62" height="22" rx="11" fill="#E2BE62"/>
+    <text x="1831" y="199" fill="#1A1408" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="700" text-anchor="middle">BUILT</text>
+    <text x="1558" y="234" fill="#F6F0E4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="26" font-weight="600">Anyone verifies</text>
+    <text x="1558" y="274" fill="#F3D48A" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="600">verify.mjs</text>
+    <text x="1558" y="298" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">Checks the Ed25519 signature.</text>
+    <text x="1558" y="320" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">Reads get_anchor on NEAR.</text>
+    <text x="1558" y="342" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">A read. No account key.</text>
+    <text x="1558" y="374" fill="#F3D48A" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="600">Demo page</text>
+    <text x="1558" y="398" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">Recomputes the same sha256.</text>
+    <text x="1558" y="420" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">Live: NEAR testnet RPC.</text>
+    <text x="1558" y="442" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">Offline: no network.</text>
+    <text x="1558" y="474" fill="#F3D48A" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="600">GitHub Pages</text>
+    <text x="1558" y="498" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">ruiruii.github.io/sycee</text>
+    <text x="1558" y="520" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">The same static demo file.</text>
+    <text x="1558" y="542" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">Reads hash, offline, and</text>
+    <text x="1558" y="564" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">a nearblocks tx URL.</text>
+    <text x="1558" y="632" fill="#D9CBAE" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="14">demo/index.html</text>
+  </g>
+
+  <!-- Planned band -->
+  <rect x="40" y="688" width="1842" height="236" rx="16" fill="url(#bandFill)" stroke="#E2BE62" stroke-width="1.5" stroke-dasharray="8 6"/>
+  <text x="64" y="722" fill="#F6F0E4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="22" font-weight="600">Hosted evidence service</text>
+  <rect x="1688" y="700" width="92" height="24" rx="12" fill="none" stroke="#E2BE62" stroke-width="1.25"/>
+  <text x="1734" y="716" fill="#F3D48A" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="700" text-anchor="middle" letter-spacing="1.2">PLANNED</text>
+  <text x="64" y="750" fill="#D9CBAE" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">Proposed pilot with partners. Not built in this repository. It would keep copies of receipts that are already signed.</text>
+
+  <g>
+    <rect x="64" y="774" width="430" height="124" rx="12" fill="#100e0b" stroke="#E2BE62" stroke-width="1.25" stroke-dasharray="5 4"/>
+    <text x="84" y="806" fill="#F6F0E4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="16" font-weight="600">Receipt storage</text>
+    <text x="84" y="834" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">A third-party copy of</text>
+    <text x="84" y="856" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">receipts already signed.</text>
+  </g>
+  <g>
+    <rect x="510" y="774" width="430" height="124" rx="12" fill="#100e0b" stroke="#E2BE62" stroke-width="1.25" stroke-dasharray="5 4"/>
+    <text x="530" y="806" fill="#F6F0E4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="16" font-weight="600">Verification dashboard</text>
+    <text x="530" y="834" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">A hosted place to open</text>
+    <text x="530" y="856" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">a receipt and check it.</text>
+  </g>
+  <g>
+    <rect x="956" y="774" width="430" height="124" rx="12" fill="#100e0b" stroke="#E2BE62" stroke-width="1.25" stroke-dasharray="5 4"/>
+    <text x="976" y="806" fill="#F6F0E4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="16" font-weight="600">Anchoring service</text>
+    <text x="976" y="834" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">Writes fingerprints through</text>
+    <text x="976" y="856" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">the same anchor methods.</text>
+  </g>
+  <g>
+    <rect x="1402" y="774" width="456" height="124" rx="12" fill="#100e0b" stroke="#E2BE62" stroke-width="1.25" stroke-dasharray="5 4"/>
+    <text x="1422" y="806" fill="#F6F0E4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="16" font-weight="600">Redeem and consumed</text>
+    <text x="1422" y="834" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">Phase 1 records redeem_count.</text>
+    <text x="1422" y="856" fill="#E7DCC4" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15">Agent-signed consumed comes later.</text>
+  </g>
+
+  <line x1="48" y1="948" x2="1872" y2="948" stroke="#E2BE62" stroke-opacity="0.45" stroke-width="1"/>
+  <text x="960" y="990" fill="#F3D48A" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="22" font-weight="600" text-anchor="middle" letter-spacing="0.4">No custody    ·    No fund movement    ·    No scoring</text>
+  <text x="960" y="1024" fill="#D9CBAE" font-family="Inter, Liberation Sans, Arial, sans-serif" font-size="15" text-anchor="middle">The chain stores a timestamped fingerprint. Anyone can read it. It does not score anyone, and it does not hold funds.</text>
+</svg>

@@ -33,6 +33,69 @@ Offline, open [examples/near-anchor/demo/index.html](examples/near-anchor/demo/i
 
 Recorded testnet receipt (`tx` is the full nearblocks URL): [open it](https://ruiruii.github.io/sycee/?hash=sha256:618a391577ebd1e6a94430f05947e74c84a7d59523034ed28851b712a40ead81&offline=0&tx=https%3A%2F%2Ftestnet.nearblocks.io%2Ftxns%2F6TyCsHwSkwKshGgWGDJPFqrW2WLqrBnpvw3Amy4ppxTo).
 
+## Architecture
+
+An agent pays a merchant over x402. The merchant middleware and the agent SDK each sign a receipt. SYCEE fingerprints that signed receipt, and a restricted key anchors the fingerprint on NEAR. Anyone can check it. Dashed boxes are the hosted evidence service. That service is proposed and is not built in this repository.
+
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"darkMode": true, "background": "#0c0b09", "primaryColor": "#16130e", "primaryTextColor": "#f6f0e4", "primaryBorderColor": "#e2be62", "secondaryColor": "#16130e", "tertiaryColor": "#100e0b", "lineColor": "#e2be62", "textColor": "#f6f0e4", "clusterBkg": "#100e0b", "clusterBorder": "#c6a15b", "titleColor": "#f3d48a", "edgeLabelBackground": "#16130e", "fontFamily": "arial, sans-serif"}}}%%
+flowchart TB
+  agent["AI agent<br/>@sycee/agent-sdk"]
+  rail["x402 facilitator<br/>payment rail, not SYCEE"]
+  merchant["Merchant API<br/>demo merchant"]
+  agent -->|x402 payment| merchant
+  rail -->|verifies and settles| merchant
+
+  msign["Merchant signature, built<br/>consumed stays unknown<br/>counts redeem_count<br/>header x-gates-receipt"]
+  asign["Agent signature, built<br/>consumed yes or no<br/>linkReceipts"]
+  merchant --> msign
+  agent --> asign
+
+  hash["Receipt fingerprint, built<br/>sha256 of the canonical JSON<br/>of the signed envelope"]
+  msign --> hash
+  asign --> hash
+
+  fkey["Restricted function-call key, built<br/>anchor and anchor_batch only<br/>cannot move funds"]
+  near["NEAR anchor, built<br/>sycee-anchor.testnet<br/>hash, chain, merchant id<br/>block height and time"]
+  hash --> fkey --> near
+
+  script["verify.mjs, built<br/>Ed25519, then get_anchor"]
+  page["Demo page, built<br/>recomputes sha256<br/>NEAR RPC when live"]
+  pages["GitHub Pages, built<br/>ruiruii.github.io/sycee"]
+  near --> script
+  near --> page
+  page --> pages
+
+  subgraph hosted ["Hosted evidence service, planned"]
+    direction LR
+    store["Receipt storage"]
+    dash["Verification dashboard"]
+    asvc["Anchoring service"]
+    track["redeem_count, then consumed"]
+  end
+  hash -.->|planned copy| store
+  store --- dash
+  store --- asvc
+  store --- track
+
+  bounds["No custody<br/>No fund movement<br/>No scoring"]
+  pages --> bounds
+
+  classDef built fill:#16130e,stroke:#e2be62,color:#f6f0e4,stroke-width:1.5px
+  classDef railnode fill:#16130e,stroke:#c4b08a,color:#f6f0e4,stroke-width:1.5px
+  classDef planned fill:#100e0b,stroke:#e2be62,color:#f3d48a,stroke-width:1.5px,stroke-dasharray:6 4
+  classDef quiet fill:#100e0b,stroke:#e2be62,color:#f3d48a,stroke-width:1px
+  class agent,merchant,msign,asign,hash,fkey,near,script,page,pages built
+  class rail railnode
+  class store,dash,asvc,track planned
+  class hosted planned
+  class bounds quiet
+```
+
+[High-res diagram for slides](docs/architecture.svg) · [PNG](docs/architecture.png) · [Component notes](docs/ARCHITECTURE.md)
+
+Solid outlines are in this repository today. The x402 facilitator is the payment rail: the demo calls it, and SYCEE does not take custody or move funds. Dashed outlines are planned.
+
 ## Why this fits the tracks
 
 **AI Security & Defense.** The agent holds a restricted NEAR function-call key that can call only `anchor` and `anchor_batch`. A leaked agent key cannot move funds, add keys, or transfer. After the block above, from `examples/near-anchor`:
