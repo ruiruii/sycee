@@ -7,6 +7,7 @@ A page you can open, with no wallet:
 - Local file: [examples/near-anchor/demo/index.html](demo/index.html)
 - Public URL: [https://ruiruii.github.io/sycee/](https://ruiruii.github.io/sycee/) (deployed from main, HTTP 200). The same file is [demo/index.html](demo/index.html).
 - Live check. `tx` must be the full nearblocks URL: [open the recorded testnet receipt](https://ruiruii.github.io/sycee/?hash=sha256:618a391577ebd1e6a94430f05947e74c84a7d59523034ed28851b712a40ead81&offline=0&tx=https%3A%2F%2Ftestnet.nearblocks.io%2Ftxns%2F6TyCsHwSkwKshGgWGDJPFqrW2WLqrBnpvw3Amy4ppxTo). The published page reads `hash`, `offline`, and that full `tx` URL.
+- Hosted demo merchant, evidence panel: [https://sycee-production.up.railway.app/evidence](https://sycee-production.up.railway.app/evidence). First-party Base Sepolia merchant (official x402), alongside the GitHub Pages demo. SYCEE does not touch the funds. A paid `GET /v1/base/tip` leaves a signed receipt on the panel.
 
 This is the English text of [SUBMISSION.zh.md](SUBMISSION.zh.md). The owner's checklist is [提交清单.md](提交清单.md).
 

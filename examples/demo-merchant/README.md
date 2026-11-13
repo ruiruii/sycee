@@ -105,6 +105,8 @@ In the service settings:
 | Config file (optional) | `examples/demo-merchant/railway.toml` repeats the start command and the healthcheck |
 | Node | `22`. Set the variable `NIXPACKS_NODE_VERSION` to `22` so a SQLite file works. Node 18 still boots; the store is then memory only. |
 
+A Railway service whose Root Directory is only `examples/demo-merchant` cannot resolve `@sycee/agent-sdk`. The working deploy leaves Root Directory empty (the repository root), uses start command `npm run demo:merchant`, healthcheck path `/health`, and `NIXPACKS_NODE_VERSION=22`.
+
 `npm start` runs `node src/dev-server.mjs`. Railway sets `PORT`. When `PORT` is set and `HOST` is not, the process listens on `0.0.0.0`. Do not set `HOST` to `127.0.0.1` on Railway.
 
 Environment variables, exact names:
@@ -126,7 +128,7 @@ Optional durability: add a Railway volume mounted at `/data` and set `SQLITE_PAT
 
 Do not set `MAINNET=true` until you have also changed `NETWORK`, `ASSET`, `ASSET_NAME`, `FACILITATOR_URL`, and `RPC_URL` as a set. That list is in the Cloudflare section below. The public facilitator at `https://x402.org/facilitator` is refused when `MAINNET=true`.
 
-After the service is up, `GET /health` is `{ "ok": true, "configured": true }` only when `PAY_TO` and `SYCEE_SIGNING_KEY` are set. `GET /v1/base/tip` with no payment header is the 402 challenge. `GET /evidence` is the public panel.
+After the service is up, `GET /health` is `{ "ok": true, "configured": true }` only when `PAY_TO` and `SYCEE_SIGNING_KEY` are set. `GET /v1/base/tip` with no payment header is the 402 challenge. `GET /evidence` is the public panel. The hosted evidence panel is [https://sycee-production.up.railway.app/evidence](https://sycee-production.up.railway.app/evidence). On that host, `/health` is the operator check: the process is up, the network is Base Sepolia, the store is memory, and anchoring is off.
 
 ## Cloudflare
 
