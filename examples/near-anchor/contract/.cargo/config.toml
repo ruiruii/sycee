@@ -1,0 +1,7 @@
+# nearcore 2.6.2 parses contracts with sign-extension only.
+# bulk-memory, reference-types, and multivalue fail preparation.
+[target.wasm32-unknown-unknown]
+rustflags = [
+  "-C", "target-feature=-bulk-memory,-reference-types,-multivalue,-simd128,-nontrapping-fptoint,-relaxed-simd",
+  "-C", "link-arg=--max-memory=134217728",
+]

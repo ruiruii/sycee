@@ -1,0 +1,51 @@
+name: NEAR anchor
+
+# Separate from the Node 18/20/22 conformance matrix. Runs only when this
+# example changes. The sandbox download is the slow part.
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'examples/near-anchor/**'
+      - '.github/workflows/near-anchor.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'examples/near-anchor/**'
+      - '.github/workflows/near-anchor.yml'
+
+jobs:
+  near-anchor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rust 1.86 for the wasm the sandbox can load
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.86.0
+          targets: wasm32-unknown-unknown
+
+      - name: Rust 1.100 for host unit tests
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.100.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build contract
+        run: bash examples/near-anchor/scripts/build.sh
+
+      - name: Install example dependencies
+        working-directory: examples/near-anchor
+        run: npm install
+
+      - name: Node tests, including the local sandbox
+        working-directory: examples/near-anchor
+        run: npm test
+
+      - name: Rust unit tests
+        working-directory: examples/near-anchor/contract
+        run: cargo +1.100.0 test

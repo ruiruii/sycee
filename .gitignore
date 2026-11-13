@@ -29,3 +29,8 @@ coverage/
 .dev.vars
 *.sqlite
 *.sqlite3
+
+# NEAR anchor build output. Rebuild with examples/near-anchor/scripts/build.sh.
+examples/near-anchor/contract/target/
+examples/near-anchor/out/
+examples/near-anchor/.tools/

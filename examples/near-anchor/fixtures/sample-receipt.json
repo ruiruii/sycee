@@ -1,0 +1,37 @@
+{
+  "vsr": {
+    "amount": {
+      "currency": "USDC",
+      "value": "0.001000"
+    },
+    "completeness": "unilateral_merchant",
+    "delivery": {
+      "delivered_at": "2026-11-13T00:00:00.000Z",
+      "status": "delivered"
+    },
+    "payment": {
+      "complete_seen_at": "2026-11-13T00:00:01.000Z",
+      "proof_hash": "sha256:1642068b6548796e84e753c085d6ff5c4c3dc697927bcdc325a09dbe6807bba9",
+      "proof_seen_at": "2026-11-13T00:00:00.000Z",
+      "redeem_count": 1,
+      "redeem_resources": [
+        "base.tip.v1"
+      ],
+      "settlement_status": "settled"
+    },
+    "protocol": "x402",
+    "request_fingerprint": "sha256:fd1cfd99686285356c67e4cd8c48aca574da97cb9e3fc59765368d2d60ec515c",
+    "resource_id": "base.tip.v1",
+    "result": {
+      "consumed": "unknown"
+    },
+    "schema_version": "sycee/v0.1",
+    "signer": {
+      "agent_id": "sycee:demo-merchant",
+      "key_id": "demo-sample",
+      "public_key": "ed25519:MCowBQYDK2VwAyEA0EqyMnQrtKs6E2i9RhXk5tAiSrcaAWuvhSCjMsl3hzc",
+      "role": "merchant"
+    }
+  },
+  "signature": "00Jt_3nvMrIFP7aVvZf2iYsSQTDe8t0sgaDZmC2o8aZAiNZHhSmiy8Ys5w4SVw0DpR21i2lmFrageb-mCndNDA"
+}
