@@ -24,7 +24,7 @@ import { KeyPair } from 'near-api-js';
 import { addKey as addKeyAction, functionCallAccessKey, transfer as transferAction } from 'near-api-js/lib/transaction.js';
 import { digestHex, receiptHash } from '../lib/receipt.mjs';
 import { simulatedPurchase } from '../lib/simulate-pay.mjs';
-import { GAS_ALLOWANCE, WASM, bootSandbox, freshKey, limitedAccessKey, shortError } from '../lib/near-sandbox.mjs';
+import { GAS_ALLOWANCE, WASM, bootSandbox, freshKey, limitedAccessKey, shortError, txHashOf, txLink } from '../lib/near-sandbox.mjs';
 import { signingKeyFromEnvOrFile } from '../lib/rpc.mjs';
 
 const METHODS = ['anchor', 'anchor_batch'];
@@ -35,11 +35,19 @@ function flag(name) {
 
 async function rejectOf(promise) {
   try {
-    await promise;
-    return null;
+    const value = await promise;
+    return { ok: true, reason: null, tx: txHashOf(value) };
   } catch (err) {
-    return shortError(err);
+    return { ok: false, reason: shortError(err), tx: txHashOf(err) };
   }
+}
+
+function outcome(label, result) {
+  if (!result) return { status: 'failed', reason: 'no result', tx: null };
+  if (result.ok === false || result.reason) {
+    return { status: 'rejected', reason: result.reason || 'rejected', tx: result.tx || null };
+  }
+  return { status: label, reason: null, tx: result.tx || null };
 }
 
 /**
@@ -55,38 +63,53 @@ async function sandboxAttempts(agent, contract, limited, digest) {
     merchant_id: 'sycee:demo-merchant',
     batch_root: null,
   };
-  const anchor = await agent.call(contract, 'anchor', args, { signWithKey: limited });
-  const transfer = await rejectOf(
+  const anchorRaw = await agent.callRaw(contract, 'anchor', args, { signWithKey: limited });
+  let anchor = null;
+  try {
+    anchor = anchorRaw.parseResult();
+  } catch {
+    anchor = null;
+  }
+  const anchorOk = anchor?.receipt_hash === digest;
+  const transfer = outcome('transfer', await rejectOf(
     agent.batch(contract.accountId).transfer(1n).transact(limited),
-  );
+  ));
   const extra = freshKey();
-  const addKey = await rejectOf(
+  const addKey = outcome('add key', await rejectOf(
     agent.batch(agent.accountId).addKey(extra.getPublicKey()).transact(limited),
-  );
-  const otherMethod = await rejectOf(
+  ));
+  const otherMethod = outcome('add_anchorer', await rejectOf(
     agent.call(contract, 'add_anchorer', { account_id: 'nobody.test.near' }, { signWithKey: limited }),
-  );
-  const deposit = await rejectOf(
+  ));
+  const deposit = outcome('deposit', await rejectOf(
     agent.call(contract, 'anchor', args, { signWithKey: limited, attachedDeposit: 1n }),
-  );
-  const duplicate = await rejectOf(
+  ));
+  const duplicate = outcome('duplicate', await rejectOf(
     agent.call(contract, 'anchor', args, { signWithKey: limited }),
-  );
+  ));
   return {
     chain: 'local NEAR sandbox',
+    testnet: false,
     contract: contract.accountId,
     agent: agent.accountId,
-    anchor_with_limited_key: anchor?.receipt_hash === digest ? 'ok' : 'failed',
-    transfer_near: transfer ? 'rejected' : 'unexpectedly succeeded',
-    add_key: addKey ? 'rejected' : 'unexpectedly succeeded',
-    call_add_anchorer: otherMethod ? 'rejected' : 'unexpectedly succeeded',
-    attached_deposit: deposit ? 'rejected' : 'unexpectedly succeeded',
-    duplicate_anchor: duplicate ? 'rejected' : 'unexpectedly succeeded',
-    transfer_detail: transfer,
-    add_key_detail: addKey,
-    other_method_detail: otherMethod,
-    deposit_detail: deposit,
-    duplicate_detail: duplicate,
+    public_key: limited.getPublicKey().toString(),
+    anchor_with_limited_key: anchorOk ? 'ok' : 'failed',
+    anchor_tx: txHashOf(anchorRaw),
+    transfer_near: transfer.status === 'rejected' ? 'rejected' : 'unexpectedly succeeded',
+    add_key: addKey.status === 'rejected' ? 'rejected' : 'unexpectedly succeeded',
+    call_add_anchorer: otherMethod.status === 'rejected' ? 'rejected' : 'unexpectedly succeeded',
+    attached_deposit: deposit.status === 'rejected' ? 'rejected' : 'unexpectedly succeeded',
+    duplicate_anchor: duplicate.status === 'rejected' ? 'rejected' : 'unexpectedly succeeded',
+    transfer_detail: transfer.reason,
+    add_key_detail: addKey.reason,
+    other_method_detail: otherMethod.reason,
+    deposit_detail: deposit.reason,
+    duplicate_detail: duplicate.reason,
+    transfer_tx: transfer.tx,
+    add_key_attempt_tx: addKey.tx,
+    other_method_tx: otherMethod.tx,
+    deposit_tx: deposit.tx,
+    duplicate_tx: duplicate.tx,
   };
 }
 
@@ -99,11 +122,13 @@ async function runSandbox(digest) {
     const agent = await root.createSubAccount('agent');
     await contract.call(contract, 'add_anchorer', { account_id: agent.accountId });
     const limited = freshKey();
-    await agent.batch(agent.accountId).addKey(
+    const added = await agent.batch(agent.accountId).addKey(
       limited.getPublicKey(),
       limitedAccessKey(contract.accountId),
     ).transact();
-    return await sandboxAttempts(agent, contract, limited, digest);
+    const report = await sandboxAttempts(agent, contract, limited, digest);
+    report.add_key_tx = txHashOf(added);
+    return report;
   } finally {
     await worker.tearDown();
   }
@@ -134,7 +159,7 @@ async function runTestnet(digest) {
   const fullSecret = await signingKeyFromEnvOrFile({ network: 'testnet', accountId });
   const full = await connectWith(accountId, fullSecret);
   const limited = KeyPair.fromRandom('ed25519');
-  await full.account.signAndSendTransaction({
+  const added = await full.account.signAndSendTransaction({
     receiverId: accountId,
     actions: [addKeyAction(
       limited.getPublicKey(),
@@ -149,8 +174,9 @@ async function runTestnet(digest) {
     batch_root: null,
   };
   let anchorStatus = 'failed';
+  let anchorTx = null;
   try {
-    await limitedConn.account.functionCall({
+    const anchored = await limitedConn.account.functionCall({
       contractId,
       methodName: 'anchor',
       args,
@@ -158,58 +184,76 @@ async function runTestnet(digest) {
       attachedDeposit: '0',
     });
     anchorStatus = 'ok';
+    anchorTx = txHashOf(anchored);
   } catch (err) {
     anchorStatus = `failed ${shortError(err)}`;
+    anchorTx = txHashOf(err);
   }
-  const transfer = await rejectOf(limitedConn.account.signAndSendTransaction({
+  const transfer = outcome('transfer', await rejectOf(limitedConn.account.signAndSendTransaction({
     receiverId: contractId,
     actions: [transferAction(1n)],
-  }));
+  })));
   const extra = KeyPair.fromRandom('ed25519');
-  const addKey = await rejectOf(limitedConn.account.signAndSendTransaction({
+  const addKey = outcome('add key', await rejectOf(limitedConn.account.signAndSendTransaction({
     receiverId: accountId,
     actions: [addKeyAction(extra.getPublicKey(), functionCallAccessKey(contractId, METHODS, GAS_ALLOWANCE))],
-  }));
-  const otherMethod = await rejectOf(limitedConn.account.functionCall({
+  })));
+  const otherMethod = outcome('add_anchorer', await rejectOf(limitedConn.account.functionCall({
     contractId,
     methodName: 'add_anchorer',
     args: { account_id: accountId },
     gas: '30000000000000',
     attachedDeposit: '0',
-  }));
-  const deposit = await rejectOf(limitedConn.account.functionCall({
+  })));
+  const deposit = outcome('deposit', await rejectOf(limitedConn.account.functionCall({
     contractId,
     methodName: 'anchor',
     args,
     gas: '100000000000000',
     attachedDeposit: '1',
-  }));
-  const duplicate = await rejectOf(limitedConn.account.functionCall({
+  })));
+  const duplicate = outcome('duplicate', await rejectOf(limitedConn.account.functionCall({
     contractId,
     methodName: 'anchor',
     args,
     gas: '100000000000000',
     attachedDeposit: '0',
-  }));
+  })));
   return {
     chain: 'NEAR testnet',
+    testnet: true,
     contract: contractId,
     agent: accountId,
+    public_key: limited.getPublicKey().toString(),
+    add_key_tx: txHashOf(added),
     anchor_with_limited_key: anchorStatus,
-    transfer_near: transfer ? 'rejected' : 'unexpectedly succeeded',
-    add_key: addKey ? 'rejected' : 'unexpectedly succeeded',
-    call_add_anchorer: otherMethod ? 'rejected' : 'unexpectedly succeeded',
-    attached_deposit: deposit ? 'rejected' : 'unexpectedly succeeded',
-    duplicate_anchor: duplicate ? 'rejected' : 'unexpectedly succeeded',
-    transfer_detail: transfer,
-    add_key_detail: addKey,
-    other_method_detail: otherMethod,
-    deposit_detail: deposit,
-    duplicate_detail: duplicate,
+    anchor_tx: anchorTx,
+    transfer_near: transfer.status === 'rejected' ? 'rejected' : 'unexpectedly succeeded',
+    add_key: addKey.status === 'rejected' ? 'rejected' : 'unexpectedly succeeded',
+    call_add_anchorer: otherMethod.status === 'rejected' ? 'rejected' : 'unexpectedly succeeded',
+    attached_deposit: deposit.status === 'rejected' ? 'rejected' : 'unexpectedly succeeded',
+    duplicate_anchor: duplicate.status === 'rejected' ? 'rejected' : 'unexpectedly succeeded',
+    transfer_detail: transfer.reason,
+    add_key_detail: addKey.reason,
+    other_method_detail: otherMethod.reason,
+    deposit_detail: deposit.reason,
+    duplicate_detail: duplicate.reason,
+    transfer_tx: transfer.tx,
+    add_key_attempt_tx: addKey.tx,
+    other_method_tx: otherMethod.tx,
+    deposit_tx: deposit.tx,
+    duplicate_tx: duplicate.tx,
   };
 }
 
+function attemptLine(label, status, reason, hash, testnet) {
+  const why = status === 'rejected' ? ` (${reason || 'rejected'})` : '';
+  const where = hash ? ` tx ${txLink(hash, testnet)}` : '';
+  return `${label}: ${status}${why}${where}`;
+}
+
 export function formatSecurity(report) {
+  const testnet = report.chain === 'NEAR testnet' || report.testnet === true;
   return [
     'SYCEE security demo',
     'payment: SIMULATED',
@@ -218,18 +262,23 @@ export function formatSecurity(report) {
     `contract: ${report.contract}`,
     `agent: ${report.agent}`,
     'key: function-call',
+    `public_key: ${report.public_key}`,
     `methods: ${METHODS.join(',')}`,
     'deposit: not allowed',
     `gas_allowance_yocto: ${GAS_ALLOWANCE.toString()}`,
+    `receipt_hash: ${report.receipt_hash}`,
+    `add_key_tx: ${txLink(report.add_key_tx, testnet)}`,
+    `anchor_tx: ${txLink(report.anchor_tx, testnet)}`,
     `anchor_with_limited_key: ${report.anchor_with_limited_key}`,
-    `transfer NEAR: ${report.transfer_near}`,
-    `add key: ${report.add_key}`,
-    `call add_anchorer: ${report.call_add_anchorer}`,
-    `attached deposit: ${report.attached_deposit}`,
-    `duplicate anchor: ${report.duplicate_anchor}`,
+    attemptLine('transfer NEAR', report.transfer_near, report.transfer_detail, report.transfer_tx, testnet),
+    attemptLine('add key', report.add_key, report.add_key_detail, report.add_key_attempt_tx, testnet),
+    attemptLine('call add_anchorer', report.call_add_anchorer, report.other_method_detail, report.other_method_tx, testnet),
+    attemptLine('attached deposit', report.attached_deposit, report.deposit_detail, report.deposit_tx, testnet),
+    attemptLine('duplicate anchor', report.duplicate_anchor, report.duplicate_detail, report.duplicate_tx, testnet),
     'can: call anchor and anchor_batch on this contract, and pay gas up to the allowance',
     'cannot: transfer NEAR, attach a deposit, add a key, or call any other method',
-    '故事：代理只有一把受限钥匙。它能把收据指纹写上 NEAR，不能转账，也不能给自己加一把更大的钥匙。',
+    'note: transfer, add-key, and add_anchorer are rejected when the access key is checked. Those failures may not appear on an explorer.',
+    '故事：代理只有一把受限钥匙。它能把收据指纹写上 NEAR，不能转账，也不能给自己加一把更大的钥匙。转账、加钥匙、调用别的方法在钥匙校验时就被拒绝，浏览器上不一定看得到。',
   ].join('\n');
 }
 

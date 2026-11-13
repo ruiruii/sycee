@@ -122,7 +122,10 @@ export async function runE2E(opts = {}) {
 }
 
 export function formatStory(story) {
-  const page = `examples/near-anchor/demo/index.html?hash=${encodeURIComponent(story.receipt_hash)}&offline=0`;
+  const tx = typeof story.nearblocks === 'string' && story.nearblocks.startsWith('https://')
+    ? `&tx=${encodeURIComponent(story.nearblocks)}`
+    : '';
+  const page = `examples/near-anchor/demo/index.html?hash=${encodeURIComponent(story.receipt_hash)}&offline=0${tx}`;
   const lines = [
     'SYCEE e2e',
     `payment: ${story.payment}`,

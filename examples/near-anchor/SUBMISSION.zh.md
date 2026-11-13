@@ -104,7 +104,9 @@ NEAR_CONTRACT_ID=sycee-anchor.testnet node scripts/verify.mjs --receipt fixtures
 NEAR_ACCOUNT_ID=sycee-anchor.testnet NEAR_CONTRACT_ID=sycee-anchor.testnet npm run demo:e2e -- --testnet
 ```
 
-你看到 `chain: NEAR testnet` 和 `nearblocks: https://testnet.nearblocks.io/txns/` 开头的链接。
+你看到 `chain: NEAR testnet` 和 `nearblocks: https://testnet.nearblocks.io/txns/` 开头的链接。演示页地址带 `&tx=`。
+
+已经跑通的一笔：[6TyCsHwSkwKshGgWGDJPFqrW2WLqrBnpvw3Amy4ppxTo](https://testnet.nearblocks.io/txns/6TyCsHwSkwKshGgWGDJPFqrW2WLqrBnpvw3Amy4ppxTo)，收据指纹以 `sha256:618a3915` 开头。付款是模拟的。
 
 ```bash
 npm run demo:security
@@ -117,6 +119,8 @@ npm run demo:security
 ```bash
 NEAR_ACCOUNT_ID=sycee-anchor.testnet NEAR_CONTRACT_ID=sycee-anchor.testnet npm run demo:security -- --testnet
 ```
+
+已经跑通。受限公钥 `ed25519:7G1L5eMc5pKCJcVNbHvv68j1THA6bxc9QDFg7sFN4Qjy`。加钥匙：[HpZaM37gDbngx7skC1vjk81QFkjb7Yv2jLHN7GGWSLnh](https://testnet.nearblocks.io/txns/HpZaM37gDbngx7skC1vjk81QFkjb7Yv2jLHN7GGWSLnh)。用这把钥匙写入：[9u6vfDWwuMdUcyVb3LXDUuotbdQBF68EmbX7Z6oRM8r6](https://testnet.nearblocks.io/txns/9u6vfDWwuMdUcyVb3LXDUuotbdQBF68EmbX7Z6oRM8r6)。重复写入被拒绝：[234ghPupTc158iY6osT53vBTML823BrGYLgdeNg4dPM6](https://testnet.nearblocks.io/txns/234ghPupTc158iY6osT53vBTML823BrGYLgdeNg4dPM6)。转账、再加钥匙、调用 `add_anchorer` 在钥匙校验时就被拒绝，浏览器上不一定看得到。
 
 ```mermaid
 flowchart LR

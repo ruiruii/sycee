@@ -104,7 +104,9 @@ On the owner's machine, to write one more simulated receipt to testnet (the key 
 NEAR_ACCOUNT_ID=sycee-anchor.testnet NEAR_CONTRACT_ID=sycee-anchor.testnet npm run demo:e2e -- --testnet
 ```
 
-You see `chain: NEAR testnet` and a `nearblocks:` link.
+You see `chain: NEAR testnet` and a `nearblocks:` link. The demo page URL includes `&tx=`.
+
+Recorded run: [6TyCsHwSkwKshGgWGDJPFqrW2WLqrBnpvw3Amy4ppxTo](https://testnet.nearblocks.io/txns/6TyCsHwSkwKshGgWGDJPFqrW2WLqrBnpvw3Amy4ppxTo). The receipt hash starts with `sha256:618a3915`. The payment was simulated.
 
 ```bash
 npm run demo:security
@@ -117,6 +119,8 @@ Same story on testnet, which adds one restricted key and spends testnet gas only
 ```bash
 NEAR_ACCOUNT_ID=sycee-anchor.testnet NEAR_CONTRACT_ID=sycee-anchor.testnet npm run demo:security -- --testnet
 ```
+
+Recorded run. Restricted public key `ed25519:7G1L5eMc5pKCJcVNbHvv68j1THA6bxc9QDFg7sFN4Qjy`. Added in [HpZaM37gDbngx7skC1vjk81QFkjb7Yv2jLHN7GGWSLnh](https://testnet.nearblocks.io/txns/HpZaM37gDbngx7skC1vjk81QFkjb7Yv2jLHN7GGWSLnh). Anchor with that key: [9u6vfDWwuMdUcyVb3LXDUuotbdQBF68EmbX7Z6oRM8r6](https://testnet.nearblocks.io/txns/9u6vfDWwuMdUcyVb3LXDUuotbdQBF68EmbX7Z6oRM8r6). Duplicate rejected by the contract: [234ghPupTc158iY6osT53vBTML823BrGYLgdeNg4dPM6](https://testnet.nearblocks.io/txns/234ghPupTc158iY6osT53vBTML823BrGYLgdeNg4dPM6). Transfer, adding a key, and `add_anchorer` were rejected at access-key validation and may not appear on an explorer.
 
 ```mermaid
 flowchart LR

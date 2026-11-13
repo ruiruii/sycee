@@ -148,11 +148,13 @@ Read the sample receipt already on testnet. No key. You see `"ok": true`.
 NEAR_CONTRACT_ID=sycee-anchor.testnet node scripts/verify.mjs --receipt fixtures/sample-receipt.json
 ```
 
-On the owner's machine, write one more simulated receipt to testnet. The key is not printed. You see a `nearblocks:` link.
+On the owner's machine, write one more simulated receipt to testnet. The key is not printed. You see a `nearblocks:` link, and `demo_page` includes `&tx=`.
 
 ```bash
 NEAR_ACCOUNT_ID=sycee-anchor.testnet NEAR_CONTRACT_ID=sycee-anchor.testnet npm run demo:e2e -- --testnet
 ```
+
+Recorded run: [6TyCsHwSkwKshGgWGDJPFqrW2WLqrBnpvw3Amy4ppxTo](https://testnet.nearblocks.io/txns/6TyCsHwSkwKshGgWGDJPFqrW2WLqrBnpvw3Amy4ppxTo), receipt hash starting `sha256:618a3915`. Payment was simulated.
 
 Security demo. The agent key may call only `anchor` and `anchor_batch`. You see `transfer NEAR: rejected` and `add key: rejected`.
 
@@ -165,3 +167,5 @@ The owner can run that on testnet. It adds one restricted key and spends testnet
 ```bash
 NEAR_ACCOUNT_ID=sycee-anchor.testnet NEAR_CONTRACT_ID=sycee-anchor.testnet npm run demo:security -- --testnet
 ```
+
+Recorded run. Public key `ed25519:7G1L5eMc5pKCJcVNbHvv68j1THA6bxc9QDFg7sFN4Qjy`, added in [HpZaM37gDbngx7skC1vjk81QFkjb7Yv2jLHN7GGWSLnh](https://testnet.nearblocks.io/txns/HpZaM37gDbngx7skC1vjk81QFkjb7Yv2jLHN7GGWSLnh), anchored in [9u6vfDWwuMdUcyVb3LXDUuotbdQBF68EmbX7Z6oRM8r6](https://testnet.nearblocks.io/txns/9u6vfDWwuMdUcyVb3LXDUuotbdQBF68EmbX7Z6oRM8r6), duplicate rejected in [234ghPupTc158iY6osT53vBTML823BrGYLgdeNg4dPM6](https://testnet.nearblocks.io/txns/234ghPupTc158iY6osT53vBTML823BrGYLgdeNg4dPM6). Transfer, add-key, and `add_anchorer` failed at access-key validation and may not appear on an explorer.
