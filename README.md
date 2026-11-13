@@ -2,11 +2,9 @@
 
 [![CI](https://github.com/ruiruii/sycee/actions/workflows/ci.yml/badge.svg)](https://github.com/ruiruii/sycee/actions/workflows/ci.yml)
 
-SYCEE writes a signed receipt for an agent payment and fingerprints that receipt on NEAR, so anyone can verify what was bought.
+SYCEE is the evidence layer for AI agent payments: every payment gets a signed receipt, fingerprinted on NEAR, that anyone can verify, and SYCEE never touches the funds.
 
-## Try it
-
-From a clean clone. Node.js 20 or newer, and [rustup](https://rustup.rs). The build installs Rust 1.86.0. No NEAR account and no secret. The demo anchors on a local sandbox. The last command only reads the public testnet contract.
+Node.js 20 or newer, and [rustup](https://rustup.rs). The build installs Rust 1.86.0. No NEAR account and no secret.
 
 ```bash
 git clone https://github.com/ruiruii/sycee.git
@@ -19,19 +17,22 @@ npm run demo:e2e
 NEAR_CONTRACT_ID=sycee-anchor.testnet node scripts/verify.mjs --receipt fixtures/sample-receipt.json
 ```
 
-You will see:
+What you will see:
 
-- `bash scripts/build.sh` ends with the wasm size `159146`.
-- `npm run demo:e2e` prints `payment: SIMULATED`, `payment_note: mock facilitator, no Base Sepolia transfer, no funds moved`, `http_status: 200`, `receipt_hash: sha256:` and 64 hex characters, `chain: local NEAR sandbox`, `verify: ok true`, and `nearblocks: n/a`. Sandbox log lines may appear above that summary. The summary starts at `SYCEE e2e`.
-- The verify command prints JSON with `"ok": true` and `sha256:f296fd15aee336c3d877dab40eec7a6e64f68923d4002807a2433866ab69cf03`.
+```text
+159146
+payment: SIMULATED
+receipt_hash: sha256:<64 hex>
+verify: ok true
+"ok": true,
+"hash": "sha256:f296fd15aee336c3d877dab40eec7a6e64f68923d4002807a2433866ab69cf03",
+```
 
-Offline, open [examples/near-anchor/demo/index.html](examples/near-anchor/demo/index.html) and leave「离线示例」checked. The page recomputes `sha256:f296fd15aee336c3d877dab40eec7a6e64f68923d4002807a2433866ab69cf03` and matches the fingerprint written into the file. That check does not use the network.
+`159146` is the wasm size from `bash scripts/build.sh`. `payment: SIMULATED`, `receipt_hash:`, and `verify: ok true` are from `npm run demo:e2e` (that hash is new each run). `"ok": true` and the `sha256:f296fd15…` fingerprint are the verify command.
 
 - Live demo: [https://ruiruii.github.io/sycee/](https://ruiruii.github.io/sycee/)
 - Demo post: [https://x.com/aking_z/status/2121175201778143394](https://x.com/aking_z/status/2121175201778143394)
 - Video: [https://x.com/aking_z/status/2121175474265313681](https://x.com/aking_z/status/2121175474265313681)
-
-Recorded testnet receipt (`tx` is the full nearblocks URL): [open it](https://ruiruii.github.io/sycee/?hash=sha256:618a391577ebd1e6a94430f05947e74c84a7d59523034ed28851b712a40ead81&offline=0&tx=https%3A%2F%2Ftestnet.nearblocks.io%2Ftxns%2F6TyCsHwSkwKshGgWGDJPFqrW2WLqrBnpvw3Amy4ppxTo).
 
 ## Architecture
 
