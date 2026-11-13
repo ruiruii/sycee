@@ -321,3 +321,36 @@ making the pair auditable by anyone holding them. It does not close the hole: an
 still file a correction-shaped row that is not true. What it removes is the property that
 makes the hole cheap — that the second row is indistinguishable from an independent
 observation of the same attempt.
+
+## 14. Triage: which layer answers "what happened to my payment"
+
+The question §10 records arrived in public as one question and left as four answers, none of
+which disagreed. That is a symptom worth writing down. In the x402 Slack thread of 2026-11-14
+on a lost `/settle` response, three participants answered the same complaint, each answer
+correct inside its own layer; the grouping below is the asker's own summary of what each
+answer was good for, kept because it is more useful than a claim that the problem is unsolved.
+
+| Question | Only reliable source | Shape of the answer | What it cannot tell you |
+|---|---|---|---|
+| Did the money move? | The token contract, via `authorizationState(authorizer, nonce)` on EIP-3009 | A boolean anyone can read, true only after the transfer executed | Whether *this* attempt is the one that moved it — that needs the pair below |
+| Which attempt was it? | The payload the caller signed and kept | `(authorizer, nonce)`, or the equivalent stable id the scheme provides | Whether the seller decided anything about it |
+| How was it decided? | The seller, in a row | A reason (§5) bound to one attempt identity (§4) | Whether funds moved (§10) |
+| Did two concurrent attempts both settle? | The seller's claim layer | A claim taken before broadcast, so the loser is refused | Anything about attempts it never saw |
+| How long does idempotency survive a restart? | Whoever operates the facilitator | Vendor documentation or SLA | Nothing about the protocol — the protocol does not require it |
+
+Two consequences follow, and both are cheap to act on now.
+
+**The first two rows are the caller's own responsibility, and they are the only ones a caller
+can satisfy alone.** A payload persisted before broadcast yields the `(authorizer, nonce)`
+pair; the pair yields a chain read. That is a complete answer to "did my payment go through"
+with no facilitator cooperation, no protocol change, and no trust in the seller. The failure
+mode it prevents is not a missing endpoint — it is a process that writes to the network
+before it writes to disk.
+
+**Answers from different rows do not compose.** The recurring error in this thread was to
+assemble one recovery story out of four correct answers, which produces a plan that inherits
+every gap instead of closing one. A row evidences a decision; a chain read evidences a
+transfer; neither substitutes for the other, and a design that treats them as interchangeable
+will report settlement it cannot prove. This is the same boundary §10 draws, stated from the
+reader's side rather than the format's.
+
