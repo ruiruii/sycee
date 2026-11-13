@@ -1,4 +1,14 @@
 # Copy to .dev.vars for `wrangler dev`. Never commit .dev.vars.
-# Generate a key from the repo root:
+# Generate a receipt key from the repo root:
 #   node --input-type=module -e "import { generateKeyPair } from '@sycee/core'; console.log(generateKeyPair().privateKey)"
 # SYCEE_SIGNING_KEY=ed25519-priv:REPLACE_ME
+# PAY_TO=0xYourBaseAddress
+# NETWORK=eip155:84532
+# FACILITATOR_URL=https://x402.org/facilitator
+# RPC_URL=https://sepolia.base.org
+# PRICE_ATOMIC=1000
+# Optional NEAR function-call key. This is not the receipt key above.
+# NEAR_ACCOUNT_ID=your-account.testnet
+# NEAR_PRIVATE_KEY=ed25519:REPLACE_ME
+# NEAR_CONTRACT_ID=sycee-anchor.testnet
+# NEAR_RPC_URL=https://rpc.testnet.near.org

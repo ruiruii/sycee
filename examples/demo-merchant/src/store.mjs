@@ -86,6 +86,23 @@ export function memoryStore() {
         agents: [...agents.values()],
       });
     },
+    async setAnchor(proofHash, anchor) {
+      for (let i = attempts.length - 1; i >= 0; i -= 1) {
+        if (attempts[i].proof_hash === proofHash && attempts[i].decision === 'accepted') {
+          attempts[i].anchor = anchor;
+          return;
+        }
+      }
+    },
+    async listReceipts(limit = 20) {
+      const lim = clampLimit(limit);
+      const rows = [];
+      for (let i = attempts.length - 1; i >= 0 && rows.length < lim; i -= 1) {
+        const row = attempts[i];
+        if (row.decision === 'accepted' && row.receipt) rows.push(publicAttempt(row));
+      }
+      return rows;
+    },
     async dump() {
       return {
         redemptions: [...redemptions.entries()].map(([proof_hash, rec]) => ({ proof_hash, ...rec })),
@@ -215,6 +232,44 @@ export function d1Store(db) {
         throw annotateDb(err);
       }
     },
+    async setAnchor(proofHash, anchor) {
+      try {
+        await run(
+          db,
+          `UPDATE attempts SET anchor_json = ?1 WHERE id = (
+             SELECT id FROM attempts WHERE proof_hash = ?2 AND decision = 'accepted' ORDER BY id DESC LIMIT 1
+           )`,
+          JSON.stringify(anchor),
+          proofHash,
+        );
+      } catch (err) {
+        if (/no such column/i.test(String(err && err.message))) return;
+        throw annotateDb(err);
+      }
+    },
+    async listReceipts(limit = 20) {
+      const lim = clampLimit(limit);
+      try {
+        return mapReceiptRows(await all(
+          db,
+          `SELECT proof_hash, redeem_count, decision, settlement, delivery, traffic, at, receipt_json, anchor_json
+           FROM attempts
+           WHERE decision = 'accepted' AND receipt_json IS NOT NULL
+           ORDER BY id DESC LIMIT ?1`,
+          lim,
+        ));
+      } catch (err) {
+        if (!/no such column/i.test(String(err && err.message))) throw annotateDb(err);
+        return mapReceiptRows(await all(
+          db,
+          `SELECT proof_hash, redeem_count, decision, settlement, delivery, traffic, at, receipt_json
+           FROM attempts
+           WHERE decision = 'accepted' AND receipt_json IS NOT NULL
+           ORDER BY id DESC LIMIT ?1`,
+          lim,
+        ));
+      }
+    },
     async stats() {
       try {
         const redeem = await first(
@@ -326,6 +381,59 @@ function summarize({ redemptions, attempts, agents }) {
     at: row.at,
   }));
   return { accepted, refused, redeem: { eq1, gt1, max }, settlement, traffic, consumed, recent };
+}
+
+function publicAttempt(row) {
+  return {
+    proof_hash: row.proof_hash,
+    redeem_count: row.redeem_count,
+    decision: row.decision,
+    settlement: row.settlement,
+    delivery: row.delivery,
+    traffic: row.traffic,
+    at: row.at,
+    receipt: row.receipt,
+    anchor: row.anchor ?? null,
+  };
+}
+
+function mapReceiptRows(rows) {
+  const out = [];
+  for (const row of rows) {
+    let receipt = null;
+    try {
+      receipt = row.receipt_json ? JSON.parse(row.receipt_json) : null;
+    } catch {
+      continue;
+    }
+    if (!receipt) continue;
+    let anchor = null;
+    if (row.anchor_json) {
+      try {
+        anchor = JSON.parse(row.anchor_json);
+      } catch {
+        anchor = null;
+      }
+    }
+    out.push(publicAttempt({
+      proof_hash: row.proof_hash,
+      redeem_count: num(row.redeem_count),
+      decision: row.decision,
+      settlement: row.settlement,
+      delivery: row.delivery,
+      traffic: row.traffic,
+      at: row.at,
+      receipt,
+      anchor,
+    }));
+  }
+  return out;
+}
+
+function clampLimit(limit) {
+  const n = Number(limit);
+  if (!Number.isInteger(n) || n < 1) return 20;
+  return Math.min(n, 50);
 }
 
 function hydrateAgent(row) {

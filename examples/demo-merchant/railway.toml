@@ -1,0 +1,8 @@
+# Used when the Railway service root directory is examples/demo-merchant
+# and the config-as-code path points here. The README lists the same
+# settings for the dashboard form.
+
+[deploy]
+startCommand = "npm start"
+healthcheckPath = "/health"
+healthcheckTimeout = 60

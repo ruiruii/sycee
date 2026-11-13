@@ -26,7 +26,8 @@ CREATE TABLE IF NOT EXISTS attempts (
   traffic TEXT NOT NULL,
   at TEXT NOT NULL,
   receipt_json TEXT,
-  trade_no TEXT
+  trade_no TEXT,
+  anchor_json TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_attempts_proof ON attempts(proof_hash);
