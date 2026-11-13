@@ -3,9 +3,18 @@
 # used by near-sandbox (nearcore 2.6.2) cannot parse. Does not deploy.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+
+# Rust 1.86 matches contract/rust-toolchain.toml. near-sandbox (nearcore 2.6.2)
+# rejects Wasm from newer compilers until wasm-opt lowers it below.
+if ! command -v rustup >/dev/null 2>&1; then
+  echo "scripts/build.sh needs rustup so it can install Rust 1.86.0 and the wasm32-unknown-unknown target." >&2
+  echo "Install rustup from https://rustup.rs and run this script again. No NEAR account is required." >&2
+  exit 1
+fi
+rustup toolchain install 1.86.0 --profile minimal --target wasm32-unknown-unknown
+
 cd "$ROOT/contract"
-rustup target add wasm32-unknown-unknown >/dev/null
-cargo build --target wasm32-unknown-unknown --release --locked
+cargo +1.86.0 build --target wasm32-unknown-unknown --release --locked
 RAW="target/wasm32-unknown-unknown/release/sycee_anchor.wasm"
 mkdir -p "$ROOT/out" "$ROOT/.tools"
 

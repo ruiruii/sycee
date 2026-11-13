@@ -4,7 +4,7 @@ A page you can open, with no wallet:
 
 - Local file: [examples/near-anchor/demo/index.html](demo/index.html)
 - Public URL: [https://ruiruii.github.io/sycee/](https://ruiruii.github.io/sycee/) (deployed from main, HTTP 200). The same file is [demo/index.html](demo/index.html).
-- Live check. `tx` must be the full nearblocks URL: [open the recorded testnet receipt](https://ruiruii.github.io/sycee/?hash=sha256:618a391577ebd1e6a94430f05947e74c84a7d59523034ed28851b712a40ead81&offline=0&tx=https%3A%2F%2Ftestnet.nearblocks.io%2Ftxns%2F6TyCsHwSkwKshGgWGDJPFqrW2WLqrBnpvw3Amy4ppxTo). The site that is live now is the main copy and does not read these parameters yet. After this pull request merges, re-run the Demo page workflow.
+- Live check. `tx` must be the full nearblocks URL: [open the recorded testnet receipt](https://ruiruii.github.io/sycee/?hash=sha256:618a391577ebd1e6a94430f05947e74c84a7d59523034ed28851b712a40ead81&offline=0&tx=https%3A%2F%2Ftestnet.nearblocks.io%2Ftxns%2F6TyCsHwSkwKshGgWGDJPFqrW2WLqrBnpvw3Amy4ppxTo). The published page reads `hash`, `offline`, and that full `tx` URL.
 
 This is the English text of [SUBMISSION.zh.md](SUBMISSION.zh.md). The owner's checklist is [提交清单.md](提交清单.md).
 
@@ -54,8 +54,8 @@ These ran on this machine. They are not a plan.
 
 - The contract builds. `bash scripts/build.sh` writes a wasm of **159146 bytes** (`out/sycee_anchor.wasm`).
 - 6 Rust unit tests passed (`cargo +1.100.0 test`): write, duplicate rejected, stranger rejected, attached deposit rejected, the owner allows another writer, and the batch fingerprint matches the off-chain check.
-- 11 Node unit tests passed: the fingerprint matches `@sycee/core`, the combined fingerprint, the demo page's algorithm, and the deploy script's refusal of mainnet.
-- 1 local NEAR sandbox test passed. It covers: write, duplicate rejected, stranger rejected, a missing fingerprint reads back empty, attached NEAR rejected, the public log, a batch root equal to the JavaScript root, `verify_inclusion`, and `scripts/verify.mjs` succeeding against that local chain.
+- 16 Node unit tests passed: the fingerprint matches `@sycee/core`, the combined fingerprint, the demo page's algorithm, and the deploy script's refusal of mainnet.
+- 3 local NEAR sandbox tests passed. They cover the contract sandbox (write, duplicate rejected, stranger rejected, a missing fingerprint reads back empty, attached NEAR rejected, the public log, a batch root equal to the JavaScript root, `verify_inclusion`, and `scripts/verify.mjs` against that local chain), the end-to-end demo, and the restricted-key demo.
 - The demo page opens with a sample receipt filled in. With "离线示例" checked, it computes `sha256:f296fd15aee336c3d877dab40eec7a6e64f68923d4002807a2433866ab69cf03` and shows that this matches the fingerprint written into the page. That step does not contact testnet.
 - The testnet contract is deployed. Account `sycee-anchor.testnet`, owner `sycee-anchor.testnet`, anchorers `[]`. Built from commit `01b4e419`, wasm 159146 bytes, sha256 `c027e046864760b51848501cec91c5c0b4e738d6dc94de86ce63d3d0ae98a236`. Deploy transaction: [J14QkoAmZmtNeFrUcjb5BwN1WjhoN4L7QwiQ9YF5zq3h](https://testnet.nearblocks.io/txns/J14QkoAmZmtNeFrUcjb5BwN1WjhoN4L7QwiQ9YF5zq3h).
 - That same sample receipt (`fixtures/sample-receipt.json`) is anchored. Hash `sha256:f296fd15aee336c3d877dab40eec7a6e64f68923d4002807a2433866ab69cf03`, source chain `eip155:84532`, merchant id `sycee:demo-merchant`, block 277456711. Anchor transaction: [9WbMG7rgCiX7TNhnhZdSwGvz2xv82HX3oCgbVCdQHxzJ](https://testnet.nearblocks.io/txns/9WbMG7rgCiX7TNhnhZdSwGvz2xv82HX3oCgbVCdQHxzJ). `verify.mjs` returned ok.
@@ -64,7 +64,7 @@ These ran on this machine. They are not a plan.
 
 SYCEE's specification and signing code already existed before 2026-10-19. The last commit before that day is [`f1af69d`](https://github.com/ruiruii/sycee/commit/f1af69de1f461d9d656f598473042187e9118db1) (2026-10-12). The new work is `examples/near-anchor/`: the contract, the demo page, the end-to-end demo, and the restricted-key demo.
 
-Compare: https://github.com/ruiruii/sycee/compare/f1af69de1f461d9d656f598473042187e9118db1...cursor/hackathon-e2e-security-a63a
+Compare: https://github.com/ruiruii/sycee/compare/f1af69de1f461d9d656f598473042187e9118db1...main
 
 That diff also contains other SYCEE commits that landed on main after 19 October, including the demo merchant. The owner will add the tags `pre-hackathon` and `hackathon-submission`. This change does not create tags.
 
@@ -74,9 +74,10 @@ That diff also contains other SYCEE commits that landed on main after 19 October
 
 ## 3-step try it
 
-From the repository root:
+From anywhere inside the clone. Node.js 20 or newer, and rustup. `scripts/build.sh` installs Rust 1.86.0. No NEAR account. The root `npm install` has to come first, because the demo merchant imports the workspace packages.
 
 ```bash
+cd "$(git rev-parse --show-toplevel)"
 npm install
 cd examples/near-anchor
 npm install
@@ -86,12 +87,14 @@ bash scripts/build.sh
 You see `159146` on the last line.
 
 ```bash
+cd "$(git rev-parse --show-toplevel)/examples/near-anchor"
 npm run demo:e2e
 ```
 
 You see `payment: SIMULATED`, `http_status: 200`, `receipt_hash: sha256:` plus 64 hex characters, `chain: local NEAR sandbox`, `verify: ok true`, and `nearblocks: n/a`. No real transfer.
 
 ```bash
+cd "$(git rev-parse --show-toplevel)/examples/near-anchor"
 NEAR_CONTRACT_ID=sycee-anchor.testnet node scripts/verify.mjs --receipt fixtures/sample-receipt.json
 ```
 
@@ -99,9 +102,10 @@ You see `"ok": true`. This only reads the sample receipt already stored on testn
 
 The demo page accepts the `receipt_hash` line, or `demo/index.html?hash=sha256:...&tx=https://testnet.nearblocks.io/txns/...&offline=0`.
 
-On the owner's machine, to write one more simulated receipt to testnet (the key is not printed):
+Optional. Skip this unless you already have the NEAR account. The key is not printed.
 
 ```bash
+cd "$(git rev-parse --show-toplevel)/examples/near-anchor"
 NEAR_ACCOUNT_ID=sycee-anchor.testnet NEAR_CONTRACT_ID=sycee-anchor.testnet npm run demo:e2e -- --testnet
 ```
 
@@ -110,14 +114,16 @@ You see `chain: NEAR testnet` and a `nearblocks:` link. The demo page URL includ
 Recorded run: [6TyCsHwSkwKshGgWGDJPFqrW2WLqrBnpvw3Amy4ppxTo](https://testnet.nearblocks.io/txns/6TyCsHwSkwKshGgWGDJPFqrW2WLqrBnpvw3Amy4ppxTo). The receipt hash starts with `sha256:618a3915`. The payment was simulated.
 
 ```bash
+cd "$(git rev-parse --show-toplevel)/examples/near-anchor"
 npm run demo:security
 ```
 
 You see `anchor_with_limited_key: ok`, `transfer NEAR: rejected`, and `add key: rejected`. The key may call only `anchor` and `anchor_batch` on this contract. It cannot transfer NEAR or add a key.
 
-Same story on testnet, which adds one restricted key and spends testnet gas only:
+Optional. Skip this unless you already have the NEAR account. It adds one restricted key and spends testnet gas only:
 
 ```bash
+cd "$(git rev-parse --show-toplevel)/examples/near-anchor"
 NEAR_ACCOUNT_ID=sycee-anchor.testnet NEAR_CONTRACT_ID=sycee-anchor.testnet npm run demo:security -- --testnet
 ```
 
@@ -144,7 +150,7 @@ flowchart LR
 | Technical implementation | One command runs pay, receipt, anchor, and verify | `npm run demo:e2e` |
 | Design | Hashes only | `contract/src/lib.rs` |
 | Impact | The sample receipt is on testnet | [anchor tx](https://testnet.nearblocks.io/txns/9WbMG7rgCiX7TNhnhZdSwGvz2xv82HX3oCgbVCdQHxzJ) |
-| Originality | Code before 19 October is the baseline | [compare](https://github.com/ruiruii/sycee/compare/f1af69de1f461d9d656f598473042187e9118db1...cursor/hackathon-e2e-security-a63a) |
+| Originality | Code before 19 October is the baseline | [compare](https://github.com/ruiruii/sycee/compare/f1af69de1f461d9d656f598473042187e9118db1...main) |
 | Sustainability | The agent key cannot move funds | `npm run demo:security` |
 
 The owner posted these. Nothing is posted from here.
@@ -155,4 +161,4 @@ The owner posted these. Nothing is posted from here.
 Still the owner's, not done here:
 
 - Mainnet payout account: `locallemon5213.near`. The owner created it and it was verified on mainnet. Nothing in this repository is deployed to mainnet, and nothing here moves funds.
-- Public demo URL: [https://ruiruii.github.io/sycee/](https://ruiruii.github.io/sycee/). After this pull request merges, re-run the Demo page workflow so the live site gets the paste box and URL parameters.
+- Public demo URL: [https://ruiruii.github.io/sycee/](https://ruiruii.github.io/sycee/). The published page reads `hash`, `offline`, and a full nearblocks `tx` URL.
