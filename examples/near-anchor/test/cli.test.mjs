@@ -6,6 +6,8 @@ import { spawn } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { signingKeyFromEnvOrFile } from '../lib/rpc.mjs';
+import { shortError } from '../lib/near-sandbox.mjs';
+import { formatStory } from '../scripts/e2e.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SECRET = 'ed25519:not-a-real-key-and-must-not-be-logged';
@@ -21,6 +23,32 @@ function run(script, env) {
     child.on('close', (code) => resolve({ code, stdout, stderr }));
   });
 }
+
+test('shortError keeps NEAR type and kind when the message is {}', () => {
+  const err = new Error('{}');
+  err.type = 'InvalidAccessKeyError';
+  err.kind = { DepositWithFunctionCall: null };
+  const text = shortError(err);
+  assert.match(text, /InvalidAccessKeyError/);
+  assert.match(text, /DepositWithFunctionCall/);
+  assert.notEqual(text, '{}');
+});
+
+test('formatStory puts the testnet tx on the demo page url', () => {
+  const tx = 'https://testnet.nearblocks.io/txns/6TyCsHwSkwKshGgWGDJPFqrW2WLqrBnpvw3Amy4ppxTo';
+  const text = formatStory({
+    payment: 'SIMULATED',
+    http_status: 200,
+    receipt_hash: `sha256:${'ab'.repeat(32)}`,
+    chain: 'NEAR testnet',
+    contract: 'sycee-anchor.testnet',
+    block_height: 1,
+    anchored: true,
+    verify: 'ok true',
+    nearblocks: tx,
+  });
+  assert.match(text, /demo_page: .*&tx=https%3A%2F%2Ftestnet\.nearblocks\.io%2Ftxns%2F6TyCsHwSkwKshGgWGDJPFqrW2WLqrBnpvw3Amy4ppxTo/);
+});
 
 test('the deploy script refuses mainnet and does not create an account', async () => {
   const text = await readFile(path.join(root, 'scripts/deploy.sh'), 'utf8');

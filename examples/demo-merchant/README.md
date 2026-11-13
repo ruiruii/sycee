@@ -155,7 +155,7 @@ Those npm packages are client tools for this script only. They are not imported 
 
 ## Anchoring a receipt on NEAR
 
-The receipt this merchant signs can be hashed and written to a NEAR testnet contract that stores only that hash. The contract does not score, does not hold funds, and does not move funds. The deployed account is `sycee-anchor.testnet` ([deploy transaction](https://testnet.nearblocks.io/txns/J14QkoAmZmtNeFrUcjb5BwN1WjhoN4L7QwiQ9YF5zq3h)). The walkthrough is [../near-anchor/README.md](../near-anchor/README.md). A browser page that recomputes the hash with no wallet is [../near-anchor/demo/index.html](../near-anchor/demo/index.html).
+The receipt this merchant signs can be hashed and written to a NEAR testnet contract that stores only that hash. The contract does not score, does not hold funds, and does not move funds. The deployed account is `sycee-anchor.testnet` ([deploy transaction](https://testnet.nearblocks.io/txns/J14QkoAmZmtNeFrUcjb5BwN1WjhoN4L7QwiQ9YF5zq3h)). The walkthrough is [../near-anchor/README.md](../near-anchor/README.md). A browser page that recomputes the hash with no wallet is [../near-anchor/demo/index.html](../near-anchor/demo/index.html). The public copy is [https://ruiruii.github.io/sycee/](https://ruiruii.github.io/sycee/).
 
 ## Layout
 

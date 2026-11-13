@@ -32,7 +32,7 @@
   <div class="banner">
     <p>这是 SYCEE 的演示页。打开就能算。不需要钱包，也不会转账。</p>
     <p>agent payment 的收据（verifiable receipt）在 Base Sepolia 上产生。这里只核对它的指纹。记到 NEAR 上叫 cross-chain anchoring。</p>
-    <p>测试网合约是 <code>sycee-anchor.testnet</code>。取消「离线示例」会去问这个账号。公开网页网址仍是 [待填]（TBD）。</p>
+    <p>测试网合约是 <code>sycee-anchor.testnet</code>。取消「离线示例」会去问这个账号。公开网页：<a href="https://ruiruii.github.io/sycee/">https://ruiruii.github.io/sycee/</a>。</p>
   </div>
 </header>
 <main>
@@ -56,7 +56,7 @@
   <div id="out" class="card wait">还没计算。</div>
 </main>
 <footer>
-  <p>公开网址：[待填]（TBD）。仓库主人打开 GitHub Pages 并手动运行 Demo page 工作流之后，页面才会出现在 <code>https://ruiruii.github.io/sycee/</code>。现在没有这个网址。</p>
+  <p>公开网址：<a href="https://ruiruii.github.io/sycee/">https://ruiruii.github.io/sycee/</a>。现在线上的是 main 上的版本。本页的贴指纹和网址参数要等这次改动合并后，再跑一次 Demo page 工作流才会出现在那个网址上。</p>
   <p>离线示例只在浏览器里对照指纹，不连网。同一张示例收据已经写在 <code>sycee-anchor.testnet</code>，区块 277456711。<a href="https://testnet.nearblocks.io/txns/9WbMG7rgCiX7TNhnhZdSwGvz2xv82HX3oCgbVCdQHxzJ">锚定交易</a>。<code>verify.mjs</code> 对过，结果是成功。</p>
 </footer>
 <script>
@@ -157,6 +157,19 @@ function parseReceiptText(text) {
   for (let i = 0; i < bin.length; i += 1) bytes[i] = bin.charCodeAt(i);
   return JSON.parse(new TextDecoder().decode(bytes));
 }
+
+function findHash(text) {
+  const prefixed = String(text || '').match(/sha256:[0-9a-f]{64}/i);
+  if (prefixed) return prefixed[0].toLowerCase();
+  const bare = String(text || '').match(/(?:^|[^0-9a-f])([0-9a-f]{64})(?:$|[^0-9a-f])/i);
+  if (bare) return `sha256:${bare[1].toLowerCase()}`;
+  return null;
+}
+
+function findTx(text) {
+  const match = String(text || '').match(/https:\/\/testnet\.nearblocks\.io\/txns\/[A-Za-z0-9]+/);
+  return match ? match[0] : null;
+}
 // HASH_LIB_END
 
 const receiptBox = document.querySelector('#receipt');
@@ -175,19 +188,30 @@ function esc(value) {
   return String(value).replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
 }
 
+const pageParams = new URLSearchParams(location.search);
+if (pageParams.get('hash')) receiptBox.value = pageParams.get('hash');
+if (pageParams.get('contract')) document.querySelector('#contract').value = pageParams.get('contract');
+if (pageParams.get('offline') === '0') document.querySelector('#offline').checked = false;
+const txFromUrl = pageParams.get('tx');
+
 document.querySelector('#run').addEventListener('click', async () => {
-  let envelope;
-  try {
-    envelope = parseReceiptText(receiptBox.value);
-  } catch (err) {
-    render(`<p>这张收据读不出来。${esc(err.message)}</p>`, 'wait');
-    return;
+  const pasted = receiptBox.value;
+  const txLink = findTx(pasted) || (txFromUrl && /^https:\/\/testnet\.nearblocks\.io\/txns\/[A-Za-z0-9]+$/.test(txFromUrl) ? txFromUrl : null);
+  let hash = null;
+  const trimmed = pasted.trim();
+  if (trimmed.startsWith('{') || trimmed.startsWith('[') || (!trimmed.includes('receipt_hash:') && !trimmed.includes('\n') && !/^sha256:[0-9a-f]{64}$/i.test(trimmed) && !/^[0-9a-f]{64}$/i.test(trimmed))) {
+    try {
+      hash = receiptHash(parseReceiptText(trimmed));
+    } catch (err) {
+      if (!findHash(trimmed)) {
+        render(`<p>这张收据读不出来。${esc(err.message)}</p>`, 'wait');
+        return;
+      }
+    }
   }
-  let hash;
-  try {
-    hash = receiptHash(envelope);
-  } catch (err) {
-    render(`<p>算不出指纹。${esc(err.message)}</p>`, 'wait');
+  if (!hash) hash = findHash(trimmed);
+  if (!hash) {
+    render('<p>没有找到收据或指纹。可以贴整张收据，或贴演示命令打印的 receipt_hash 那一行。</p>', 'wait');
     return;
   }
   const digest = hash.slice('sha256:'.length);
@@ -195,12 +219,14 @@ document.querySelector('#run').addEventListener('click', async () => {
   const contractId = document.querySelector('#contract').value.trim();
   if (offline) {
     const same = digest === SAMPLE_DIGEST;
+    const txHtml = txLink ? `<p>交易 <a href="${esc(txLink)}">${esc(txLink)}</a></p>` : '';
     render(
       `<p><strong>${same ? '离线示例核对通过' : '指纹变了，和内置示例不一样'}</strong></p>
        <p>指纹 <code>${esc(hash)}</code></p>
+       ${txHtml}
        <p>${same
          ? '这一步没有连网。这张示例收据也已经记在 sycee-anchor.testnet，区块 277456711。取消勾选会再问一次链。'
-         : '这一步没有连网。链上那条记录只对应页内的示例收据。'}</p>`,
+         : '这一步没有连网。要查这一条指纹，取消离线示例。合约账号默认是 sycee-anchor.testnet。'}</p>`,
       same ? 'ok' : 'wait',
     );
     return;
@@ -247,6 +273,7 @@ document.querySelector('#run').addEventListener('click', async () => {
     render(
       `<p><strong>${match ? '测试网上的指纹和这张收据一致' : '链上指纹和这张收据不一致'}</strong></p>
        <p>指纹 <code>${esc(hash)}</code></p>
+       ${txLink ? `<p>交易 <a href="${esc(txLink)}">${esc(txLink)}</a></p>` : ''}
        <p>来源链 <code>${esc(record.source_chain)}</code>，商家 <code>${esc(record.merchant_id)}</code></p>
        <p>区块高度 ${esc(record.block_height)}，时间（纳秒）<code>${esc(record.block_timestamp_ns)}</code></p>
        <p>写入账号 <code>${esc(record.predecessor)}</code></p>`,

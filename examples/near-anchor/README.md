@@ -57,7 +57,7 @@ Leave "离线示例" checked. The page compares the hash to the sample hash bake
 
 `sha256:f296fd15aee336c3d877dab40eec7a6e64f68923d4002807a2433866ab69cf03`
 
-That offline check does not contact NEAR. The same sample is already anchored on `sycee-anchor.testnet`: source chain `eip155:84532`, merchant id `sycee:demo-merchant`, block 277456711. Anchor transaction: [9WbMG7rgCiX7TNhnhZdSwGvz2xv82HX3oCgbVCdQHxzJ](https://testnet.nearblocks.io/txns/9WbMG7rgCiX7TNhnhZdSwGvz2xv82HX3oCgbVCdQHxzJ). `scripts/verify.mjs` returned ok against that record. Uncheck "离线示例" and the page asks `sycee-anchor.testnet`, which is the default in the contract field. The public page URL is still `[待填]` (TBD). The owner enables GitHub Pages with source "GitHub Actions", then runs the `Demo page` workflow (`.github/workflows/near-anchor-pages.yml`). This repository does not turn Pages on. After that, the site is expected at `https://ruiruii.github.io/sycee/`. A demo video and an X post are also still `[待填]` (TBD).
+That offline check does not contact NEAR. The same sample is already anchored on `sycee-anchor.testnet`: source chain `eip155:84532`, merchant id `sycee:demo-merchant`, block 277456711. Anchor transaction: [9WbMG7rgCiX7TNhnhZdSwGvz2xv82HX3oCgbVCdQHxzJ](https://testnet.nearblocks.io/txns/9WbMG7rgCiX7TNhnhZdSwGvz2xv82HX3oCgbVCdQHxzJ). `scripts/verify.mjs` returned ok against that record. Uncheck "离线示例" and the page asks `sycee-anchor.testnet`, which is the default in the contract field. The public page is [https://ruiruii.github.io/sycee/](https://ruiruii.github.io/sycee/) (HTTP 200, deployed from main). A live check uses `hash`, `offline=0`, and `tx` set to the full nearblocks URL: [recorded receipt](https://ruiruii.github.io/sycee/?hash=sha256:618a391577ebd1e6a94430f05947e74c84a7d59523034ed28851b712a40ead81&offline=0&tx=https%3A%2F%2Ftestnet.nearblocks.io%2Ftxns%2F6TyCsHwSkwKshGgWGDJPFqrW2WLqrBnpvw3Amy4ppxTo). The site that is live now does not read those parameters. After this pull request merges, re-run the Demo page workflow (`.github/workflows/near-anchor-pages.yml`). A demo video and an X post are still `[待填]` (TBD).
 
 ## Build and test
 
@@ -130,4 +130,42 @@ NEAR_CONTRACT_ID=sycee-anchor.testnet \
   node scripts/verify.mjs --receipt fixtures/sample-receipt.json
 ```
 
-`--evidence path/to/evidence.json` fills the chain and the payTo from the demo merchant's public page. It still needs the receipt file. The demo page's contract field already defaults to `sycee-anchor.testnet`.
+`--evidence path/to/evidence.json` fills the chain and the payTo from the demo merchant's public page. It still needs the receipt file. The demo page's contract field already defaults to `sycee-anchor.testnet`. Paste a `receipt_hash` line, or open `demo/index.html?hash=sha256:...&tx=https://testnet.nearblocks.io/txns/...&offline=0`.
+
+## Try the two demos
+
+From this directory, after `npm install` at the repo root and `bash scripts/build.sh` here.
+
+Default end to end. Simulated payment, local sandbox, no key. You see `payment: SIMULATED`, `verify: ok true`, and `nearblocks: n/a`.
+
+```bash
+npm run demo:e2e
+```
+
+Read the sample receipt already on testnet. No key. You see `"ok": true`.
+
+```bash
+NEAR_CONTRACT_ID=sycee-anchor.testnet node scripts/verify.mjs --receipt fixtures/sample-receipt.json
+```
+
+On the owner's machine, write one more simulated receipt to testnet. The key is not printed. You see a `nearblocks:` link, and `demo_page` includes `&tx=`.
+
+```bash
+NEAR_ACCOUNT_ID=sycee-anchor.testnet NEAR_CONTRACT_ID=sycee-anchor.testnet npm run demo:e2e -- --testnet
+```
+
+Recorded run: [6TyCsHwSkwKshGgWGDJPFqrW2WLqrBnpvw3Amy4ppxTo](https://testnet.nearblocks.io/txns/6TyCsHwSkwKshGgWGDJPFqrW2WLqrBnpvw3Amy4ppxTo), receipt hash starting `sha256:618a3915`. Payment was simulated.
+
+Security demo. The agent key may call only `anchor` and `anchor_batch`. You see `transfer NEAR: rejected` and `add key: rejected`.
+
+```bash
+npm run demo:security
+```
+
+The owner can run that on testnet. It adds one restricted key and spends testnet gas only.
+
+```bash
+NEAR_ACCOUNT_ID=sycee-anchor.testnet NEAR_CONTRACT_ID=sycee-anchor.testnet npm run demo:security -- --testnet
+```
+
+Recorded run. Public key `ed25519:7G1L5eMc5pKCJcVNbHvv68j1THA6bxc9QDFg7sFN4Qjy`, added in [HpZaM37gDbngx7skC1vjk81QFkjb7Yv2jLHN7GGWSLnh](https://testnet.nearblocks.io/txns/HpZaM37gDbngx7skC1vjk81QFkjb7Yv2jLHN7GGWSLnh), anchored in [9u6vfDWwuMdUcyVb3LXDUuotbdQBF68EmbX7Z6oRM8r6](https://testnet.nearblocks.io/txns/9u6vfDWwuMdUcyVb3LXDUuotbdQBF68EmbX7Z6oRM8r6), duplicate rejected in [234ghPupTc158iY6osT53vBTML823BrGYLgdeNg4dPM6](https://testnet.nearblocks.io/txns/234ghPupTc158iY6osT53vBTML823BrGYLgdeNg4dPM6). Transfer, add-key, and `add_anchorer` failed at access-key validation and may not appear on an explorer.

@@ -9,7 +9,7 @@ const html = await readFile(new URL('../demo/index.html', import.meta.url), 'utf
 const start = html.indexOf('// HASH_LIB_START');
 const end = html.indexOf('// HASH_LIB_END');
 const lib = html.slice(start, end);
-const api = new Function(`${lib}\nreturn { receiptHash, canonicalJSON, sha256Hex, SAMPLE_DIGEST, SAMPLE_RECEIPT, parseReceiptText };`)();
+const api = new Function(`${lib}\nreturn { receiptHash, canonicalJSON, sha256Hex, SAMPLE_DIGEST, SAMPLE_RECEIPT, parseReceiptText, findHash, findTx };`)();
 
 test('the demo page hashes a receipt the same way SYCEE does', () => {
   assert.equal(api.receiptHash(sample), receiptHash(sample));
@@ -19,12 +19,24 @@ test('the demo page hashes a receipt the same way SYCEE does', () => {
   assert.equal(api.sha256Hex('abc'), createHash('sha256').update('abc').digest('hex'));
 });
 
-test('the demo page queries sycee-anchor.testnet and still marks the public URL as unset', () => {
+test('the demo page queries sycee-anchor.testnet and links the public site', () => {
   assert.match(html, /value="sycee-anchor\.testnet"/);
   assert.match(html, /277456711/);
   assert.match(html, /9WbMG7rgCiX7TNhnhZdSwGvz2xv82HX3oCgbVCdQHxzJ/);
-  assert.match(html, /\[待填\]/);
+  assert.match(html, /https:\/\/ruiruii\.github\.io\/sycee\//);
+  assert.doesNotMatch(html, /公开网址：\[待填\]/);
   assert.match(html, /id="offline"[^>]*checked|checked[^>]*id="offline"/);
+});
+
+test('a pasted e2e transcript yields its hash and nearblocks link', () => {
+  const text = [
+    'payment: SIMULATED',
+    'receipt_hash: sha256:f296fd15aee336c3d877dab40eec7a6e64f68923d4002807a2433866ab69cf03',
+    'nearblocks: https://testnet.nearblocks.io/txns/9WbMG7rgCiX7TNhnhZdSwGvz2xv82HX3oCgbVCdQHxzJ',
+  ].join('\n');
+  assert.equal(api.findHash(text), 'sha256:f296fd15aee336c3d877dab40eec7a6e64f68923d4002807a2433866ab69cf03');
+  assert.equal(api.findTx(text), 'https://testnet.nearblocks.io/txns/9WbMG7rgCiX7TNhnhZdSwGvz2xv82HX3oCgbVCdQHxzJ');
+  assert.match(html, /URLSearchParams/);
 });
 
 test('a base64url receipt header parses to the same hash', () => {
