@@ -192,10 +192,18 @@ contradiction cases.
   surface answers it: the surface is `/supported`, `/verify`, `/settle`, with no read
   endpoint keyed by the payment authorization (nonce, or the EIP-3009 authorization hash),
   and `/settle` is an execution call rather than a query. A row here evidences that an
-  attempt happened and how it was decided; it does not evidence that funds moved. Closing
-  that gap needs a settlement lookup this protocol does not define — the seller-side half of
-  which is scoped in x402#4198, and the facilitator-side half of which is an implementation
-  question, not a format one.
+  attempt happened and how it was decided; it does not evidence that funds moved.
+- **Under `exact` the chain does answer it, and that makes the gap smaller than it looks.**
+  `authorizationState(authorizer, nonce)` is a view call any third party can make on an
+  EIP-3009 token, and it returns true only after the transfer executed. So "did the money
+  move" is not unknowable — it is unaddressable: a buyer who lost the response also lost the
+  `(authorizer, nonce)` pair needed to ask, because the answer lives in a payload that was
+  never persisted on their side. The missing piece is therefore the payload's durability
+  before broadcast, not a new facilitator endpoint, and an implementation that keeps the
+  signed payload can re-derive the pair and ask the chain directly. That is the same
+  requirement x402#4198's seller-side claim is stated over, which is why it is phrased over
+  the payload rather than over an endpoint. Schemes without an equivalent read keep the
+  wider claim: for them there is nothing to ask, and the gap is a protocol one.
 - **One attempt can leave two rows and a wrong claim.** §4's ceiling forbids a row from
   claiming more evidence than its reason allows, but an issuer can get the same effect by
   recording one attempt twice: once with the true, low-ceiling reason, and once with a reason
