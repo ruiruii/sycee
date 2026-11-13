@@ -33,6 +33,9 @@ verify: ok true
 - Live demo: [https://ruiruii.github.io/sycee/](https://ruiruii.github.io/sycee/)
 - Demo post: [https://x.com/aking_z/status/2121175201778143394](https://x.com/aking_z/status/2121175201778143394)
 - Video: [https://x.com/aking_z/status/2121175474265313681](https://x.com/aking_z/status/2121175474265313681)
+- Hosted demo merchant, evidence panel: [https://sycee-production.up.railway.app/evidence](https://sycee-production.up.railway.app/evidence)
+
+That panel is the first-party demo merchant on Base Sepolia (official x402), listed alongside the GitHub Pages demo and the X post. SYCEE does not touch the funds. A paid `GET /v1/base/tip` leaves a signed receipt on the panel.
 
 ## Architecture
 
@@ -119,6 +122,8 @@ The open-source core in this repository stays free under Apache-2.0. The paid la
 ---
 
 演示页面（打开就能看，不需要钱包）：[https://ruiruii.github.io/sycee/](https://ruiruii.github.io/sycee/)（也有本地文件 [examples/near-anchor/demo/index.html](examples/near-anchor/demo/index.html)）。
+
+线上演示商家的证据面板：[https://sycee-production.up.railway.app/evidence](https://sycee-production.up.railway.app/evidence)。这是 Base Sepolia 上的第一方商家，走官方 x402，和 GitHub Pages 演示页、X 演示帖并列。SYCEE 不碰资金。一次付费的 `GET /v1/base/tip` 会在面板上留下一张签过名的收据。
 
 直接核对测试网上那笔模拟付款（`tx` 必须是完整的 nearblocks 网址，页面不认单独的交易号）：[https://ruiruii.github.io/sycee/?hash=sha256:618a391577ebd1e6a94430f05947e74c84a7d59523034ed28851b712a40ead81&offline=0&tx=https%3A%2F%2Ftestnet.nearblocks.io%2Ftxns%2F6TyCsHwSkwKshGgWGDJPFqrW2WLqrBnpvw3Amy4ppxTo](https://ruiruii.github.io/sycee/?hash=sha256:618a391577ebd1e6a94430f05947e74c84a7d59523034ed28851b712a40ead81&offline=0&tx=https%3A%2F%2Ftestnet.nearblocks.io%2Ftxns%2F6TyCsHwSkwKshGgWGDJPFqrW2WLqrBnpvw3Amy4ppxTo)。线上页面已经从 main 部署，并且会读取 `hash`、`offline` 和完整的 nearblocks `tx`。
 
@@ -253,6 +258,8 @@ flowchart LR
 ---
 
 A page you can open, with no wallet: [https://ruiruii.github.io/sycee/](https://ruiruii.github.io/sycee/). The same file is [examples/near-anchor/demo/index.html](examples/near-anchor/demo/index.html).
+
+The hosted demo merchant's evidence panel is [https://sycee-production.up.railway.app/evidence](https://sycee-production.up.railway.app/evidence). It is the first-party merchant on Base Sepolia (official x402), alongside the GitHub Pages demo and the X post. SYCEE does not touch the funds. A paid `GET /v1/base/tip` leaves a signed receipt on that panel.
 
 Live check of the recorded testnet receipt. The `tx` parameter must be the full nearblocks URL:
 

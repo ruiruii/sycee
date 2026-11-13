@@ -7,6 +7,7 @@ SYCEE 是 AI agent 支付的证据层，每笔支付都有一张签名收据，�
 - 本地文件：[examples/near-anchor/demo/index.html](demo/index.html)
 - 公开网址：[https://ruiruii.github.io/sycee/](https://ruiruii.github.io/sycee/)（已从 main 部署，打开返回 200）。本地文件仍是 [demo/index.html](demo/index.html)。
 - 带参数的核对链接（`tx` 要写成完整的 nearblocks 网址）：[打开这次测试网收据](https://ruiruii.github.io/sycee/?hash=sha256:618a391577ebd1e6a94430f05947e74c84a7d59523034ed28851b712a40ead81&offline=0&tx=https%3A%2F%2Ftestnet.nearblocks.io%2Ftxns%2F6TyCsHwSkwKshGgWGDJPFqrW2WLqrBnpvw3Amy4ppxTo)。线上页面会读取 `hash`、`offline` 和完整的 `tx`。
+- 线上演示商家证据面板：[https://sycee-production.up.railway.app/evidence](https://sycee-production.up.railway.app/evidence)。Base Sepolia 上的第一方商家（官方 x402），和 GitHub Pages 演示页并列。SYCEE 不碰资金。一次付费的 `GET /v1/base/tip` 会在面板上留下签过名的收据。
 
 英文稿在 [SUBMISSION.en.md](SUBMISSION.en.md)。给主人勾的清单在 [提交清单.md](提交清单.md)。
 
