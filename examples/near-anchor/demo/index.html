@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SYCEE 收据指纹 · NEAR</title>
+<style>
+  :root { color-scheme: light; }
+  body { margin: 0; font: 17px/1.5 Georgia, "Iowan Old Style", "Songti SC", serif; color: #1a1a1a; background: #f7f5f0; }
+  header, main { max-width: 46rem; margin: 0 auto; padding: 1.25rem; }
+  header { padding-top: 1.75rem; }
+  h1 { font-size: 1.7rem; margin: 0 0 0.35rem; letter-spacing: -0.02em; }
+  h2 { font-size: 1.15rem; margin: 1.4rem 0 0.4rem; }
+  .banner { background: #1a1a1a; color: #f7f5f0; padding: 0.9rem 1rem; }
+  .banner p { margin: 0.3rem 0; }
+  label { display: block; margin: 0.7rem 0 0.25rem; }
+  textarea, input[type="text"] { width: 100%; box-sizing: border-box; font: 0.9rem/1.4 ui-monospace, "Cascadia Code", monospace; padding: 0.55rem; border: 1px solid #cfc8bb; background: #fff; }
+  textarea { min-height: 16rem; }
+  .row { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; margin: 0.8rem 0; }
+  button { font: 1rem/1.2 Georgia, serif; background: #1a1a1a; color: #f7f5f0; border: 0; padding: 0.55rem 0.9rem; cursor: pointer; }
+  button.secondary { background: #fff; color: #1a1a1a; border: 1px solid #1a1a1a; }
+  .card { background: #fff; border: 1px solid #e2ddd4; padding: 0.8rem 0.95rem; margin: 0.8rem 0; overflow-wrap: anywhere; }
+  .ok { border-color: #1f6b3a; }
+  .wait { background: #fff6d8; }
+  code, .mono { font-family: ui-monospace, "Cascadia Code", monospace; font-size: 0.92em; }
+  footer { max-width: 46rem; margin: 0 auto; padding: 0 1.25rem 2rem; color: #444; }
+</style>
+</head>
+<body>
+<header>
+  <h1>收据指纹核对</h1>
+  <div class="banner">
+    <p>这是 SYCEE 的演示页。打开就能算。不需要钱包，也不会转账。</p>
+    <p>agent payment 的收据（verifiable receipt）在 Base Sepolia 上产生。这里只核对它的指纹。记到 NEAR 上叫 cross-chain anchoring。</p>
+    <p>测试网合约是 <code>sycee-anchor.testnet</code>。取消「离线示例」会去问这个账号。公开网页网址仍是 [待填]（TBD）。</p>
+  </div>
+</header>
+<main>
+  <p>示例收据是仓库里造的样本，不是一笔已经发生的付款。收据里只有指纹和签名，没有付款原文。</p>
+
+  <label for="receipt">收据（JSON，或商家返回的那一长串）</label>
+  <textarea id="receipt" spellcheck="false"></textarea>
+
+  <div class="row">
+    <button id="reset" class="secondary" type="button">恢复示例</button>
+    <label><input id="offline" type="checkbox" checked> 离线示例（不连网，现在就能看）</label>
+  </div>
+
+  <label for="contract">NEAR 测试网合约账号</label>
+  <input id="contract" type="text" value="sycee-anchor.testnet" autocomplete="off">
+
+  <div class="row">
+    <button id="run" type="button">计算指纹并核对</button>
+  </div>
+
+  <div id="out" class="card wait">还没计算。</div>
+</main>
+<footer>
+  <p>公开网址：[待填]（TBD）。仓库主人打开 GitHub Pages 并手动运行 Demo page 工作流之后，页面才会出现在 <code>https://ruiruii.github.io/sycee/</code>。现在没有这个网址。</p>
+  <p>离线示例只在浏览器里对照指纹，不连网。同一张示例收据已经写在 <code>sycee-anchor.testnet</code>，区块 277456711。<a href="https://testnet.nearblocks.io/txns/9WbMG7rgCiX7TNhnhZdSwGvz2xv82HX3oCgbVCdQHxzJ">锚定交易</a>。<code>verify.mjs</code> 对过，结果是成功。</p>
+</footer>
+<script>
+// HASH_LIB_START
+const SAMPLE_DIGEST = 'f296fd15aee336c3d877dab40eec7a6e64f68923d4002807a2433866ab69cf03';
+const SAMPLE_RECEIPT = {"vsr":{"amount":{"currency":"USDC","value":"0.001000"},"completeness":"unilateral_merchant","delivery":{"delivered_at":"2026-11-13T00:00:00.000Z","status":"delivered"},"payment":{"complete_seen_at":"2026-11-13T00:00:01.000Z","proof_hash":"sha256:1642068b6548796e84e753c085d6ff5c4c3dc697927bcdc325a09dbe6807bba9","proof_seen_at":"2026-11-13T00:00:00.000Z","redeem_count":1,"redeem_resources":["base.tip.v1"],"settlement_status":"settled"},"protocol":"x402","request_fingerprint":"sha256:fd1cfd99686285356c67e4cd8c48aca574da97cb9e3fc59765368d2d60ec515c","resource_id":"base.tip.v1","result":{"consumed":"unknown"},"schema_version":"sycee/v0.1","signer":{"agent_id":"sycee:demo-merchant","key_id":"demo-sample","public_key":"ed25519:MCowBQYDK2VwAyEA0EqyMnQrtKs6E2i9RhXk5tAiSrcaAWuvhSCjMsl3hzc","role":"merchant"}},"signature":"00Jt_3nvMrIFP7aVvZf2iYsSQTDe8t0sgaDZmC2o8aZAiNZHhSmiy8Ys5w4SVw0DpR21i2lmFrageb-mCndNDA"};
+
+function canonicalize(value) {
+  if (value === null || typeof value !== 'object') {
+    if (typeof value === 'number') {
+      if (!Number.isFinite(value)) throw new TypeError('canonical JSON: non-finite number');
+      return value;
+    }
+    if (typeof value === 'bigint') throw new TypeError('canonical JSON: BigInt not allowed');
+    if (typeof value === 'undefined') throw new TypeError('canonical JSON: undefined not allowed');
+    return value;
+  }
+  if (Array.isArray(value)) return value.map(canonicalize);
+  const out = {};
+  for (const key of Object.keys(value).sort()) {
+    const item = value[key];
+    if (item === undefined) continue;
+    out[key] = canonicalize(item);
+  }
+  return out;
+}
+
+function canonicalJSON(value) {
+  return JSON.stringify(canonicalize(value));
+}
+
+function sha256Hex(text) {
+  const bytes = new TextEncoder().encode(text);
+  const K = new Uint32Array([
+    0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+    0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+    0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+    0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+    0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+    0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+    0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+    0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
+  ]);
+  const rotr = (x, n) => (x >>> n) | (x << (32 - n));
+  let h0 = 0x6a09e667, h1 = 0xbb67ae85, h2 = 0x3c6ef372, h3 = 0xa54ff53a;
+  let h4 = 0x510e527f, h5 = 0x9b05688c, h6 = 0x1f83d9ab, h7 = 0x5be0cd19;
+  const bitLen = bytes.length * 8;
+  const withPad = new Uint8Array((((bytes.length + 9 + 63) >> 6) << 6));
+  withPad.set(bytes);
+  withPad[bytes.length] = 0x80;
+  const view = new DataView(withPad.buffer);
+  view.setUint32(withPad.length - 8, Math.floor(bitLen / 0x100000000), false);
+  view.setUint32(withPad.length - 4, bitLen >>> 0, false);
+  const w = new Uint32Array(64);
+  for (let i = 0; i < withPad.length; i += 64) {
+    for (let t = 0; t < 16; t += 1) w[t] = view.getUint32(i + t * 4, false);
+    for (let t = 16; t < 64; t += 1) {
+      const s0 = rotr(w[t - 15], 7) ^ rotr(w[t - 15], 18) ^ (w[t - 15] >>> 3);
+      const s1 = rotr(w[t - 2], 17) ^ rotr(w[t - 2], 19) ^ (w[t - 2] >>> 10);
+      w[t] = (w[t - 16] + s0 + w[t - 7] + s1) >>> 0;
+    }
+    let a = h0, b = h1, c = h2, d = h3, e = h4, f = h5, g = h6, h = h7;
+    for (let t = 0; t < 64; t += 1) {
+      const s1 = rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25);
+      const ch = (e & f) ^ (~e & g);
+      const temp1 = (h + s1 + ch + K[t] + w[t]) >>> 0;
+      const s0 = rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22);
+      const maj = (a & b) ^ (a & c) ^ (b & c);
+      const temp2 = (s0 + maj) >>> 0;
+      h = g; g = f; f = e; e = (d + temp1) >>> 0; d = c; c = b; b = a; a = (temp1 + temp2) >>> 0;
+    }
+    h0 = (h0 + a) >>> 0; h1 = (h1 + b) >>> 0; h2 = (h2 + c) >>> 0; h3 = (h3 + d) >>> 0;
+    h4 = (h4 + e) >>> 0; h5 = (h5 + f) >>> 0; h6 = (h6 + g) >>> 0; h7 = (h7 + h) >>> 0;
+  }
+  return [h0, h1, h2, h3, h4, h5, h6, h7].map((x) => x.toString(16).padStart(8, '0')).join('');
+}
+
+function asEnvelope(envelope) {
+  if (!envelope || typeof envelope !== 'object' || !envelope.vsr || typeof envelope.signature !== 'string') {
+    throw new Error('需要一张收据：{ vsr, signature }');
+  }
+  return { vsr: envelope.vsr, signature: envelope.signature };
+}
+
+function receiptHash(envelope) {
+  const hex = sha256Hex(canonicalJSON(asEnvelope(envelope)));
+  return `sha256:${hex}`;
+}
+
+function parseReceiptText(text) {
+  const trimmed = String(text || '').trim();
+  if (!trimmed) throw new Error('收据是空的');
+  if (trimmed.startsWith('{') || trimmed.startsWith('[')) return JSON.parse(trimmed);
+  const pad = trimmed.length % 4 === 0 ? '' : '='.repeat(4 - (trimmed.length % 4));
+  const b64 = trimmed.replace(/-/g, '+').replace(/_/g, '/') + pad;
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i += 1) bytes[i] = bin.charCodeAt(i);
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
+// HASH_LIB_END
+
+const receiptBox = document.querySelector('#receipt');
+const out = document.querySelector('#out');
+function showSample() {
+  receiptBox.value = JSON.stringify(SAMPLE_RECEIPT, null, 2);
+}
+showSample();
+document.querySelector('#reset').addEventListener('click', showSample);
+
+function render(html, kind) {
+  out.className = `card ${kind}`;
+  out.innerHTML = html;
+}
+function esc(value) {
+  return String(value).replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+}
+
+document.querySelector('#run').addEventListener('click', async () => {
+  let envelope;
+  try {
+    envelope = parseReceiptText(receiptBox.value);
+  } catch (err) {
+    render(`<p>这张收据读不出来。${esc(err.message)}</p>`, 'wait');
+    return;
+  }
+  let hash;
+  try {
+    hash = receiptHash(envelope);
+  } catch (err) {
+    render(`<p>算不出指纹。${esc(err.message)}</p>`, 'wait');
+    return;
+  }
+  const digest = hash.slice('sha256:'.length);
+  const offline = document.querySelector('#offline').checked;
+  const contractId = document.querySelector('#contract').value.trim();
+  if (offline) {
+    const same = digest === SAMPLE_DIGEST;
+    render(
+      `<p><strong>${same ? '离线示例核对通过' : '指纹变了，和内置示例不一样'}</strong></p>
+       <p>指纹 <code>${esc(hash)}</code></p>
+       <p>${same
+         ? '这一步没有连网。这张示例收据也已经记在 sycee-anchor.testnet，区块 277456711。取消勾选会再问一次链。'
+         : '这一步没有连网。链上那条记录只对应页内的示例收据。'}</p>`,
+      same ? 'ok' : 'wait',
+    );
+    return;
+  }
+  if (!contractId || contractId.includes('待填') || /tbd/i.test(contractId)) {
+    render(
+      `<p>指纹已经算出来了：<code>${esc(hash)}</code></p>
+       <p>合约账号还是 [待填]，所以没有去问测试网。填上主人部署后的账号再查。</p>`,
+      'wait',
+    );
+    return;
+  }
+  render('<p>正在问 NEAR 测试网…</p>', 'wait');
+  try {
+    const response = await fetch('https://rpc.testnet.near.org', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 'sycee',
+        method: 'query',
+        params: {
+          request_type: 'call_function',
+          finality: 'final',
+          account_id: contractId,
+          method_name: 'get_anchor',
+          args_base64: btoa(JSON.stringify({ receipt_hash: digest })),
+        },
+      }),
+    });
+    const body = await response.json();
+    if (body.error) {
+      const message = body.error.data || body.error.message || '查询失败';
+      render(`<p>测试网没有返回记录。${esc(typeof message === 'string' ? message : JSON.stringify(message))}</p><p>指纹 <code>${esc(hash)}</code></p>`, 'wait');
+      return;
+    }
+    const text = new TextDecoder().decode(new Uint8Array(body.result.result));
+    const record = text === 'null' ? null : JSON.parse(text);
+    if (!record) {
+      render(`<p>测试网上还没有这条指纹。</p><p>指纹 <code>${esc(hash)}</code></p>`, 'wait');
+      return;
+    }
+    const match = String(record.receipt_hash).toLowerCase() === digest;
+    render(
+      `<p><strong>${match ? '测试网上的指纹和这张收据一致' : '链上指纹和这张收据不一致'}</strong></p>
+       <p>指纹 <code>${esc(hash)}</code></p>
+       <p>来源链 <code>${esc(record.source_chain)}</code>，商家 <code>${esc(record.merchant_id)}</code></p>
+       <p>区块高度 ${esc(record.block_height)}，时间（纳秒）<code>${esc(record.block_timestamp_ns)}</code></p>
+       <p>写入账号 <code>${esc(record.predecessor)}</code></p>`,
+      match ? 'ok' : 'wait',
+    );
+  } catch (err) {
+    render(`<p>连不上测试网。${esc(err.message)}</p><p>指纹仍是 <code>${esc(hash)}</code>。离线示例不需要网络。</p>`, 'wait');
+  }
+});
+</script>
+<noscript><p>这个页面需要浏览器里的脚本才能算指纹。它不会连接钱包。</p></noscript>
+</body>
+</html>

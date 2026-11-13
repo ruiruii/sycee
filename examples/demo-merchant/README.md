@@ -153,6 +153,10 @@ Those npm packages are client tools for this script only. They are not imported 
 - Receipts and the dashboard store proof hashes, decisions, and (on an accepted settle) the public transaction hash. They do not store the payment payload, the EIP-3009 authorization, or the payer key. The transaction hash is not shown on the public page.
 - Rate limit is a fixed one-minute window per `CF-Connecting-IP` (or the first `X-Forwarded-For` hop outside Cloudflare). A configured limit outside 1–10000 is treated as 60. It is a brake, not an authentication boundary.
 
+## Anchoring a receipt on NEAR
+
+The receipt this merchant signs can be hashed and written to a NEAR testnet contract that stores only that hash. The contract does not score, does not hold funds, and does not move funds. The deployed account is `sycee-anchor.testnet` ([deploy transaction](https://testnet.nearblocks.io/txns/J14QkoAmZmtNeFrUcjb5BwN1WjhoN4L7QwiQ9YF5zq3h)). The walkthrough is [../near-anchor/README.md](../near-anchor/README.md). A browser page that recomputes the hash with no wallet is [../near-anchor/demo/index.html](../near-anchor/demo/index.html).
+
 ## Layout
 
 ```

@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# Compile the anchor contract and lower Wasm features the NEAR runtime
+# used by near-sandbox (nearcore 2.6.2) cannot parse. Does not deploy.
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT/contract"
+rustup target add wasm32-unknown-unknown >/dev/null
+cargo build --target wasm32-unknown-unknown --release --locked
+RAW="target/wasm32-unknown-unknown/release/sycee_anchor.wasm"
+mkdir -p "$ROOT/out" "$ROOT/.tools"
+
+WASM_OPT="${WASM_OPT:-}"
+if [ -z "$WASM_OPT" ]; then
+  if command -v wasm-opt >/dev/null 2>&1; then
+    WASM_OPT="$(command -v wasm-opt)"
+  else
+    WASM_OPT="$ROOT/.tools/wasm-opt"
+  fi
+fi
+if [ ! -x "$WASM_OPT" ]; then
+  ARCHIVE="$ROOT/.tools/binaryen.tar.gz"
+  curl -fsSL -o "$ARCHIVE" \
+    https://github.com/WebAssembly/binaryen/releases/download/version_120/binaryen-version_120-x86_64-linux.tar.gz
+  tar -xzf "$ARCHIVE" -C "$ROOT/.tools" --strip-components=2 binaryen-version_120/bin/wasm-opt
+  chmod +x "$WASM_OPT"
+fi
+
+"$WASM_OPT" -Oz \
+  --signext-lowering \
+  --disable-bulk-memory \
+  --disable-reference-types \
+  --disable-multivalue \
+  --disable-simd \
+  --disable-nontrapping-float-to-int \
+  "$RAW" \
+  -o "$ROOT/out/sycee_anchor.wasm"
+wc -c "$ROOT/out/sycee_anchor.wasm"

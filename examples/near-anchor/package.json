@@ -1,0 +1,25 @@
+{
+  "name": "@sycee/near-anchor",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Anchor SYCEE receipt hashes on NEAR testnet. Hashes only. No scoring, no custody, no fund movement.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "bash scripts/build.sh",
+    "test": "node --test test/hash.test.mjs test/merkle.test.mjs test/demo-page.test.mjs test/cli.test.mjs && node --test test/sandbox.test.mjs",
+    "test:unit": "node --test test/hash.test.mjs test/merkle.test.mjs test/demo-page.test.mjs test/cli.test.mjs",
+    "anchor": "node scripts/anchor.mjs",
+    "verify": "node scripts/verify.mjs"
+  },
+  "dependencies": {
+    "@sycee/core": "file:../../packages/core",
+    "near-api-js": "^5.1.1"
+  },
+  "devDependencies": {
+    "near-workspaces": "^5.0.0"
+  }
+}

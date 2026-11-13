@@ -1,3 +1,86 @@
+演示页面（打开就能看，不需要钱包）：[examples/near-anchor/demo/index.html](examples/near-anchor/demo/index.html)
+公开网址：[待填]（TBD）。主人打开 GitHub Pages 并手动运行 Demo page 工作流之后，预期在 `https://ruiruii.github.io/sycee/`。现在没有这个网址。
+
+## 我们解决什么
+
+机器帮人付钱（agent payment）之后，旁人怎么确认那张收据没被改过。我们要的是一张能核对的收据（verifiable receipt）。演示商家在 Base Sepolia 上卖一个 0.001 美元的测试接口并签名收据。我们不给人打分，不保管钱，也不转账。
+
+## 用了什么技术
+
+收据仍在 Base Sepolia 产生。我们只把收据的指纹记到 NEAR 测试网，这就是跨链留痕（cross-chain anchoring）。指纹算法和 SYCEE 自己的一样。合约里只有指纹、来源链、商家公开地址、区块高度和时间。没有付款原文。测试网合约账号是 `sycee-anchor.testnet`（主人也是这个账号，写入名单是空的）。部署交易：[J14QkoAmZmtNeFrUcjb5BwN1WjhoN4L7QwiQ9YF5zq3h](https://testnet.nearblocks.io/txns/J14QkoAmZmtNeFrUcjb5BwN1WjhoN4L7QwiQ9YF5zq3h)。来自提交 `01b4e419`，wasm 159146 字节，sha256 `c027e046864760b51848501cec91c5c0b4e738d6dc94de86ce63d3d0ae98a236`。
+
+## 怎么验证
+
+1. 打开上面的演示页。里面已经放了一张示例收据。勾着「离线示例」，它会算出 `sha256:f296fd15aee336c3d877dab40eec7a6e64f68923d4002807a2433866ab69cf03`，并和页内写死的指纹对照。这一步不连网。
+2. 开发者在 `examples/near-anchor/` 跑 `bash scripts/build.sh` 和 `npm test`。合约 wasm 159146 字节。Rust 测试 6 个、Node 单元测试 11 个、本地 NEAR 沙箱测试 1 个，都已通过。沙箱覆盖写入、重复拒绝、外人拒绝、查询和核对脚本。
+3. 示例收据 `examples/near-anchor/fixtures/sample-receipt.json` 已经写在 `sycee-anchor.testnet`。指纹 `sha256:f296fd15aee336c3d877dab40eec7a6e64f68923d4002807a2433866ab69cf03`，来源链 `eip155:84532`，商家 `sycee:demo-merchant`，区块 277456711。锚定交易：[9WbMG7rgCiX7TNhnhZdSwGvz2xv82HX3oCgbVCdQHxzJ](https://testnet.nearblocks.io/txns/9WbMG7rgCiX7TNhnhZdSwGvz2xv82HX3oCgbVCdQHxzJ)。`verify.mjs` 返回成功。这是核对过的结果，不是计划。
+
+完整中文说明：[examples/near-anchor/SUBMISSION.zh.md](examples/near-anchor/SUBMISSION.zh.md)。主人清单：[examples/near-anchor/提交清单.md](examples/near-anchor/提交清单.md)。
+
+---
+
+A page you can open, with no wallet: [examples/near-anchor/demo/index.html](examples/near-anchor/demo/index.html). Public URL: [待填] (TBD). The owner turns on GitHub Pages (source: GitHub Actions) and then runs the workflow named Demo page by hand. After that, the page is expected at `https://ruiruii.github.io/sycee/`. That URL does not exist yet.
+
+This is the English text of [examples/near-anchor/SUBMISSION.zh.md](examples/near-anchor/SUBMISSION.zh.md). The same file is [examples/near-anchor/SUBMISSION.en.md](examples/near-anchor/SUBMISSION.en.md).
+
+## Problem
+
+Machines pay for things on a person's behalf. The track name for that is agent payment. After the payment, how can someone else tell that the receipt was not edited?
+
+SYCEE already issues the receipt. The track name for that receipt is verifiable receipt. The demo merchant, on Base Sepolia, sells one test call, `GET /v1/base/tip`, for 0.001 test USDC. When the payment is accepted, the merchant signs a receipt. The receipt holds hashes and a signature. It does not hold the payment itself.
+
+What was missing is a public time record: this receipt's fingerprint was written down at a known moment. This project does not score anyone, does not hold funds, and does not move funds.
+
+## Solution
+
+The receipt is still produced by the demo merchant on Base Sepolia. This project does one more thing: it copies the receipt's fingerprint onto NEAR testnet. The track name for that step is cross-chain anchoring. One chain produces the receipt. The other stamps the fingerprint with a block time.
+
+The fingerprint uses the same algorithm SYCEE already uses. The receipt is turned into one canonical JSON text, then SHA-256. For the sample receipt in this repo, that value is `sha256:f296fd15aee336c3d877dab40eec7a6e64f68923d4002807a2433866ab69cf03`.
+
+That sample is not a payment that happened. The demo page recomputes it with the same algorithm and can match this string with no network.
+
+The contract stores the fingerprint, the source chain (for example `eip155:84532`), the merchant's public payTo address, the block height, the time, and which account wrote it. It does not store the receipt body, the payment proof, or personal data.
+
+Who may write is fixed at deploy. Everyone else can only read. The same fingerprint cannot be written twice.
+
+## What we built on NEAR
+
+The contract is in `examples/near-anchor/contract/`. It does not accept NEAR and it does not send NEAR. In plain language the methods are:
+
+- `new`: at deploy, sets the owner and any other accounts allowed to write. Called once.
+- `anchor`: writes one receipt fingerprint. A repeat is rejected. An account that is not on the list is rejected.
+- `anchor_batch`: writes up to 32 fingerprints and computes one combined fingerprint (a Merkle root). The contract computes that root. The caller does not get to invent it.
+- `get_anchor`: looks up one fingerprint. Returns empty when it was never written.
+- `is_anchored`: whether that fingerprint is stored.
+- `get_batch`: looks up one combined fingerprint.
+- `verify_inclusion`: given one fingerprint and a short proof, checks that it belongs to that combined fingerprint and that this contract stored the batch.
+- `add_anchorer` / `remove_anchorer`: the owner adds or removes a writer. The owner cannot be removed.
+- `get_owner` / `is_anchorer`: read the owner and the writer list. Anyone can read.
+
+Each write emits a public log in the NEP-297 shape. The log is fingerprints and labels only.
+
+Checking happens in two places. The browser page only recomputes the fingerprint. The Node script `examples/near-anchor/scripts/verify.mjs` also checks the SYCEE signature, then compares the fingerprint on chain. The chain does not check the signature, does not decide whether the payment succeeded, and does not decide whether the buyer used the result.
+
+## Results
+
+These ran on this machine. They are not a plan.
+
+- The contract builds. `bash examples/near-anchor/scripts/build.sh` writes a wasm of 159146 bytes (`examples/near-anchor/out/sycee_anchor.wasm`).
+- 6 Rust unit tests passed (`cargo +1.100.0 test`): write, duplicate rejected, stranger rejected, attached deposit rejected, the owner allows another writer, and the batch fingerprint matches the off-chain check.
+- 11 Node unit tests passed: the fingerprint matches `@sycee/core`, the combined fingerprint, the demo page's algorithm, and the deploy script's refusal of mainnet.
+- 1 local NEAR sandbox test passed. It covers: write, duplicate rejected, stranger rejected, a missing fingerprint reads back empty, attached NEAR rejected, the public log, a batch root equal to the JavaScript root, `verify_inclusion`, and `scripts/verify.mjs` succeeding against that local chain.
+- The demo page opens with a sample receipt filled in. With "离线示例" checked, it computes `sha256:f296fd15aee336c3d877dab40eec7a6e64f68923d4002807a2433866ab69cf03` and shows that this matches the fingerprint written into the page. That step does not contact testnet.
+- The same sample receipt is on NEAR testnet. Contract account `sycee-anchor.testnet` (owner `sycee-anchor.testnet`, anchorers `[]`), deployed from commit `01b4e419`, wasm 159146 bytes, sha256 `c027e046864760b51848501cec91c5c0b4e738d6dc94de86ce63d3d0ae98a236`. Deploy transaction: [J14QkoAmZmtNeFrUcjb5BwN1WjhoN4L7QwiQ9YF5zq3h](https://testnet.nearblocks.io/txns/J14QkoAmZmtNeFrUcjb5BwN1WjhoN4L7QwiQ9YF5zq3h). The anchor is hash `sha256:f296fd15aee336c3d877dab40eec7a6e64f68923d4002807a2433866ab69cf03`, source chain `eip155:84532`, merchant id `sycee:demo-merchant`, block 277456711. Anchor transaction: [9WbMG7rgCiX7TNhnhZdSwGvz2xv82HX3oCgbVCdQHxzJ](https://testnet.nearblocks.io/txns/9WbMG7rgCiX7TNhnhZdSwGvz2xv82HX3oCgbVCdQHxzJ). `verify.mjs` returned ok.
+
+Still the owner's, not done here:
+
+- Mainnet payout account: [待填] (TBD). If the hackathon form asks for a mainnet account for a prize, the owner fills that in. No mainnet account is created here, and nothing is deployed to mainnet.
+- Demo video: [待填] (TBD).
+- Demo post on X: [待填] (TBD). The owner posts it. Nothing is posted from here.
+- Public demo URL: [待填] (TBD). See the top of this file. Repository settings were not changed.
+
+---
+
 # SYCEE
 
 [![CI](https://github.com/ruiruii/sycee/actions/workflows/ci.yml/badge.svg)](https://github.com/ruiruii/sycee/actions/workflows/ci.yml)
@@ -93,7 +176,7 @@ SYCEE/
 │   ├── adapter-automaton/      # binds a hash-chained attestation ledger (RW-001 origin)
 │   └── probe/                  # evidence-layer CLI (probe/verify/batch, signed reports)
 ├── upstream/                   # ready-to-send proposals to x402-receipts, Vauban, ERC-8004
-└── examples/                   # minimal runnable demos
+└── examples/                   # demos, including examples/near-anchor (NEAR testnet hash log)
 ```
 
 All packages are **zero-dependency** and use Node native Ed25519 (`crypto`).

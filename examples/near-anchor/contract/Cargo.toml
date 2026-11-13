@@ -1,0 +1,23 @@
+[package]
+name = "sycee-anchor"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+description = "Anchor SYCEE receipt hashes on NEAR. Stores hashes only. No scoring, no custody, no fund movement."
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+near-sdk = { version = "=5.7.1", features = ["unit-testing"] }
+# 0.2.5+ of near-sys floats onto edition2024. 5.7.1 was published against 0.2.2.
+near-sys = "=0.2.2"
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+overflow-checks = true
+strip = "symbols"
