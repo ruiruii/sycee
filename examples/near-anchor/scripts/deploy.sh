@@ -2,6 +2,7 @@
 # Deploy to NEAR testnet with near-cli-rs.
 # Does not create an account, does not deploy to mainnet, does not spend
 # anything except the gas your existing testnet account already pays.
+# Does not print a private key.
 set -euo pipefail
 
 NETWORK="${NEAR_NETWORK:-testnet}"
@@ -21,6 +22,47 @@ case "$NEAR_ACCOUNT_ID" in
     exit 2
     ;;
 esac
+
+# OS keyring (sign-with-keychain) has no session on a headless Linux box.
+# The legacy keychain is the JSON file ~/.near-credentials/<network>/<account>.json.
+os_keyring_available() {
+  case "$(uname -s)" in
+    Darwin) return 0 ;;
+    Linux)
+      if [ -n "${DBUS_SESSION_BUS_ADDRESS:-}" ]; then
+        return 0
+      fi
+      if [ -n "${XDG_RUNTIME_DIR:-}" ] && [ -S "${XDG_RUNTIME_DIR}/bus" ]; then
+        return 0
+      fi
+      return 1
+      ;;
+    *) return 1 ;;
+  esac
+}
+
+case "${NEAR_SIGN_WITH:-auto}" in
+  keychain) SIGN_WITH="sign-with-keychain" ;;
+  legacy) SIGN_WITH="sign-with-legacy-keychain" ;;
+  auto)
+    if os_keyring_available; then
+      SIGN_WITH="sign-with-keychain"
+    else
+      echo "No OS keyring session. Signing with ~/.near-credentials (sign-with-legacy-keychain)." >&2
+      echo "Set NEAR_SIGN_WITH=keychain to require the OS keyring, or NEAR_SIGN_WITH=legacy to keep this." >&2
+      SIGN_WITH="sign-with-legacy-keychain"
+    fi
+    ;;
+  *)
+    echo "NEAR_SIGN_WITH must be auto, keychain, or legacy." >&2
+    exit 2
+    ;;
+esac
+
+if [ "${NEAR_DEPLOY_PRINT_SIGN:-}" = "1" ]; then
+  echo "sign:${SIGN_WITH}"
+  exit 0
+fi
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 WASM="${SYCEE_ANCHOR_WASM:-$ROOT/out/sycee_anchor.wasm}"
@@ -52,7 +94,7 @@ INIT="$(
 
 echo "Deploying ${WASM} to ${NEAR_ACCOUNT_ID} on testnet."
 echo "Init: ${INIT}"
-echo "Signs with your near-cli-rs keychain. Does not create an account."
+echo "Signer: ${SIGN_WITH}. Does not create an account. Does not print a key."
 
 exec near contract deploy "$NEAR_ACCOUNT_ID" \
   use-file "$WASM" \
@@ -61,5 +103,5 @@ exec near contract deploy "$NEAR_ACCOUNT_ID" \
   prepaid-gas '30 Tgas' \
   attached-deposit '0 NEAR' \
   network-config testnet \
-  sign-with-keychain \
+  "$SIGN_WITH" \
   send

@@ -56,10 +56,12 @@ These ran on this machine. They are not a plan.
 - 11 Node unit tests passed: the fingerprint matches `@sycee/core`, the combined fingerprint, the demo page's algorithm, and the deploy script's refusal of mainnet.
 - 1 local NEAR sandbox test passed. It covers: write, duplicate rejected, stranger rejected, a missing fingerprint reads back empty, attached NEAR rejected, the public log, a batch root equal to the JavaScript root, `verify_inclusion`, and `scripts/verify.mjs` succeeding against that local chain.
 - The demo page opens with a sample receipt filled in. With "离线示例" checked, it computes `sha256:f296fd15aee336c3d877dab40eec7a6e64f68923d4002807a2433866ab69cf03` and shows that this matches the fingerprint written into the page. That step does not contact testnet.
+- The testnet contract is deployed. Account `sycee-anchor.testnet`, owner `sycee-anchor.testnet`, anchorers `[]`. Built from commit `01b4e419`, wasm 159146 bytes, sha256 `c027e046864760b51848501cec91c5c0b4e738d6dc94de86ce63d3d0ae98a236`. Deploy transaction: [J14QkoAmZmtNeFrUcjb5BwN1WjhoN4L7QwiQ9YF5zq3h](https://testnet.nearblocks.io/txns/J14QkoAmZmtNeFrUcjb5BwN1WjhoN4L7QwiQ9YF5zq3h).
+- That same sample receipt (`fixtures/sample-receipt.json`) is anchored. Hash `sha256:f296fd15aee336c3d877dab40eec7a6e64f68923d4002807a2433866ab69cf03`, source chain `eip155:84532`, merchant id `sycee:demo-merchant`, block 277456711. Anchor transaction: [9WbMG7rgCiX7TNhnhZdSwGvz2xv82HX3oCgbVCdQHxzJ](https://testnet.nearblocks.io/txns/9WbMG7rgCiX7TNhnhZdSwGvz2xv82HX3oCgbVCdQHxzJ). `verify.mjs` returned ok.
 
 Still the owner's, not done here:
 
-- Testnet contract account: [待填] (TBD). With a testnet account you already have, run `NEAR_ACCOUNT_ID=your-account.testnet bash scripts/deploy.sh`. This repo does not create an account and does not deploy.
 - Mainnet payout account: [待填] (TBD). If the hackathon form asks for a mainnet account for a prize, the owner fills that in. No mainnet account is created here, and nothing is deployed to mainnet.
+- Demo video: [待填] (TBD).
 - Demo post on X: [待填] (TBD). The owner posts it. Nothing is posted from here.
 - Public demo URL: [待填] (TBD). See the top of this file. Repository settings were not changed.

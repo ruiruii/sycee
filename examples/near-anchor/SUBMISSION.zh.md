@@ -56,10 +56,12 @@ SYCEE 已经会开收据。收据的英文名字是 verifiable receipt。演示�
 - Node 单元测试 11 个通过：指纹和 `@sycee/core` 一致、总指纹、演示页算法、部署脚本拒绝主网。
 - 本地 NEAR 沙箱测试 1 个通过。它覆盖：写入、重复拒绝、外人拒绝、查不到时返回空、拒收附带的 NEAR、公开日志、批量总指纹和 JavaScript 算的一致、`verify_inclusion`、以及 `scripts/verify.mjs` 对着这个本地链核对成功。
 - 演示页打开就有一张示例收据。勾着「离线示例」时，它算出 `sha256:f296fd15aee336c3d877dab40eec7a6e64f68923d4002807a2433866ab69cf03`，并显示和页内写死的指纹一致。这一步没有连测试网。
+- 测试网合约已经部署。账号 `sycee-anchor.testnet`，主人也是这个账号，写入名单是空的。来自提交 `01b4e419`，wasm 159146 字节，sha256 `c027e046864760b51848501cec91c5c0b4e738d6dc94de86ce63d3d0ae98a236`。部署交易：[J14QkoAmZmtNeFrUcjb5BwN1WjhoN4L7QwiQ9YF5zq3h](https://testnet.nearblocks.io/txns/J14QkoAmZmtNeFrUcjb5BwN1WjhoN4L7QwiQ9YF5zq3h)。
+- 同一张示例收据（`fixtures/sample-receipt.json`）已经写上链。指纹就是上面那串，来源链 `eip155:84532`，商家 `sycee:demo-merchant`，区块 277456711。锚定交易：[9WbMG7rgCiX7TNhnhZdSwGvz2xv82HX3oCgbVCdQHxzJ](https://testnet.nearblocks.io/txns/9WbMG7rgCiX7TNhnhZdSwGvz2xv82HX3oCgbVCdQHxzJ)。`verify.mjs` 返回成功。
 
 还没做、要主人自己做的：
 
-- 测试网合约账号：[待填]（TBD）。用你已有的测试网账号运行 `NEAR_ACCOUNT_ID=你的账号.testnet bash scripts/deploy.sh`。本仓库不创建账号，也不部署。
 - 主网收款账号：[待填]（TBD）。黑客松表格如果要一个主网账号来领奖，由主人自己填。这里不创建主网账号，也不部署到主网。
+- 演示视频：[待填]（TBD）。
 - X 上的演示帖：[待填]（TBD）。由主人自己发。这里不发帖。
 - 公开演示网址：[待填]（TBD）。见文首。仓库设置没有被改过。

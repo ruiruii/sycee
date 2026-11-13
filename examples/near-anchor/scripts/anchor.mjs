@@ -4,9 +4,10 @@
  *
  *   NEAR_ACCOUNT_ID=you.testnet \
  *   NEAR_CONTRACT_ID=you.testnet \
- *   NEAR_PRIVATE_KEY=ed25519:... \
  *   node scripts/anchor.mjs --receipt receipt.json --evidence evidence.json
  *
+ * The signing key is NEAR_PRIVATE_KEY, or ~/.near-credentials/$NEAR_NETWORK/$NEAR_ACCOUNT_ID.json
+ * when that variable is unset. The key is never printed.
  * Refuses mainnet. Does not create an account.
  */
 

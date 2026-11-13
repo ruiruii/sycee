@@ -19,9 +19,12 @@ test('the demo page hashes a receipt the same way SYCEE does', () => {
   assert.equal(api.sha256Hex('abc'), createHash('sha256').update('abc').digest('hex'));
 });
 
-test('the demo page does not claim a deployed contract', () => {
+test('the demo page queries sycee-anchor.testnet and still marks the public URL as unset', () => {
+  assert.match(html, /value="sycee-anchor\.testnet"/);
+  assert.match(html, /277456711/);
+  assert.match(html, /9WbMG7rgCiX7TNhnhZdSwGvz2xv82HX3oCgbVCdQHxzJ/);
   assert.match(html, /\[待填\]/);
-  assert.doesNotMatch(html, /已部署到测试网|deployed on testnet/i);
+  assert.match(html, /id="offline"[^>]*checked|checked[^>]*id="offline"/);
 });
 
 test('a base64url receipt header parses to the same hash', () => {

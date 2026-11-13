@@ -4,7 +4,7 @@ A NEAR contract that stores hashes of SYCEE receipts. The Base Sepolia demo merc
 
 The chain record is a timestamped log. Any agent can recompute the hash and read it back. The contract does not score anyone, does not take custody, and does not move funds. It stores hashes, a chain label such as `eip155:84532`, a merchant id (the demo's public `payTo`), the block height, and the block timestamp. It does not store the receipt body, the payment proof, or a payer key.
 
-The contract is not deployed. The testnet account is `[待填]` (TBD). Nothing in this directory creates a NEAR account or spends funds.
+The deployed testnet contract is `sycee-anchor.testnet`. The owner is `sycee-anchor.testnet` and `anchorers` is empty. That deployment is commit `01b4e419`, wasm 159146 bytes, sha256 `c027e046864760b51848501cec91c5c0b4e738d6dc94de86ce63d3d0ae98a236`. Deploy transaction: [J14QkoAmZmtNeFrUcjb5BwN1WjhoN4L7QwiQ9YF5zq3h](https://testnet.nearblocks.io/txns/J14QkoAmZmtNeFrUcjb5BwN1WjhoN4L7QwiQ9YF5zq3h). Nothing in this directory creates a NEAR account. Mainnet is refused.
 
 ## Receipt hash
 
@@ -57,7 +57,7 @@ Leave "离线示例" checked. The page compares the hash to the sample hash bake
 
 `sha256:f296fd15aee336c3d877dab40eec7a6e64f68923d4002807a2433866ab69cf03`
 
-That check does not contact NEAR. Uncheck it only after a contract account exists. The account field defaults to `[待填]`. The public URL is also `[待填]` (TBD). The owner enables GitHub Pages with source "GitHub Actions", then runs the `Demo page` workflow (`.github/workflows/near-anchor-pages.yml`). This repository does not turn Pages on. After that, the site is expected at `https://ruiruii.github.io/sycee/`.
+That offline check does not contact NEAR. The same sample is already anchored on `sycee-anchor.testnet`: source chain `eip155:84532`, merchant id `sycee:demo-merchant`, block 277456711. Anchor transaction: [9WbMG7rgCiX7TNhnhZdSwGvz2xv82HX3oCgbVCdQHxzJ](https://testnet.nearblocks.io/txns/9WbMG7rgCiX7TNhnhZdSwGvz2xv82HX3oCgbVCdQHxzJ). `scripts/verify.mjs` returned ok against that record. Uncheck "离线示例" and the page asks `sycee-anchor.testnet`, which is the default in the contract field. The public page URL is still `[待填]` (TBD). The owner enables GitHub Pages with source "GitHub Actions", then runs the `Demo page` workflow (`.github/workflows/near-anchor-pages.yml`). This repository does not turn Pages on. After that, the site is expected at `https://ruiruii.github.io/sycee/`. A demo video and an X post are also still `[待填]` (TBD).
 
 ## Build and test
 
@@ -88,7 +88,17 @@ bash scripts/build.sh
 NEAR_ACCOUNT_ID=your-account.testnet bash scripts/deploy.sh
 ```
 
-`scripts/deploy.sh` refuses `NEAR_NETWORK` other than `testnet`, and refuses an account id ending in `.near`. It does not create an account. The command it runs is:
+`scripts/deploy.sh` refuses `NEAR_NETWORK` other than `testnet`, and refuses an account id ending in `.near`. It does not create an account. `sycee-anchor.testnet` is already deployed; run this only for another account you control.
+
+Signing has two near-cli-rs modes. `NEAR_SIGN_WITH=auto` (the default) uses the OS keyring when a session exists, and otherwise the file keychain. A headless Linux box has no keyring, so auto picks the file.
+
+| `NEAR_SIGN_WITH` | near-cli-rs flag | Where the key is |
+|---|---|---|
+| `keychain` | `sign-with-keychain` | The OS keyring. This fails on headless Linux with no session bus. |
+| `legacy` | `sign-with-legacy-keychain` | `~/.near-credentials/testnet/<account>.json` |
+| `auto` | one of the two above | Keyring if `DBUS_SESSION_BUS_ADDRESS` or the runtime bus socket is present (always on macOS); otherwise the file. |
+
+The command it runs is:
 
 ```bash
 near contract deploy "$NEAR_ACCOUNT_ID" \
@@ -102,23 +112,22 @@ near contract deploy "$NEAR_ACCOUNT_ID" \
   send
 ```
 
+On a machine with no OS keyring, the last signing word is `sign-with-legacy-keychain` instead of `sign-with-keychain`. The credentials file looks like `{"account_id":"...","public_key":"ed25519:...","private_key":"ed25519:..."}`. The script does not print that key.
+
 Optional `NEAR_ANCHORERS` is a comma-separated list of extra writer accounts.
 
-After that account exists, anchor one receipt and read it back:
+To anchor another receipt, set `NEAR_PRIVATE_KEY` or leave it unset and put the same JSON at `~/.near-credentials/$NEAR_NETWORK/$NEAR_ACCOUNT_ID.json`. `scripts/anchor.mjs` reads that file and does not print the key. A second copy of a hash the contract already stores is rejected. The sample hash above is one of those.
 
 ```bash
-NEAR_ACCOUNT_ID=your-account.testnet \
-NEAR_CONTRACT_ID=your-account.testnet \
-NEAR_PRIVATE_KEY='ed25519:...' \
+NEAR_ACCOUNT_ID=sycee-anchor.testnet \
+NEAR_CONTRACT_ID=sycee-anchor.testnet \
   node scripts/anchor.mjs \
     --receipt path/to/receipt.json \
     --source-chain eip155:84532 \
-    --merchant-id 0xYourPayTo
+    --merchant-id sycee:demo-merchant
 
-NEAR_CONTRACT_ID=your-account.testnet \
-  node scripts/verify.mjs --receipt path/to/receipt.json
+NEAR_CONTRACT_ID=sycee-anchor.testnet \
+  node scripts/verify.mjs --receipt fixtures/sample-receipt.json
 ```
 
-`--evidence path/to/evidence.json` fills the chain and the payTo from the demo merchant's public page. It still needs the receipt file. A second copy of the same hash is rejected by the contract.
-
-Put the account id into the demo page's contract field, replacing `[待填]`.
+`--evidence path/to/evidence.json` fills the chain and the payTo from the demo merchant's public page. It still needs the receipt file. The demo page's contract field already defaults to `sycee-anchor.testnet`.

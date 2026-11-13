@@ -32,7 +32,7 @@
   <div class="banner">
     <p>这是 SYCEE 的演示页。打开就能算。不需要钱包，也不会转账。</p>
     <p>agent payment 的收据（verifiable receipt）在 Base Sepolia 上产生。这里只核对它的指纹。记到 NEAR 上叫 cross-chain anchoring。</p>
-    <p>测试网合约账号还是 [待填]（TBD）。下面的离线示例不依赖那份合约。</p>
+    <p>测试网合约是 <code>sycee-anchor.testnet</code>。取消「离线示例」会去问这个账号。公开网页网址仍是 [待填]（TBD）。</p>
   </div>
 </header>
 <main>
@@ -47,7 +47,7 @@
   </div>
 
   <label for="contract">NEAR 测试网合约账号</label>
-  <input id="contract" type="text" value="[待填]" autocomplete="off">
+  <input id="contract" type="text" value="sycee-anchor.testnet" autocomplete="off">
 
   <div class="row">
     <button id="run" type="button">计算指纹并核对</button>
@@ -57,7 +57,7 @@
 </main>
 <footer>
   <p>公开网址：[待填]（TBD）。仓库主人打开 GitHub Pages 并手动运行 Demo page 工作流之后，页面才会出现在 <code>https://ruiruii.github.io/sycee/</code>。现在没有这个网址。</p>
-  <p>离线示例只证明：这张收据算出来的指纹，和页面里写死的示例指纹相同。它不是测试网上的记录。</p>
+  <p>离线示例只在浏览器里对照指纹，不连网。同一张示例收据已经写在 <code>sycee-anchor.testnet</code>，区块 277456711。<a href="https://testnet.nearblocks.io/txns/9WbMG7rgCiX7TNhnhZdSwGvz2xv82HX3oCgbVCdQHxzJ">锚定交易</a>。<code>verify.mjs</code> 对过，结果是成功。</p>
 </footer>
 <script>
 // HASH_LIB_START
@@ -198,7 +198,9 @@ document.querySelector('#run').addEventListener('click', async () => {
     render(
       `<p><strong>${same ? '离线示例核对通过' : '指纹变了，和内置示例不一样'}</strong></p>
        <p>指纹 <code>${esc(hash)}</code></p>
-       <p>这是页面里写死的对照，不是 NEAR 测试网上的记录。合约账号仍是 [待填]。</p>`,
+       <p>${same
+         ? '这一步没有连网。这张示例收据也已经记在 sycee-anchor.testnet，区块 277456711。取消勾选会再问一次链。'
+         : '这一步没有连网。链上那条记录只对应页内的示例收据。'}</p>`,
       same ? 'ok' : 'wait',
     );
     return;

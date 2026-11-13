@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- `examples/near-anchor`: a NEAR testnet contract that anchors SYCEE receipt hashes. It stores hashes only. No scoring, no custody, no fund movement. Not deployed. The demo page, Chinese and English submission notes, and the deploy command are in that directory.
+- `examples/near-anchor`: a NEAR testnet contract that anchors SYCEE receipt hashes. It stores hashes only. No scoring, no custody, no fund movement. Deployed as `sycee-anchor.testnet` from commit `01b4e419` (wasm 159146 bytes). The sample receipt is anchored at block 277456711. The public demo URL, demo video, and X post are still unset.
 
 ## 0.1.0
 
