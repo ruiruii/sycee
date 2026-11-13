@@ -288,7 +288,7 @@ flowchart LR
 
 Still the owner's, not done here:
 
-- Mainnet payout account: [待填] (TBD). If the hackathon form asks for a mainnet account for a prize, the owner fills that in. No mainnet account is created here, and nothing is deployed to mainnet.
+- Mainnet payout account: `locallemon5213.near`. The owner created it and it was verified on mainnet. Nothing in this repository is deployed to mainnet, and nothing here moves funds.
 - Demo video: [待填] (TBD).
 - Demo post on X: [待填] (TBD). The owner posts it. Nothing is posted from here.
 - Public demo URL: [待填] (TBD). See the top of this file. Repository settings were not changed.
