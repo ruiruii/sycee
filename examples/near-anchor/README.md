@@ -57,33 +57,38 @@ Leave "离线示例" checked. The page compares the hash to the sample hash bake
 
 `sha256:f296fd15aee336c3d877dab40eec7a6e64f68923d4002807a2433866ab69cf03`
 
-That offline check does not contact NEAR. The same sample is already anchored on `sycee-anchor.testnet`: source chain `eip155:84532`, merchant id `sycee:demo-merchant`, block 277456711. Anchor transaction: [9WbMG7rgCiX7TNhnhZdSwGvz2xv82HX3oCgbVCdQHxzJ](https://testnet.nearblocks.io/txns/9WbMG7rgCiX7TNhnhZdSwGvz2xv82HX3oCgbVCdQHxzJ). `scripts/verify.mjs` returned ok against that record. Uncheck "离线示例" and the page asks `sycee-anchor.testnet`, which is the default in the contract field. The public page is [https://ruiruii.github.io/sycee/](https://ruiruii.github.io/sycee/) (HTTP 200, deployed from main). A live check uses `hash`, `offline=0`, and `tx` set to the full nearblocks URL: [recorded receipt](https://ruiruii.github.io/sycee/?hash=sha256:618a391577ebd1e6a94430f05947e74c84a7d59523034ed28851b712a40ead81&offline=0&tx=https%3A%2F%2Ftestnet.nearblocks.io%2Ftxns%2F6TyCsHwSkwKshGgWGDJPFqrW2WLqrBnpvw3Amy4ppxTo). The site that is live now does not read those parameters. After this pull request merges, re-run the Demo page workflow (`.github/workflows/near-anchor-pages.yml`). Demo video (2-min, posted as a reply under the demo post): [https://x.com/aking_z/status/2121175474265313681](https://x.com/aking_z/status/2121175474265313681). Demo post on X: [https://x.com/aking_z/status/2121175201778143394](https://x.com/aking_z/status/2121175201778143394).
+That offline check does not contact NEAR. The same sample is already anchored on `sycee-anchor.testnet`: source chain `eip155:84532`, merchant id `sycee:demo-merchant`, block 277456711. Anchor transaction: [9WbMG7rgCiX7TNhnhZdSwGvz2xv82HX3oCgbVCdQHxzJ](https://testnet.nearblocks.io/txns/9WbMG7rgCiX7TNhnhZdSwGvz2xv82HX3oCgbVCdQHxzJ). `scripts/verify.mjs` returned ok against that record. Uncheck "离线示例" and the page asks `sycee-anchor.testnet`, which is the default in the contract field. The public page is [https://ruiruii.github.io/sycee/](https://ruiruii.github.io/sycee/) (HTTP 200, deployed from main). It reads `hash`, `offline`, and `tx` when `tx` is the full nearblocks URL: [recorded receipt](https://ruiruii.github.io/sycee/?hash=sha256:618a391577ebd1e6a94430f05947e74c84a7d59523034ed28851b712a40ead81&offline=0&tx=https%3A%2F%2Ftestnet.nearblocks.io%2Ftxns%2F6TyCsHwSkwKshGgWGDJPFqrW2WLqrBnpvw3Amy4ppxTo). Demo video (2-min, posted as a reply under the demo post): [https://x.com/aking_z/status/2121175474265313681](https://x.com/aking_z/status/2121175474265313681). Demo post on X: [https://x.com/aking_z/status/2121175201778143394](https://x.com/aking_z/status/2121175201778143394).
 
 ## Build and test
 
-From `examples/near-anchor` (Node 20 or newer; the sandbox test uses Node 22 in CI):
+Node.js 20 or newer (the sandbox test uses Node 22 in CI) and [rustup](https://rustup.rs). `scripts/build.sh` installs Rust 1.86.0. No NEAR account. Run this from anywhere inside the clone. The root `npm install` comes first: the demo merchant imports the workspace packages, and `npm install` in this directory does not put those packages where that import can see them.
 
 ```bash
-bash scripts/build.sh
+cd "$(git rev-parse --show-toplevel)"
 npm install
+cd examples/near-anchor
+npm install
+bash scripts/build.sh
 npm test
 cargo +1.100.0 test --manifest-path contract/Cargo.toml
 ```
 
-`scripts/build.sh` compiles with Rust 1.86 (see `contract/rust-toolchain.toml`) and runs `wasm-opt --signext-lowering`. The near-sandbox bundled with `near-workspaces` is nearcore 2.6.2, which rejects newer Wasm proposals at prepare time. Rust 1.100 is used only for the host unit tests.
+`scripts/build.sh` compiles with Rust 1.86 (see `contract/rust-toolchain.toml`) and runs `wasm-opt --signext-lowering`. The near-sandbox bundled with `near-workspaces` is nearcore 2.6.2, which rejects newer Wasm proposals at prepare time. Rust 1.100 is used only for the host unit tests. `cargo +1.100.0` installs that toolchain when it is missing.
 
-`npm test` covers the hash, the Merkle tree, the demo page, the deploy-script guards, and one local sandbox: anchor, duplicate rejection, unauthorized caller, missing-hash lookup, attached-deposit rejection, the event log, a batch whose root matches the JavaScript tree, `verify_inclusion`, and `scripts/verify.mjs` against that sandbox. It does not touch testnet.
+`npm test` runs 16 unit tests (the hash, the Merkle tree, the demo page, and the deploy-script guards) and 3 local sandbox tests: the contract scenario (anchor, duplicate rejection, unauthorized caller, missing-hash lookup, attached-deposit rejection, the event log, a batch whose root matches the JavaScript tree, `verify_inclusion`, and `scripts/verify.mjs`), the end-to-end demo, and the restricted-key demo. It does not touch testnet. You see `# tests 16` and then `# tests 3`, both with `# fail 0`. `cargo +1.100.0 test` reports `6 passed`.
 
 The compiled file is `out/sycee_anchor.wasm`, 159146 bytes. It is not committed. Rebuild it.
 
 These tests are not part of the root `npm test` matrix (Node 18, 20, and 22). A separate workflow, `.github/workflows/near-anchor.yml`, runs them.
 
-## Deploy (testnet, your account)
+## Deploy (optional, testnet, your account)
+
+Optional. Skip this section unless you already have a testnet account. The build, `npm test`, and the local demos do not need one. This repository does not create an account.
 
 Install [near-cli-rs](https://docs.near.org/tools/cli) and import the key of a testnet account you already have. Then:
 
 ```bash
-cd examples/near-anchor
+cd "$(git rev-parse --show-toplevel)/examples/near-anchor"
 bash scripts/build.sh
 NEAR_ACCOUNT_ID=your-account.testnet bash scripts/deploy.sh
 ```
@@ -98,9 +103,9 @@ Signing has two near-cli-rs modes. `NEAR_SIGN_WITH=auto` (the default) uses the 
 | `legacy` | `sign-with-legacy-keychain` | `~/.near-credentials/testnet/<account>.json` |
 | `auto` | one of the two above | Keyring if `DBUS_SESSION_BUS_ADDRESS` or the runtime bus socket is present (always on macOS); otherwise the file. |
 
-The command it runs is:
+The script runs this. It is not a separate step.
 
-```bash
+```text
 near contract deploy "$NEAR_ACCOUNT_ID" \
   use-file out/sycee_anchor.wasm \
   with-init-call new \
@@ -116,16 +121,22 @@ On a machine with no OS keyring, the last signing word is `sign-with-legacy-keyc
 
 Optional `NEAR_ANCHORERS` is a comma-separated list of extra writer accounts.
 
-To anchor another receipt, set `NEAR_PRIVATE_KEY` or leave it unset and put the same JSON at `~/.near-credentials/$NEAR_NETWORK/$NEAR_ACCOUNT_ID.json`. `scripts/anchor.mjs` reads that file and does not print the key. A second copy of a hash the contract already stores is rejected. The sample hash above is one of those.
+Optional. To anchor another receipt, set `NEAR_PRIVATE_KEY` or leave it unset and put the same JSON at `~/.near-credentials/$NEAR_NETWORK/$NEAR_ACCOUNT_ID.json`. `scripts/anchor.mjs` reads that file and does not print the key. A second copy of a hash the contract already stores is rejected. The sample hash above is one of those. Skip this unless you already have the account and a receipt file.
 
 ```bash
+cd "$(git rev-parse --show-toplevel)/examples/near-anchor"
 NEAR_ACCOUNT_ID=sycee-anchor.testnet \
 NEAR_CONTRACT_ID=sycee-anchor.testnet \
   node scripts/anchor.mjs \
     --receipt path/to/receipt.json \
     --source-chain eip155:84532 \
     --merchant-id sycee:demo-merchant
+```
 
+This read does not need a key. You see `"ok": true`.
+
+```bash
+cd "$(git rev-parse --show-toplevel)/examples/near-anchor"
 NEAR_CONTRACT_ID=sycee-anchor.testnet \
   node scripts/verify.mjs --receipt fixtures/sample-receipt.json
 ```
@@ -134,37 +145,42 @@ NEAR_CONTRACT_ID=sycee-anchor.testnet \
 
 ## Try the two demos
 
-From this directory, after `npm install` at the repo root and `bash scripts/build.sh` here.
+After the build steps above. Each block finds the clone root, so a new shell at the repository root works. No NEAR account.
 
-Default end to end. Simulated payment, local sandbox, no key. You see `payment: SIMULATED`, `verify: ok true`, and `nearblocks: n/a`.
+Default end to end. Simulated payment, local sandbox, no key. You see `payment: SIMULATED`, `payment_note: mock facilitator, no Base Sepolia transfer, no funds moved`, `http_status: 200`, `receipt_hash: sha256:` and 64 hex characters, `verify: ok true`, and `nearblocks: n/a`. The summary starts at `SYCEE e2e`.
 
 ```bash
+cd "$(git rev-parse --show-toplevel)/examples/near-anchor"
 npm run demo:e2e
 ```
 
-Read the sample receipt already on testnet. No key. You see `"ok": true`.
+Read the sample receipt already on testnet. No key. You see `"ok": true` and `sha256:f296fd15aee336c3d877dab40eec7a6e64f68923d4002807a2433866ab69cf03`. This call needs network access to the public testnet RPC.
 
 ```bash
+cd "$(git rev-parse --show-toplevel)/examples/near-anchor"
 NEAR_CONTRACT_ID=sycee-anchor.testnet node scripts/verify.mjs --receipt fixtures/sample-receipt.json
 ```
 
-On the owner's machine, write one more simulated receipt to testnet. The key is not printed. You see a `nearblocks:` link, and `demo_page` includes `&tx=`.
+Optional. Skip this unless you already have the NEAR account. It writes one more simulated receipt to testnet. The key is not printed. You see a `nearblocks:` link, and `demo_page` includes `&tx=`.
 
 ```bash
+cd "$(git rev-parse --show-toplevel)/examples/near-anchor"
 NEAR_ACCOUNT_ID=sycee-anchor.testnet NEAR_CONTRACT_ID=sycee-anchor.testnet npm run demo:e2e -- --testnet
 ```
 
 Recorded run: [6TyCsHwSkwKshGgWGDJPFqrW2WLqrBnpvw3Amy4ppxTo](https://testnet.nearblocks.io/txns/6TyCsHwSkwKshGgWGDJPFqrW2WLqrBnpvw3Amy4ppxTo), receipt hash starting `sha256:618a3915`. Payment was simulated.
 
-Security demo. The agent key may call only `anchor` and `anchor_batch`. You see `transfer NEAR: rejected` and `add key: rejected`.
+Security demo. The agent key may call only `anchor` and `anchor_batch`. You see `transfer NEAR: rejected` and `add key: rejected`. A `Failure` line in the sandbox log is a rejected call. The command exits 0.
 
 ```bash
+cd "$(git rev-parse --show-toplevel)/examples/near-anchor"
 npm run demo:security
 ```
 
-The owner can run that on testnet. It adds one restricted key and spends testnet gas only.
+Optional. Skip this unless you already have the NEAR account. It adds one restricted key and spends testnet gas only.
 
 ```bash
+cd "$(git rev-parse --show-toplevel)/examples/near-anchor"
 NEAR_ACCOUNT_ID=sycee-anchor.testnet NEAR_CONTRACT_ID=sycee-anchor.testnet npm run demo:security -- --testnet
 ```
 

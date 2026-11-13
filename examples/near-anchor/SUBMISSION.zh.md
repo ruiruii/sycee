@@ -4,7 +4,7 @@
 
 - 本地文件：[examples/near-anchor/demo/index.html](demo/index.html)
 - 公开网址：[https://ruiruii.github.io/sycee/](https://ruiruii.github.io/sycee/)（已从 main 部署，打开返回 200）。本地文件仍是 [demo/index.html](demo/index.html)。
-- 带参数的核对链接（`tx` 要写成完整的 nearblocks 网址）：[打开这次测试网收据](https://ruiruii.github.io/sycee/?hash=sha256:618a391577ebd1e6a94430f05947e74c84a7d59523034ed28851b712a40ead81&offline=0&tx=https%3A%2F%2Ftestnet.nearblocks.io%2Ftxns%2F6TyCsHwSkwKshGgWGDJPFqrW2WLqrBnpvw3Amy4ppxTo)。现在线上的是 main 上的旧页面，还不会读这些参数。本 PR 合并后，主人要再跑一次 Demo page 工作流。
+- 带参数的核对链接（`tx` 要写成完整的 nearblocks 网址）：[打开这次测试网收据](https://ruiruii.github.io/sycee/?hash=sha256:618a391577ebd1e6a94430f05947e74c84a7d59523034ed28851b712a40ead81&offline=0&tx=https%3A%2F%2Ftestnet.nearblocks.io%2Ftxns%2F6TyCsHwSkwKshGgWGDJPFqrW2WLqrBnpvw3Amy4ppxTo)。线上页面会读取 `hash`、`offline` 和完整的 `tx`。
 
 英文稿在 [SUBMISSION.en.md](SUBMISSION.en.md)。给主人勾的清单在 [提交清单.md](提交清单.md)。
 
@@ -54,8 +54,8 @@ SYCEE 已经会开一张能核对的收据（verifiable receipt）。演示商�
 
 - 合约能编译。`bash scripts/build.sh` 得到的 wasm 是 **159146 字节**（`out/sycee_anchor.wasm`）。
 - Rust 单元测试 6 个通过（`cargo +1.100.0 test`）：写入、重复拒绝、外人拒绝、拒收转账、主人授权另一个账号、批量总指纹和对照。
-- Node 单元测试 11 个通过：指纹和 `@sycee/core` 一致、总指纹、演示页算法、部署脚本拒绝主网。
-- 本地 NEAR 沙箱测试 1 个通过。它覆盖：写入、重复拒绝、外人拒绝、查不到时返回空、拒收附带的 NEAR、公开日志、批量总指纹和 JavaScript 算的一致、`verify_inclusion`、以及 `scripts/verify.mjs` 对着这个本地链核对成功。
+- Node 单元测试 16 个通过：指纹和 `@sycee/core` 一致、总指纹、演示页算法、部署脚本拒绝主网。
+- 本地 NEAR 沙箱测试 3 个通过。它们覆盖合约沙箱（写入、重复拒绝、外人拒绝、查不到时返回空、拒收附带的 NEAR、公开日志、批量总指纹和 JavaScript 算的一致、`verify_inclusion`、以及 `scripts/verify.mjs` 对着这个本地链核对成功）、端到端演示和受限钥匙演示。
 - 演示页打开就有一张示例收据。勾着「离线示例」时，它算出 `sha256:f296fd15aee336c3d877dab40eec7a6e64f68923d4002807a2433866ab69cf03`，并显示和页内写死的指纹一致。这一步没有连测试网。
 - 测试网合约已经部署。账号 `sycee-anchor.testnet`，主人也是这个账号，写入名单是空的。来自提交 `01b4e419`，wasm 159146 字节，sha256 `c027e046864760b51848501cec91c5c0b4e738d6dc94de86ce63d3d0ae98a236`。部署交易：[J14QkoAmZmtNeFrUcjb5BwN1WjhoN4L7QwiQ9YF5zq3h](https://testnet.nearblocks.io/txns/J14QkoAmZmtNeFrUcjb5BwN1WjhoN4L7QwiQ9YF5zq3h)。
 - 同一张示例收据（`fixtures/sample-receipt.json`）已经写上链。指纹就是上面那串，来源链 `eip155:84532`，商家 `sycee:demo-merchant`，区块 277456711。锚定交易：[9WbMG7rgCiX7TNhnhZdSwGvz2xv82HX3oCgbVCdQHxzJ](https://testnet.nearblocks.io/txns/9WbMG7rgCiX7TNhnhZdSwGvz2xv82HX3oCgbVCdQHxzJ)。`verify.mjs` 返回成功。
@@ -64,7 +64,7 @@ SYCEE 已经会开一张能核对的收据（verifiable receipt）。演示商�
 
 SYCEE 的规格和签名代码在 2026-10-19 之前就有了。那天之前最后一次提交是 [`f1af69d`](https://github.com/ruiruii/sycee/commit/f1af69de1f461d9d656f598473042187e9118db1)（2026-10-12）。这次新做的是 `examples/near-anchor/`：合约、演示页、端到端演示、受限钥匙演示。
 
-对照：https://github.com/ruiruii/sycee/compare/f1af69de1f461d9d656f598473042187e9118db1...cursor/hackathon-e2e-security-a63a
+对照：https://github.com/ruiruii/sycee/compare/f1af69de1f461d9d656f598473042187e9118db1...main
 
 对照里也有 10 月 19 日之后合进 main 的其他改动，包括演示商家。标签 `pre-hackathon` 和 `hackathon-submission` 由主人自己加。
 
@@ -74,9 +74,10 @@ SYCEE 的规格和签名代码在 2026-10-19 之前就有了。那天之前最�
 
 ## 三步试一下
 
-在仓库根目录：
+在克隆下来的仓库里任意目录都能跑。需要 Node.js 20 或更新版本，以及 rustup。`scripts/build.sh` 会安装 Rust 1.86.0。不需要 NEAR 账号。要先在仓库根目录 `npm install`，因为演示商家会引用工作区里的包。
 
 ```bash
+cd "$(git rev-parse --show-toplevel)"
 npm install
 cd examples/near-anchor
 npm install
@@ -86,12 +87,14 @@ bash scripts/build.sh
 你看到最后一行字节数 `159146`。
 
 ```bash
+cd "$(git rev-parse --show-toplevel)/examples/near-anchor"
 npm run demo:e2e
 ```
 
 你看到 `payment: SIMULATED`，`http_status: 200`，`receipt_hash: sha256:` 加 64 位，`chain: local NEAR sandbox`，`verify: ok true`，`nearblocks: n/a`。这是模拟付款，没有真的转账。
 
 ```bash
+cd "$(git rev-parse --show-toplevel)/examples/near-anchor"
 NEAR_CONTRACT_ID=sycee-anchor.testnet node scripts/verify.mjs --receipt fixtures/sample-receipt.json
 ```
 
@@ -99,9 +102,10 @@ NEAR_CONTRACT_ID=sycee-anchor.testnet node scripts/verify.mjs --receipt fixtures
 
 演示页可以贴 `receipt_hash` 那一行，或打开 `demo/index.html?hash=sha256:...&tx=https://testnet.nearblocks.io/txns/...&offline=0`。
 
-主人的电脑上再写一条到测试网（钥匙不打印）：
+可选。没有你自己的 NEAR 账号就跳过。钥匙不打印。
 
 ```bash
+cd "$(git rev-parse --show-toplevel)/examples/near-anchor"
 NEAR_ACCOUNT_ID=sycee-anchor.testnet NEAR_CONTRACT_ID=sycee-anchor.testnet npm run demo:e2e -- --testnet
 ```
 
@@ -110,14 +114,16 @@ NEAR_ACCOUNT_ID=sycee-anchor.testnet NEAR_CONTRACT_ID=sycee-anchor.testnet npm r
 已经跑通的一笔：[6TyCsHwSkwKshGgWGDJPFqrW2WLqrBnpvw3Amy4ppxTo](https://testnet.nearblocks.io/txns/6TyCsHwSkwKshGgWGDJPFqrW2WLqrBnpvw3Amy4ppxTo)，收据指纹以 `sha256:618a3915` 开头。付款是模拟的。
 
 ```bash
+cd "$(git rev-parse --show-toplevel)/examples/near-anchor"
 npm run demo:security
 ```
 
 你看到 `anchor_with_limited_key: ok`，以及 `transfer NEAR: rejected`、`add key: rejected`。这把钥匙只能对这个合约调用 `anchor` 和 `anchor_batch`，不能转账，不能加钥匙。
 
-测试网上同样的安全演示（会加一把受限钥匙，只花测试网手续费）：
+可选。没有你自己的 NEAR 账号就跳过。会加一把受限钥匙，只花测试网手续费：
 
 ```bash
+cd "$(git rev-parse --show-toplevel)/examples/near-anchor"
 NEAR_ACCOUNT_ID=sycee-anchor.testnet NEAR_CONTRACT_ID=sycee-anchor.testnet npm run demo:security -- --testnet
 ```
 
@@ -144,7 +150,7 @@ flowchart LR
 | 技术能不能跑 | 一条命令走完付款、收据、锚定、核对 | `npm run demo:e2e` |
 | 设计 | 只存指纹 | `contract/src/lib.rs` |
 | 有没有用 | 测试网上查得到示例收据 | [锚定交易](https://testnet.nearblocks.io/txns/9WbMG7rgCiX7TNhnhZdSwGvz2xv82HX3oCgbVCdQHxzJ) |
-| 是不是新做的 | 10 月 19 日前是旧代码 | [对照](https://github.com/ruiruii/sycee/compare/f1af69de1f461d9d656f598473042187e9118db1...cursor/hackathon-e2e-security-a63a) |
+| 是不是新做的 | 10 月 19 日前是旧代码 | [对照](https://github.com/ruiruii/sycee/compare/f1af69de1f461d9d656f598473042187e9118db1...main) |
 | 能不能接着用 | 代理钥匙不能转账 | `npm run demo:security` |
 
 主人已经发了。这里不发帖。
@@ -155,4 +161,4 @@ flowchart LR
 还没做、要主人自己做的：
 
 - 主网收款账号：`locallemon5213.near`。主人已在主网建好，并核对过。这里不部署到主网，也不转账。
-- 公开演示网址已经是 [https://ruiruii.github.io/sycee/](https://ruiruii.github.io/sycee/)。合并本 PR 之后，再跑一次 Demo page 工作流，线上才会有贴指纹和网址参数。
+- 公开演示网址已经是 [https://ruiruii.github.io/sycee/](https://ruiruii.github.io/sycee/)。线上页面会读取 `hash`、`offline` 和完整的 nearblocks `tx`。
