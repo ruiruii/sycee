@@ -10,10 +10,12 @@
   },
   "scripts": {
     "build": "bash scripts/build.sh",
-    "test": "node --test test/hash.test.mjs test/merkle.test.mjs test/demo-page.test.mjs test/cli.test.mjs && node --test test/sandbox.test.mjs",
+    "test": "node --test test/hash.test.mjs test/merkle.test.mjs test/demo-page.test.mjs test/cli.test.mjs && node --test --test-timeout 180000 test/sandbox.test.mjs test/e2e.test.mjs test/security.test.mjs",
     "test:unit": "node --test test/hash.test.mjs test/merkle.test.mjs test/demo-page.test.mjs test/cli.test.mjs",
     "anchor": "node scripts/anchor.mjs",
-    "verify": "node scripts/verify.mjs"
+    "verify": "node scripts/verify.mjs",
+    "demo:e2e": "node scripts/e2e.mjs",
+    "demo:security": "node scripts/security.mjs"
   },
   "dependencies": {
     "@sycee/core": "file:../../packages/core",

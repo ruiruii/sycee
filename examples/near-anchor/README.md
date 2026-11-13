@@ -130,4 +130,38 @@ NEAR_CONTRACT_ID=sycee-anchor.testnet \
   node scripts/verify.mjs --receipt fixtures/sample-receipt.json
 ```
 
-`--evidence path/to/evidence.json` fills the chain and the payTo from the demo merchant's public page. It still needs the receipt file. The demo page's contract field already defaults to `sycee-anchor.testnet`.
+`--evidence path/to/evidence.json` fills the chain and the payTo from the demo merchant's public page. It still needs the receipt file. The demo page's contract field already defaults to `sycee-anchor.testnet`. Paste a `receipt_hash` line, or open `demo/index.html?hash=sha256:...&tx=https://testnet.nearblocks.io/txns/...&offline=0`.
+
+## Try the two demos
+
+From this directory, after `npm install` at the repo root and `bash scripts/build.sh` here.
+
+Default end to end. Simulated payment, local sandbox, no key. You see `payment: SIMULATED`, `verify: ok true`, and `nearblocks: n/a`.
+
+```bash
+npm run demo:e2e
+```
+
+Read the sample receipt already on testnet. No key. You see `"ok": true`.
+
+```bash
+NEAR_CONTRACT_ID=sycee-anchor.testnet node scripts/verify.mjs --receipt fixtures/sample-receipt.json
+```
+
+On the owner's machine, write one more simulated receipt to testnet. The key is not printed. You see a `nearblocks:` link.
+
+```bash
+NEAR_ACCOUNT_ID=sycee-anchor.testnet NEAR_CONTRACT_ID=sycee-anchor.testnet npm run demo:e2e -- --testnet
+```
+
+Security demo. The agent key may call only `anchor` and `anchor_batch`. You see `transfer NEAR: rejected` and `add key: rejected`.
+
+```bash
+npm run demo:security
+```
+
+The owner can run that on testnet. It adds one restricted key and spends testnet gas only.
+
+```bash
+NEAR_ACCOUNT_ID=sycee-anchor.testnet NEAR_CONTRACT_ID=sycee-anchor.testnet npm run demo:security -- --testnet
+```

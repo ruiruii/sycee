@@ -15,6 +15,109 @@
 2. 开发者在 `examples/near-anchor/` 跑 `bash scripts/build.sh` 和 `npm test`。合约 wasm 159146 字节。Rust 测试 6 个、Node 单元测试 11 个、本地 NEAR 沙箱测试 1 个，都已通过。沙箱覆盖写入、重复拒绝、外人拒绝、查询和核对脚本。
 3. 示例收据 `examples/near-anchor/fixtures/sample-receipt.json` 已经写在 `sycee-anchor.testnet`。指纹 `sha256:f296fd15aee336c3d877dab40eec7a6e64f68923d4002807a2433866ab69cf03`，来源链 `eip155:84532`，商家 `sycee:demo-merchant`，区块 277456711。锚定交易：[9WbMG7rgCiX7TNhnhZdSwGvz2xv82HX3oCgbVCdQHxzJ](https://testnet.nearblocks.io/txns/9WbMG7rgCiX7TNhnhZdSwGvz2xv82HX3oCgbVCdQHxzJ)。`verify.mjs` 返回成功。这是核对过的结果，不是计划。
 
+## 这次黑客松做了什么
+
+SYCEE 的规格和签名代码在 2026-10-19 之前就有了。那天是 NEAR 黑客松公布的日子。那天之前最后一次提交是 [`f1af69d`](https://github.com/ruiruii/sycee/commit/f1af69de1f461d9d656f598473042187e9118db1)（2026-10-12）。
+
+这次新做的是 NEAR 这一段：`examples/near-anchor/` 里的合约、演示页、端到端演示和受限钥匙演示。对照从那次旧提交到现在的分支：
+
+https://github.com/ruiruii/sycee/compare/f1af69de1f461d9d656f598473042187e9118db1...cursor/hackathon-e2e-security-a63a
+
+这个对照里也有 10 月 19 日之后合进 main 的其他改动，包括 Base Sepolia 演示商家。NEAR 合约本身是后来加的。标签 `pre-hackathon` 和 `hackathon-submission` 由主人自己加，这里不打标签。
+
+## 用了哪些现成的东西，哪些是 AI 写的
+
+- `near-sdk` 5.7.1：写合约
+- `near-workspaces` 和里面的 `near-sandbox`（nearcore 2.6.2）：本地沙箱，默认演示和测试用它
+- `near-api-js` 5：脚本签名、发交易
+- `near-cli-rs`：人自己部署时用，不是 npm 依赖
+- binaryen 的 `wasm-opt`：把编译结果收成沙箱能加载的格式
+- `@sycee/core` 和演示商家：10 月 19 日之前或之后已经在 main 上的 SYCEE 代码，算原有基线
+
+`examples/near-anchor/` 里的大部分代码是用 Cursor 的 AI 编程助手写的，再由团队看过。
+
+## 三步试一下
+
+在仓库根目录做。每一步做完，你应该看到右边这些字。
+
+1. 安装并编译。
+
+```bash
+npm install
+cd examples/near-anchor
+npm install
+bash scripts/build.sh
+```
+
+你看到：最后一行是 wasm 的字节数，`159146`。
+
+2. 跑默认的端到端演示。这是模拟付款，没有真的转账，也不需要钥匙。
+
+```bash
+npm run demo:e2e
+```
+
+你看到这些行：`payment: SIMULATED`，`payment_note: mock facilitator, no Base Sepolia transfer, no funds moved`，`http_status: 200`，`receipt_hash: sha256:` 后面 64 位，`chain: local NEAR sandbox`，`verify: ok true`，`nearblocks: n/a`。
+
+3. 用已经部署的测试网合约核对仓库里的示例收据。这一步只读，不花钱，不需要钥匙。
+
+```bash
+NEAR_CONTRACT_ID=sycee-anchor.testnet node scripts/verify.mjs --receipt fixtures/sample-receipt.json
+```
+
+你看到 JSON 里 `"ok": true`，以及 `sha256:f296fd15aee336c3d877dab40eec7a6e64f68923d4002807a2433866ab69cf03`。
+
+演示页可以贴第 2 步打印的整段，或只贴 `receipt_hash` 那一行。地址可以带 `?hash=sha256:...&tx=https://testnet.nearblocks.io/txns/...&offline=0`。取消「离线示例」后，它会去问 `sycee-anchor.testnet`。沙箱里新算出来的指纹不在测试网上，这是正常的。示例收据那条在测试网上，区块 277456711。
+
+主人自己的电脑上，如果要真的再写一条到测试网（模拟付款，钥匙在 `~/.near-credentials/testnet/sycee-anchor.testnet.json` 或 `NEAR_PRIVATE_KEY`，脚本不打印钥匙）：
+
+```bash
+cd examples/near-anchor
+NEAR_ACCOUNT_ID=sycee-anchor.testnet NEAR_CONTRACT_ID=sycee-anchor.testnet npm run demo:e2e -- --testnet
+```
+
+你看到：`payment: SIMULATED`，`chain: NEAR testnet`，`verify: ok true`，`nearblocks: https://testnet.nearblocks.io/txns/` 开头的链接。
+
+安全演示，默认也在本地沙箱，不需要钥匙：
+
+```bash
+npm run demo:security
+```
+
+你看到：`key: function-call`，`methods: anchor,anchor_batch`，`deposit: not allowed`，`anchor_with_limited_key: ok`，`transfer NEAR: rejected`，`add key: rejected`，`call add_anchorer: rejected`，`attached deposit: rejected`，`duplicate anchor: rejected`。
+
+这把钥匙只能调用这个合约的 `anchor` 和 `anchor_batch`，并且只能用额度里的 gas。它不能转 NEAR，不能附带存款，不能再加钥匙，也不能调别的方法。合约自己还拒绝重复指纹、拒绝名单外的账号、拒绝别人转进来的 NEAR。
+
+主人要在测试网上看同一件事（会给 `sycee-anchor.testnet` 加一把受限钥匙，只花测试网的手续费）：
+
+```bash
+NEAR_ACCOUNT_ID=sycee-anchor.testnet NEAR_CONTRACT_ID=sycee-anchor.testnet npm run demo:security -- --testnet
+```
+
+```mermaid
+flowchart LR
+  agent[代理]
+  merchant[演示商家]
+  receipt[签过名的收据]
+  key[只能写指纹的钥匙]
+  near[NEAR 合约]
+  page[核对页面]
+  agent -->|付款| merchant
+  merchant --> receipt
+  agent --> key
+  key -->|只写指纹| near
+  receipt --> page
+  near --> page
+```
+
+| 评审看什么 | 我们做了什么 | 证据 |
+|---|---|---|
+| 技术能不能跑 | 合约、本地沙箱、端到端命令 | `npm run demo:e2e`，`.github/workflows/near-anchor.yml` |
+| 设计 | 只存指纹，不评分，不碰钱 | `examples/near-anchor/contract/src/lib.rs` |
+| 有没有用 | 测试网上能查到示例收据 | [锚定交易](https://testnet.nearblocks.io/txns/9WbMG7rgCiX7TNhnhZdSwGvz2xv82HX3oCgbVCdQHxzJ) |
+| 是不是自己的东西 | 旧代码在 10 月 19 日前；NEAR 这段是新的 | [对照](https://github.com/ruiruii/sycee/compare/f1af69de1f461d9d656f598473042187e9118db1...cursor/hackathon-e2e-security-a63a) |
+| 能不能接着用 | 不托管资金；代理钥匙权限被收窄 | `npm run demo:security` |
+
 完整中文说明：[examples/near-anchor/SUBMISSION.zh.md](examples/near-anchor/SUBMISSION.zh.md)。主人清单：[examples/near-anchor/提交清单.md](examples/near-anchor/提交清单.md)。
 
 ---
@@ -25,15 +128,15 @@ This is the English text of [examples/near-anchor/SUBMISSION.zh.md](examples/nea
 
 ## Problem
 
-Machines pay for things on a person's behalf. The track name for that is agent payment. After the payment, how can someone else tell that the receipt was not edited?
+An agent pays for a call on a person's behalf (agent payment). After the payment, how can someone else tell that the receipt was not edited?
 
-SYCEE already issues the receipt. The track name for that receipt is verifiable receipt. The demo merchant, on Base Sepolia, sells one test call, `GET /v1/base/tip`, for 0.001 test USDC. When the payment is accepted, the merchant signs a receipt. The receipt holds hashes and a signature. It does not hold the payment itself.
+SYCEE already issues a verifiable receipt. The demo merchant, on Base Sepolia, sells one test call, `GET /v1/base/tip`, for 0.001 test USDC. When the payment is accepted, the merchant signs a receipt. The receipt holds hashes and a signature. It does not hold the payment itself.
 
 What was missing is a public time record: this receipt's fingerprint was written down at a known moment. This project does not score anyone, does not hold funds, and does not move funds.
 
 ## Solution
 
-The receipt is still produced by the demo merchant on Base Sepolia. This project does one more thing: it copies the receipt's fingerprint onto NEAR testnet. The track name for that step is cross-chain anchoring. One chain produces the receipt. The other stamps the fingerprint with a block time.
+The receipt is still produced by the demo merchant on Base Sepolia. This project copies the receipt's fingerprint onto NEAR. That copy is the cross-chain anchoring step: one chain produces the receipt, the other stamps the fingerprint with a block time.
 
 The fingerprint uses the same algorithm SYCEE already uses. The receipt is turned into one canonical JSON text, then SHA-256. For the sample receipt in this repo, that value is `sha256:f296fd15aee336c3d877dab40eec7a6e64f68923d4002807a2433866ab69cf03`.
 
@@ -71,6 +174,109 @@ These ran on this machine. They are not a plan.
 - 1 local NEAR sandbox test passed. It covers: write, duplicate rejected, stranger rejected, a missing fingerprint reads back empty, attached NEAR rejected, the public log, a batch root equal to the JavaScript root, `verify_inclusion`, and `scripts/verify.mjs` succeeding against that local chain.
 - The demo page opens with a sample receipt filled in. With "离线示例" checked, it computes `sha256:f296fd15aee336c3d877dab40eec7a6e64f68923d4002807a2433866ab69cf03` and shows that this matches the fingerprint written into the page. That step does not contact testnet.
 - The same sample receipt is on NEAR testnet. Contract account `sycee-anchor.testnet` (owner `sycee-anchor.testnet`, anchorers `[]`), deployed from commit `01b4e419`, wasm 159146 bytes, sha256 `c027e046864760b51848501cec91c5c0b4e738d6dc94de86ce63d3d0ae98a236`. Deploy transaction: [J14QkoAmZmtNeFrUcjb5BwN1WjhoN4L7QwiQ9YF5zq3h](https://testnet.nearblocks.io/txns/J14QkoAmZmtNeFrUcjb5BwN1WjhoN4L7QwiQ9YF5zq3h). The anchor is hash `sha256:f296fd15aee336c3d877dab40eec7a6e64f68923d4002807a2433866ab69cf03`, source chain `eip155:84532`, merchant id `sycee:demo-merchant`, block 277456711. Anchor transaction: [9WbMG7rgCiX7TNhnhZdSwGvz2xv82HX3oCgbVCdQHxzJ](https://testnet.nearblocks.io/txns/9WbMG7rgCiX7TNhnhZdSwGvz2xv82HX3oCgbVCdQHxzJ). `verify.mjs` returned ok.
+
+## What was built during the hackathon
+
+SYCEE's specification and signing code already existed before 2026-10-19, the day the NEAR hackathon was announced. The last commit before that day is [`f1af69d`](https://github.com/ruiruii/sycee/commit/f1af69de1f461d9d656f598473042187e9118db1) (2026-10-12).
+
+The new work is the NEAR piece in `examples/near-anchor/`: the contract, the demo page, the end-to-end demo, and the restricted-key demo. Compare that baseline to this branch:
+
+https://github.com/ruiruii/sycee/compare/f1af69de1f461d9d656f598473042187e9118db1...cursor/hackathon-e2e-security-a63a
+
+That diff also contains other SYCEE commits that landed on main after 19 October, including the Base Sepolia demo merchant. The NEAR contract itself starts on this line of work. The owner will add the tags `pre-hackathon` and `hackathon-submission`. This repository does not create those tags.
+
+## Libraries, templates and AI-generated code
+
+- `near-sdk` 5.7.1: the contract
+- `near-workspaces` and its `near-sandbox` (nearcore 2.6.2): local chain for tests and the default demos
+- `near-api-js` 5: signing and sending from the scripts
+- `near-cli-rs`: what a person runs to deploy; not an npm dependency
+- `wasm-opt` from binaryen: rewrites the wasm so the sandbox can load it
+- `@sycee/core` and the demo merchant: existing SYCEE code, treated as the baseline
+
+Most of `examples/near-anchor/` was written with Cursor AI coding agents and reviewed by the team.
+
+## 3-step try it
+
+From the repository root. Each step says what you should see.
+
+1. Install and build.
+
+```bash
+npm install
+cd examples/near-anchor
+npm install
+bash scripts/build.sh
+```
+
+You see the wasm size on the last line: `159146`.
+
+2. Run the default end-to-end demo. The payment is simulated. No key and no transfer.
+
+```bash
+npm run demo:e2e
+```
+
+You see `payment: SIMULATED`, `payment_note: mock facilitator, no Base Sepolia transfer, no funds moved`, `http_status: 200`, `receipt_hash: sha256:` plus 64 hex characters, `chain: local NEAR sandbox`, `verify: ok true`, and `nearblocks: n/a`.
+
+3. Check the sample receipt that is already on testnet. This is a read. It does not spend and does not need a key.
+
+```bash
+NEAR_CONTRACT_ID=sycee-anchor.testnet node scripts/verify.mjs --receipt fixtures/sample-receipt.json
+```
+
+You see JSON with `"ok": true` and `sha256:f296fd15aee336c3d877dab40eec7a6e64f68923d4002807a2433866ab69cf03`.
+
+The demo page accepts the printed block, or only the `receipt_hash` line. A link can be `demo/index.html?hash=sha256:...&tx=https://testnet.nearblocks.io/txns/...&offline=0`. Uncheck "离线示例" to query `sycee-anchor.testnet`. A hash minted in the sandbox is not on testnet. The sample receipt is, at block 277456711.
+
+On the owner's machine, to anchor one more simulated receipt on testnet (key in `~/.near-credentials/testnet/sycee-anchor.testnet.json` or `NEAR_PRIVATE_KEY`; the script does not print it):
+
+```bash
+cd examples/near-anchor
+NEAR_ACCOUNT_ID=sycee-anchor.testnet NEAR_CONTRACT_ID=sycee-anchor.testnet npm run demo:e2e -- --testnet
+```
+
+You see `payment: SIMULATED`, `chain: NEAR testnet`, `verify: ok true`, and `nearblocks: https://testnet.nearblocks.io/txns/...`.
+
+Security demo, local sandbox, no key:
+
+```bash
+npm run demo:security
+```
+
+You see `key: function-call`, `methods: anchor,anchor_batch`, `deposit: not allowed`, `anchor_with_limited_key: ok`, `transfer NEAR: rejected`, `add key: rejected`, `call add_anchorer: rejected`, `attached deposit: rejected`, and `duplicate anchor: rejected`.
+
+That key may call only `anchor` and `anchor_batch` on this contract, and may spend gas up to its allowance. It cannot transfer NEAR, attach a deposit, add a key, or call another method. The contract also rejects a duplicate hash, a caller who is not on the list, and an attached deposit.
+
+The owner can run the same story on testnet. It adds one restricted key to `sycee-anchor.testnet` and spends testnet gas only:
+
+```bash
+NEAR_ACCOUNT_ID=sycee-anchor.testnet NEAR_CONTRACT_ID=sycee-anchor.testnet npm run demo:security -- --testnet
+```
+
+```mermaid
+flowchart LR
+  agent[Agent]
+  merchant[Demo merchant]
+  receipt[Signed receipt]
+  key[Function-call key]
+  near[NEAR anchor]
+  page[Verify page]
+  agent -->|pay| merchant
+  merchant --> receipt
+  agent --> key
+  key -->|hash only| near
+  receipt --> page
+  near --> page
+```
+
+| Judging area | What we did | Evidence |
+|---|---|---|
+| Technical implementation | Contract, sandbox, one command | `npm run demo:e2e`, `.github/workflows/near-anchor.yml` |
+| Design | Hashes only. No score, no custody | `examples/near-anchor/contract/src/lib.rs` |
+| Impact | The sample receipt is readable on testnet | [anchor tx](https://testnet.nearblocks.io/txns/9WbMG7rgCiX7TNhnhZdSwGvz2xv82HX3oCgbVCdQHxzJ) |
+| Originality | Core predates 19 October; the NEAR piece is new | [compare](https://github.com/ruiruii/sycee/compare/f1af69de1f461d9d656f598473042187e9118db1...cursor/hackathon-e2e-security-a63a) |
+| Sustainability | No custody. The agent key cannot move funds | `npm run demo:security` |
 
 Still the owner's, not done here:
 

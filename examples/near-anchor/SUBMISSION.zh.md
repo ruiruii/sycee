@@ -9,15 +9,15 @@
 
 ## 问题
 
-机器帮人付钱，英文里叫 agent payment。付完之后，旁人怎么知道那张收据没有被改过？
+机器帮人付钱（agent payment）。付完之后，旁人怎么知道那张收据没有被改过？
 
-SYCEE 已经会开收据。收据的英文名字是 verifiable receipt。演示商家在 Base Sepolia（以太坊的一条测试网）上卖一个测试接口，`GET /v1/base/tip`，价格是 0.001 美元的测试 USDC。付款成功后，商家签一张收据。收据里只有指纹和签名，没有付款原文。
+SYCEE 已经会开一张能核对的收据（verifiable receipt）。演示商家在 Base Sepolia（以太坊的一条测试网）上卖一个测试接口，`GET /v1/base/tip`，价格是 0.001 美元的测试 USDC。付款成功后，商家签一张收据。收据里只有指纹和签名，没有付款原文。
 
 缺的是一个谁都能查的时间记录：这张收据的指纹，在某个时刻被人写下了。我们不给人打分，不保管钱，也不替任何人转账。
 
 ## 方案
 
-收据还是在 Base Sepolia 的演示商家那边产生。我们只做一件事：把收据的指纹抄到 NEAR 测试网上。这件事的英文是 cross-chain anchoring。一边出收据，另一边给指纹盖一个带时间的章。
+收据还是在 Base Sepolia 的演示商家那边产生。我们只做一件事：把收据的指纹抄到 NEAR 测试网上。这叫跨链留痕（cross-chain anchoring）。一边出收据，另一边给指纹盖一个带时间的章。
 
 指纹的算法和 SYCEE 自己用的一样。把收据整理成固定格式的 JSON，再做 SHA-256。带前缀写出来是：
 
@@ -58,6 +58,89 @@ SYCEE 已经会开收据。收据的英文名字是 verifiable receipt。演示�
 - 演示页打开就有一张示例收据。勾着「离线示例」时，它算出 `sha256:f296fd15aee336c3d877dab40eec7a6e64f68923d4002807a2433866ab69cf03`，并显示和页内写死的指纹一致。这一步没有连测试网。
 - 测试网合约已经部署。账号 `sycee-anchor.testnet`，主人也是这个账号，写入名单是空的。来自提交 `01b4e419`，wasm 159146 字节，sha256 `c027e046864760b51848501cec91c5c0b4e738d6dc94de86ce63d3d0ae98a236`。部署交易：[J14QkoAmZmtNeFrUcjb5BwN1WjhoN4L7QwiQ9YF5zq3h](https://testnet.nearblocks.io/txns/J14QkoAmZmtNeFrUcjb5BwN1WjhoN4L7QwiQ9YF5zq3h)。
 - 同一张示例收据（`fixtures/sample-receipt.json`）已经写上链。指纹就是上面那串，来源链 `eip155:84532`，商家 `sycee:demo-merchant`，区块 277456711。锚定交易：[9WbMG7rgCiX7TNhnhZdSwGvz2xv82HX3oCgbVCdQHxzJ](https://testnet.nearblocks.io/txns/9WbMG7rgCiX7TNhnhZdSwGvz2xv82HX3oCgbVCdQHxzJ)。`verify.mjs` 返回成功。
+
+## 这次黑客松做了什么
+
+SYCEE 的规格和签名代码在 2026-10-19 之前就有了。那天之前最后一次提交是 [`f1af69d`](https://github.com/ruiruii/sycee/commit/f1af69de1f461d9d656f598473042187e9118db1)（2026-10-12）。这次新做的是 `examples/near-anchor/`：合约、演示页、端到端演示、受限钥匙演示。
+
+对照：https://github.com/ruiruii/sycee/compare/f1af69de1f461d9d656f598473042187e9118db1...cursor/hackathon-e2e-security-a63a
+
+对照里也有 10 月 19 日之后合进 main 的其他改动，包括演示商家。标签 `pre-hackathon` 和 `hackathon-submission` 由主人自己加。
+
+## 用了哪些现成的东西，哪些是 AI 写的
+
+`near-sdk` 5.7.1 写合约。`near-workspaces` 和 `near-sandbox`（nearcore 2.6.2）做本地链。`near-api-js` 5 用来签名发交易。`near-cli-rs` 是人部署时用的命令行。`wasm-opt` 把 wasm 收成沙箱能读的格式。`@sycee/core` 和演示商家是原来就有的 SYCEE 代码。`examples/near-anchor/` 里的大部分代码是用 Cursor 的 AI 编程助手写的，再由团队看过。
+
+## 三步试一下
+
+在仓库根目录：
+
+```bash
+npm install
+cd examples/near-anchor
+npm install
+bash scripts/build.sh
+```
+
+你看到最后一行字节数 `159146`。
+
+```bash
+npm run demo:e2e
+```
+
+你看到 `payment: SIMULATED`，`http_status: 200`，`receipt_hash: sha256:` 加 64 位，`chain: local NEAR sandbox`，`verify: ok true`，`nearblocks: n/a`。这是模拟付款，没有真的转账。
+
+```bash
+NEAR_CONTRACT_ID=sycee-anchor.testnet node scripts/verify.mjs --receipt fixtures/sample-receipt.json
+```
+
+你看到 `"ok": true`。这是只读核对已经写在测试网上的示例收据。
+
+演示页可以贴 `receipt_hash` 那一行，或打开 `demo/index.html?hash=sha256:...&tx=https://testnet.nearblocks.io/txns/...&offline=0`。
+
+主人的电脑上再写一条到测试网（钥匙不打印）：
+
+```bash
+NEAR_ACCOUNT_ID=sycee-anchor.testnet NEAR_CONTRACT_ID=sycee-anchor.testnet npm run demo:e2e -- --testnet
+```
+
+你看到 `chain: NEAR testnet` 和 `nearblocks: https://testnet.nearblocks.io/txns/` 开头的链接。
+
+```bash
+npm run demo:security
+```
+
+你看到 `anchor_with_limited_key: ok`，以及 `transfer NEAR: rejected`、`add key: rejected`。这把钥匙只能对这个合约调用 `anchor` 和 `anchor_batch`，不能转账，不能加钥匙。
+
+测试网上同样的安全演示（会加一把受限钥匙，只花测试网手续费）：
+
+```bash
+NEAR_ACCOUNT_ID=sycee-anchor.testnet NEAR_CONTRACT_ID=sycee-anchor.testnet npm run demo:security -- --testnet
+```
+
+```mermaid
+flowchart LR
+  agent[代理]
+  merchant[演示商家]
+  receipt[签过名的收据]
+  key[只能写指纹的钥匙]
+  near[NEAR 合约]
+  page[核对页面]
+  agent -->|付款| merchant
+  merchant --> receipt
+  agent --> key
+  key -->|只写指纹| near
+  receipt --> page
+  near --> page
+```
+
+| 评审看什么 | 我们做了什么 | 证据 |
+|---|---|---|
+| 技术能不能跑 | 一条命令走完付款、收据、锚定、核对 | `npm run demo:e2e` |
+| 设计 | 只存指纹 | `contract/src/lib.rs` |
+| 有没有用 | 测试网上查得到示例收据 | [锚定交易](https://testnet.nearblocks.io/txns/9WbMG7rgCiX7TNhnhZdSwGvz2xv82HX3oCgbVCdQHxzJ) |
+| 是不是新做的 | 10 月 19 日前是旧代码 | [对照](https://github.com/ruiruii/sycee/compare/f1af69de1f461d9d656f598473042187e9118db1...cursor/hackathon-e2e-security-a63a) |
+| 能不能接着用 | 代理钥匙不能转账 | `npm run demo:security` |
 
 还没做、要主人自己做的：
 

@@ -38,6 +38,9 @@ jobs:
       - name: Build contract
         run: bash examples/near-anchor/scripts/build.sh
 
+      - name: Install workspace packages the demo merchant imports
+        run: npm install
+
       - name: Install example dependencies
         working-directory: examples/near-anchor
         run: npm install
