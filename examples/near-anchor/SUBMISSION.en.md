@@ -3,7 +3,8 @@
 A page you can open, with no wallet:
 
 - Local file: [examples/near-anchor/demo/index.html](demo/index.html)
-- Public URL: [待填] (TBD). The owner turns on GitHub Pages (source: GitHub Actions) and then runs the workflow named Demo page by hand. After that, the page is expected at `https://ruiruii.github.io/sycee/`. That URL does not exist yet.
+- Public URL: [https://ruiruii.github.io/sycee/](https://ruiruii.github.io/sycee/) (deployed from main, HTTP 200). The same file is [demo/index.html](demo/index.html).
+- Live check. `tx` must be the full nearblocks URL: [open the recorded testnet receipt](https://ruiruii.github.io/sycee/?hash=sha256:618a391577ebd1e6a94430f05947e74c84a7d59523034ed28851b712a40ead81&offline=0&tx=https%3A%2F%2Ftestnet.nearblocks.io%2Ftxns%2F6TyCsHwSkwKshGgWGDJPFqrW2WLqrBnpvw3Amy4ppxTo). The site that is live now is the main copy and does not read these parameters yet. After this pull request merges, re-run the Demo page workflow.
 
 This is the English text of [SUBMISSION.zh.md](SUBMISSION.zh.md). The owner's checklist is [提交清单.md](提交清单.md).
 
@@ -151,4 +152,4 @@ Still the owner's, not done here:
 - Mainnet payout account: `locallemon5213.near`. The owner created it and it was verified on mainnet. Nothing in this repository is deployed to mainnet, and nothing here moves funds.
 - Demo video: [待填] (TBD).
 - Demo post on X: [待填] (TBD). The owner posts it. Nothing is posted from here.
-- Public demo URL: [待填] (TBD). See the top of this file. Repository settings were not changed.
+- Public demo URL: [https://ruiruii.github.io/sycee/](https://ruiruii.github.io/sycee/). After this pull request merges, re-run the Demo page workflow so the live site gets the paste box and URL parameters.

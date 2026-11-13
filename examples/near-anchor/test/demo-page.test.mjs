@@ -19,11 +19,12 @@ test('the demo page hashes a receipt the same way SYCEE does', () => {
   assert.equal(api.sha256Hex('abc'), createHash('sha256').update('abc').digest('hex'));
 });
 
-test('the demo page queries sycee-anchor.testnet and still marks the public URL as unset', () => {
+test('the demo page queries sycee-anchor.testnet and links the public site', () => {
   assert.match(html, /value="sycee-anchor\.testnet"/);
   assert.match(html, /277456711/);
   assert.match(html, /9WbMG7rgCiX7TNhnhZdSwGvz2xv82HX3oCgbVCdQHxzJ/);
-  assert.match(html, /\[待填\]/);
+  assert.match(html, /https:\/\/ruiruii\.github\.io\/sycee\//);
+  assert.doesNotMatch(html, /公开网址：\[待填\]/);
   assert.match(html, /id="offline"[^>]*checked|checked[^>]*id="offline"/);
 });
 

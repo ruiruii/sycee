@@ -3,7 +3,8 @@
 演示页面，打开就能看，不需要钱包：
 
 - 本地文件：[examples/near-anchor/demo/index.html](demo/index.html)
-- 公开网址：[待填]（TBD）。主人先在仓库设置里打开 GitHub Pages（来源选 GitHub Actions），再手动运行名为 Demo page 的工作流。跑通之后，页面会出现在 `https://ruiruii.github.io/sycee/`。现在没有这个网址。
+- 公开网址：[https://ruiruii.github.io/sycee/](https://ruiruii.github.io/sycee/)（已从 main 部署，打开返回 200）。本地文件仍是 [demo/index.html](demo/index.html)。
+- 带参数的核对链接（`tx` 要写成完整的 nearblocks 网址）：[打开这次测试网收据](https://ruiruii.github.io/sycee/?hash=sha256:618a391577ebd1e6a94430f05947e74c84a7d59523034ed28851b712a40ead81&offline=0&tx=https%3A%2F%2Ftestnet.nearblocks.io%2Ftxns%2F6TyCsHwSkwKshGgWGDJPFqrW2WLqrBnpvw3Amy4ppxTo)。现在线上的是 main 上的旧页面，还不会读这些参数。本 PR 合并后，主人要再跑一次 Demo page 工作流。
 
 英文稿在 [SUBMISSION.en.md](SUBMISSION.en.md)。给主人勾的清单在 [提交清单.md](提交清单.md)。
 
@@ -151,4 +152,4 @@ flowchart LR
 - 主网收款账号：`locallemon5213.near`。主人已在主网建好，并核对过。这里不部署到主网，也不转账。
 - 演示视频：[待填]（TBD）。
 - X 上的演示帖：[待填]（TBD）。由主人自己发。这里不发帖。
-- 公开演示网址：[待填]（TBD）。见文首。仓库设置没有被改过。
+- 公开演示网址已经是 [https://ruiruii.github.io/sycee/](https://ruiruii.github.io/sycee/)。合并本 PR 之后，再跑一次 Demo page 工作流，线上才会有贴指纹和网址参数。

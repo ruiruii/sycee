@@ -1,5 +1,6 @@
-演示页面（打开就能看，不需要钱包）：[examples/near-anchor/demo/index.html](examples/near-anchor/demo/index.html)
-公开网址：[待填]（TBD）。主人打开 GitHub Pages 并手动运行 Demo page 工作流之后，预期在 `https://ruiruii.github.io/sycee/`。现在没有这个网址。
+演示页面（打开就能看，不需要钱包）：[https://ruiruii.github.io/sycee/](https://ruiruii.github.io/sycee/)（也有本地文件 [examples/near-anchor/demo/index.html](examples/near-anchor/demo/index.html)）。
+
+直接核对测试网上那笔模拟付款（`tx` 必须是完整的 nearblocks 网址，页面不认单独的交易号）：[https://ruiruii.github.io/sycee/?hash=sha256:618a391577ebd1e6a94430f05947e74c84a7d59523034ed28851b712a40ead81&offline=0&tx=https%3A%2F%2Ftestnet.nearblocks.io%2Ftxns%2F6TyCsHwSkwKshGgWGDJPFqrW2WLqrBnpvw3Amy4ppxTo](https://ruiruii.github.io/sycee/?hash=sha256:618a391577ebd1e6a94430f05947e74c84a7d59523034ed28851b712a40ead81&offline=0&tx=https%3A%2F%2Ftestnet.nearblocks.io%2Ftxns%2F6TyCsHwSkwKshGgWGDJPFqrW2WLqrBnpvw3Amy4ppxTo)。现在线上的页面是从 main 部署的，还没有「贴指纹 / 网址参数」这一版。PR #7 合并后，主人要再手动跑一次 Demo page 工作流，这个链接才会按参数打开。
 
 ## 我们解决什么
 
@@ -126,7 +127,13 @@ flowchart LR
 
 ---
 
-A page you can open, with no wallet: [examples/near-anchor/demo/index.html](examples/near-anchor/demo/index.html). Public URL: [待填] (TBD). The owner turns on GitHub Pages (source: GitHub Actions) and then runs the workflow named Demo page by hand. After that, the page is expected at `https://ruiruii.github.io/sycee/`. That URL does not exist yet.
+A page you can open, with no wallet: [https://ruiruii.github.io/sycee/](https://ruiruii.github.io/sycee/). The same file is [examples/near-anchor/demo/index.html](examples/near-anchor/demo/index.html).
+
+Live check of the recorded testnet receipt. The `tx` parameter must be the full nearblocks URL:
+
+[https://ruiruii.github.io/sycee/?hash=sha256:618a391577ebd1e6a94430f05947e74c84a7d59523034ed28851b712a40ead81&offline=0&tx=https%3A%2F%2Ftestnet.nearblocks.io%2Ftxns%2F6TyCsHwSkwKshGgWGDJPFqrW2WLqrBnpvw3Amy4ppxTo](https://ruiruii.github.io/sycee/?hash=sha256:618a391577ebd1e6a94430f05947e74c84a7d59523034ed28851b712a40ead81&offline=0&tx=https%3A%2F%2Ftestnet.nearblocks.io%2Ftxns%2F6TyCsHwSkwKshGgWGDJPFqrW2WLqrBnpvw3Amy4ppxTo)
+
+The site that is live now was deployed from main. It does not yet read `hash`, `tx`, or `offline`. After this pull request merges, the owner re-runs the Demo page workflow so the published site picks up that behavior.
 
 This is the English text of [examples/near-anchor/SUBMISSION.zh.md](examples/near-anchor/SUBMISSION.zh.md). The same file is [examples/near-anchor/SUBMISSION.en.md](examples/near-anchor/SUBMISSION.en.md).
 
@@ -291,7 +298,7 @@ Still the owner's, not done here:
 - Mainnet payout account: `locallemon5213.near`. The owner created it and it was verified on mainnet. Nothing in this repository is deployed to mainnet, and nothing here moves funds.
 - Demo video: [待填] (TBD).
 - Demo post on X: [待填] (TBD). The owner posts it. Nothing is posted from here.
-- Public demo URL: [待填] (TBD). See the top of this file. Repository settings were not changed.
+- Public demo URL: [https://ruiruii.github.io/sycee/](https://ruiruii.github.io/sycee/) (HTTP 200, deployed from main). After this pull request merges, re-run the Demo page workflow so the live site gets the paste box and URL parameters.
 
 ---
 
