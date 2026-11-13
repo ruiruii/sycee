@@ -3,8 +3,11 @@
  * PAYMENT-RESPONSE) and the facilitator verify + settle calls.
  *
  * Wire format follows the x402 v2 spec: the 402 carries a base64-encoded
- * PaymentRequired object in the PAYMENT-REQUIRED header. This file does not
- * emit the SYCEE `gates_spec` challenge.
+ * PaymentRequired object in the PAYMENT-REQUIRED header. The paid retry is
+ * PAYMENT-SIGNATURE. Settlement is PAYMENT-RESPONSE. Older clients may send
+ * the same v2 payload in X-PAYMENT, and the response is also copied to
+ * X-PAYMENT-RESPONSE. Those names are aliases, not a second payment schema.
+ * This file does not emit the SYCEE `gates_spec` challenge.
  *
  * The raw payment payload is sent to the facilitator and then dropped. It is
  * not returned and not written to the store.
@@ -81,6 +84,17 @@ export function paymentRequired(config, resourceUrl, error = 'PAYMENT-SIGNATURE 
 
 export function encodeJsonHeader(value) {
   return Buffer.from(JSON.stringify(value), 'utf8').toString('base64');
+}
+
+/**
+ * v2 settlement header, plus the v1 name as an alias of the same bytes.
+ * @param {{ setHeader(name: string, value: string): void }} res
+ * @param {object} value
+ */
+export function writePaymentResponse(res, value) {
+  const encoded = encodeJsonHeader(value);
+  res.setHeader('payment-response', encoded);
+  res.setHeader('x-payment-response', encoded);
 }
 
 export function decodeJsonHeader(value) {

@@ -260,6 +260,77 @@ export function serviceUrl(base, suffix) {
   return url.toString();
 }
 
+const DEFAULT_NEAR_CONTRACT = 'sycee-anchor.testnet';
+const DEFAULT_NEAR_RPC = 'https://rpc.testnet.near.org';
+
+/**
+ * NEAR anchoring is optional. The function-call key never becomes a payTo,
+ * and a mainnet NEAR network is refused. When the key is absent the paid
+ * route still serves; receipts are simply not anchored.
+ *
+ * `privateKey` is returned only when anchoring is enabled. It must not be
+ * copied onto a public JSON view. The `public` object is the one to render.
+ *
+ * @param {Record<string, unknown>} env
+ */
+export function readNearConfig(env = {}) {
+  const privateKey = str(env.NEAR_PRIVATE_KEY);
+  const accountId = str(env.NEAR_ACCOUNT_ID);
+  const contractId = str(env.NEAR_CONTRACT_ID) || DEFAULT_NEAR_CONTRACT;
+  const network = str(env.NEAR_NETWORK) || 'testnet';
+  const rpcUrl = str(env.NEAR_RPC_URL) || DEFAULT_NEAR_RPC;
+  const problems = [];
+
+  if (privateKey) {
+    // ed25519-priv: is the receipt key, not a NEAR function-call key.
+    if (privateKey.startsWith('ed25519-priv:') || !privateKey.startsWith('ed25519:') || privateKey.length < 20 || privateKey.length > 200) {
+      problems.push('near_key_malformed');
+    }
+    if (!accountId) problems.push('near_account_missing');
+  }
+  if (network === 'mainnet' || network === 'near' || /\.near$/.test(accountId) || /\.near$/.test(contractId) || /mainnet/i.test(rpcUrl)) {
+    problems.push('near_mainnet_refused');
+  } else if (network !== 'testnet') {
+    problems.push('near_network_unsupported');
+  }
+  if (accountId && !/^[a-z0-9._-]+$/.test(accountId)) problems.push('near_account_malformed');
+  if (!/^[a-z0-9._-]+$/.test(contractId)) problems.push('near_account_malformed');
+
+  const rpc = checkServiceUrl(rpcUrl);
+  let publishRpc = '';
+  if (rpc.ok) {
+    const parsed = new URL(rpcUrl);
+    if (!parsed.search && !parsed.username) publishRpc = rpcUrl;
+  }
+  if (privateKey && !rpc.ok) problems.push('near_bad_rpc');
+
+  const unique = [...new Set(problems)];
+  const enabled = Boolean(privateKey) && unique.length === 0;
+  const lookup = rpc.ok && !unique.includes('near_mainnet_refused') && !unique.includes('near_account_malformed') && !unique.includes('near_network_unsupported');
+
+  return {
+    enabled,
+    lookup,
+    privateKey: enabled ? privateKey : '',
+    accountId,
+    contractId,
+    network: 'testnet',
+    rpcUrl: rpc.ok ? rpcUrl : DEFAULT_NEAR_RPC,
+    sourceChain: '',
+    merchantId: '',
+    problems: unique,
+    public: {
+      enabled,
+      lookup,
+      problems: unique,
+      contract: contractId,
+      network: 'testnet',
+      account_id: enabled ? accountId : null,
+      rpc_url: lookup ? publishRpc || null : null,
+    },
+  };
+}
+
 function str(value) {
   if (value == null) return '';
   return String(value).trim();

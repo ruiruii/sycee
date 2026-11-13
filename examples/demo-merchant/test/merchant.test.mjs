@@ -86,6 +86,17 @@ async function boot(overrides = {}, hooks = {}) {
         };
         return Response.json(verdict);
       }
+      let host = '';
+      try { host = new URL(String(url)).host; } catch { host = ''; }
+      if (host === 'rpc.testnet.near.org' || host.endsWith('.near.org')) {
+        const payload = hooks.near ? await hooks.near(body, calls) : null;
+        const encoded = payload == null ? 'null' : JSON.stringify(payload);
+        return Response.json({
+          jsonrpc: '2.0',
+          id: 'sycee-anchor',
+          result: { result: Array.from(Buffer.from(encoded, 'utf8')) },
+        });
+      }
       const result = hooks.rpc ? await hooks.rpc(body, calls) : {
         number: '0x10',
         timestamp: '0x67400000',
@@ -189,6 +200,7 @@ test('a paid request verifies, settles, and returns the block plus a merchant re
   assert.equal(envelope.vsr.completeness, 'unilateral_merchant');
 
   const settled = decodeJsonHeader(res.headers.get('payment-response'));
+  assert.equal(res.headers.get('x-payment-response'), res.headers.get('payment-response'));
   assert.equal(settled.success, true);
   assert.equal(settled.transaction, `0x${'cd'.repeat(32)}`);
 
@@ -256,10 +268,12 @@ test('the raw payment is sent to the facilitator and never stored or echoed', as
   const evidenceRes = await get(merchant, '/evidence.json');
   const evidenceText = await evidenceRes.text();
   const page = await (await get(merchant, '/')).text();
+  const panel = await (await get(merchant, '/evidence')).text();
+  const receiptDoc = await (await get(merchant, '/receipts.json')).text();
   const dumped = JSON.stringify(await merchant.store.dump());
 
   assert.equal(calls.some((call) => JSON.stringify(call.body).includes(paid.nonce)), true);
-  for (const blob of [await res.text(), replayText, evidenceText, page, dumped, JSON.stringify([...res.headers])]) {
+  for (const blob of [await res.text(), replayText, evidenceText, page, panel, receiptDoc, dumped, JSON.stringify([...res.headers])]) {
     assert.equal(blob.includes(paid.nonce), false, 'nonce leaked');
     assert.equal(blob.includes(paid.signature), false, 'signature leaked');
     assert.equal(blob.includes(paid.header), false, 'payment header leaked');
@@ -574,4 +588,185 @@ test('sqlite store matches the memory store', async (t) => {
   assert.equal((await sql.rateLimit('tip:a', 1, 60_000)).allowed, true);
   assert.equal((await mem.rateLimit('tip:a', 1, 60_000)).allowed, false);
   assert.equal((await sql.rateLimit('tip:a', 1, 60_000)).allowed, false);
+  const anchor = { status: 'skipped', reason: 'not_configured', receipt_hash: `sha256:${'cd'.repeat(32)}`, contract: 'sycee-anchor.testnet' };
+  await mem.setAnchor(hash, anchor);
+  await sql.setAnchor(hash, anchor);
+  assert.deepEqual(await sql.listReceipts(20), await mem.listReceipts(20));
+});
+
+test('X-PAYMENT is an alias of PAYMENT-SIGNATURE and the response is copied to X-PAYMENT-RESPONSE', async () => {
+  const { merchant, calls } = await boot();
+  const paid = paymentHeader();
+  const res = await get(merchant, '/v1/base/tip', { 'x-payment': paid.header });
+  assert.equal(res.status, 200);
+  assert.equal(res.headers.get('x-payment-response'), res.headers.get('payment-response'));
+  const settled = decodeJsonHeader(res.headers.get('x-payment-response'));
+  assert.equal(settled.success, true);
+  assert.equal(settled.transaction, `0x${'cd'.repeat(32)}`);
+  assert.equal(calls[0].url, 'https://x402.org/facilitator/verify');
+  assert.equal(calls[0].body.x402Version, 2);
+  assert.equal(merchantEnvelope(res).vsr.result.consumed, 'unknown');
+});
+
+test('a v1-shaped payload is not accepted as a custom 402 body', async () => {
+  const { merchant, calls } = await boot();
+  const legacy = Buffer.from(JSON.stringify({
+    x402Version: 1,
+    scheme: 'exact',
+    network: 'base-sepolia',
+    payload: { signature: `0x${'ab'.repeat(65)}`, authorization: { from: PAY_TO, to: PAY_TO, value: '1000' } },
+  }), 'utf8').toString('base64');
+  const res = await get(merchant, '/v1/base/tip', { 'x-payment': legacy });
+  assert.equal(res.status, 402);
+  assert.equal((await res.json()).reason, 'malformed_payload');
+  assert.equal(calls.some((call) => String(call.url).endsWith('/settle')), false);
+  assert.equal(res.headers.get('payment-response'), res.headers.get('x-payment-response'));
+});
+
+test('a paid call records a merchant receipt that verify.mjs can judge, and anchoring stays off without a NEAR key', async () => {
+  const { merchant } = await boot();
+  const res = await get(merchant, '/v1/base/tip', { 'payment-signature': paymentHeader().header });
+  assert.equal(res.status, 200);
+  const doc = await (await get(merchant, '/receipts.json')).json();
+  assert.equal(doc.service, 'sycee-demo-merchant');
+  assert.equal(doc.receipts.length, 1);
+  const row = doc.receipts[0];
+  assert.equal(row.anchor.status, 'skipped');
+  assert.equal(row.anchor.reason, 'not_configured');
+  assert.match(row.receipt_hash, /^sha256:[0-9a-f]{64}$/);
+  const { receiptHash } = await import('../../near-anchor/lib/receipt.mjs');
+  assert.equal(row.receipt_hash, receiptHash(row));
+  assert.equal(JSON.stringify(doc).includes('trade_no'), false);
+
+  const verified = await merchant.fetch(new Request(`${ORIGIN}/v1/verify`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ receipt: { vsr: row.vsr, signature: row.signature } }),
+  }));
+  assert.equal(verified.status, 200);
+  const body = await verified.json();
+  assert.equal(body.signature_ok, true);
+  assert.equal(body.anchored, false);
+  assert.equal(body.hash, row.receipt_hash);
+  assert.ok(body.errors.includes('not anchored'));
+  assert.equal(body.verifier, 'verify.mjs');
+  assert.equal(body.record, null);
+});
+
+test('verify reports a matching get_anchor record and rejects a mismatched one', async () => {
+  const { merchant } = await boot({}, {
+    near: (body) => {
+      const args = JSON.parse(Buffer.from(body.params.args_base64, 'base64').toString('utf8'));
+      assert.equal(body.method, 'query');
+      assert.equal(body.params.method_name, 'get_anchor');
+      assert.equal(body.params.account_id, 'sycee-anchor.testnet');
+      return { receipt_hash: args.receipt_hash, block_height: 3 };
+    },
+  });
+  const res = await get(merchant, '/v1/base/tip', { 'payment-signature': paymentHeader().header });
+  const row = (await (await get(merchant, '/receipts.json')).json()).receipts[0];
+  const ok = await merchant.fetch(new Request(`${ORIGIN}/v1/verify`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ vsr: row.vsr, signature: row.signature }),
+  }));
+  const okBody = await ok.json();
+  assert.equal(okBody.ok, true);
+  assert.equal(okBody.anchored, true);
+  assert.equal(okBody.chain, 'found');
+  assert.equal(res.status, 200);
+
+  const mismatch = await boot({}, { near: () => ({ receipt_hash: 'ab'.repeat(32) }) });
+  const paid = await get(mismatch.merchant, '/v1/base/tip', { 'payment-signature': paymentHeader().header });
+  const again = (await (await get(mismatch.merchant, '/receipts.json')).json()).receipts[0];
+  const bad = await mismatch.merchant.fetch(new Request(`${ORIGIN}/v1/verify`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ receipt: { vsr: again.vsr, signature: again.signature } }),
+  }));
+  const badBody = await bad.json();
+  assert.equal(badBody.ok, false);
+  assert.equal(badBody.signature_ok, true);
+  assert.ok(badBody.errors.includes('anchored hash does not match this receipt'));
+  assert.equal(paid.status, 200);
+});
+
+test('the NEAR function-call key anchors with a zero deposit and never appears on a public page', async () => {
+  const nearKey = `ed25519:${'N'.repeat(40)}keymaterial`;
+  const anchored = [];
+  const { merchant, calls } = await boot({
+    NEAR_PRIVATE_KEY: nearKey,
+    NEAR_ACCOUNT_ID: 'writer.testnet',
+    anchorImpl: async (req) => {
+      anchored.push(req);
+      return { transaction: { hash: 'FakeTxHash11111111111111111111' } };
+    },
+  });
+  const res = await get(merchant, '/v1/base/tip', { 'payment-signature': paymentHeader().header });
+  assert.equal(res.status, 200);
+  assert.equal(anchored.length, 1);
+  assert.equal(anchored[0].method, 'anchor');
+  assert.equal(anchored[0].attachedDeposit, '0');
+  assert.equal(anchored[0].contractId, 'sycee-anchor.testnet');
+  assert.equal(anchored[0].accountId, 'writer.testnet');
+  assert.equal(anchored[0].args.merchant_id, PAY_TO);
+  assert.equal(anchored[0].args.source_chain, 'eip155:84532');
+  assert.equal(anchored[0].args.batch_root, null);
+  assert.match(anchored[0].args.receipt_hash, /^[0-9a-f]{64}$/);
+  assert.equal(JSON.stringify(anchored[0]).includes(nearKey), false);
+  assert.equal(calls.some((call) => String(call.url).includes('near.org')), false);
+
+  const doc = await (await get(merchant, '/receipts.json')).json();
+  assert.equal(doc.receipts[0].anchor.status, 'submitted');
+  assert.equal(doc.receipts[0].anchor.transaction_hash, 'FakeTxHash11111111111111111111');
+  assert.equal(doc.receipts[0].receipt_hash, `sha256:${anchored[0].args.receipt_hash}`);
+  const panel = await (await get(merchant, '/evidence')).text();
+  const dashboard = await (await get(merchant, '/')).text();
+  const known = JSON.stringify(await (await get(merchant, '/.well-known/sycee.json')).json());
+  for (const blob of [panel, dashboard, known, JSON.stringify(doc)]) {
+    assert.equal(blob.includes(nearKey), false);
+    assert.equal(blob.includes('ed25519-priv:'), false);
+  }
+  assert.equal(doc.near.anchoring ?? doc.near.enabled, true);
+});
+
+test('a NEAR anchor failure still returns the paid block', async () => {
+  const { merchant } = await boot({
+    NEAR_PRIVATE_KEY: `ed25519:${'K'.repeat(48)}`,
+    NEAR_ACCOUNT_ID: 'writer.testnet',
+    anchorImpl: async () => { throw new Error('boom'); },
+  });
+  const res = await get(merchant, '/v1/base/tip', { 'payment-signature': paymentHeader().header });
+  assert.equal(res.status, 200);
+  assert.equal((await res.json()).block_number, 16);
+  const doc = await (await get(merchant, '/receipts.json')).json();
+  assert.equal(doc.receipts[0].anchor.status, 'failed');
+  assert.equal(doc.receipts[0].anchor.reason, 'near_rejected');
+  assert.equal(JSON.stringify(doc).includes('boom'), false);
+});
+
+test('mainnet NEAR and a receipt-signing key in the NEAR slot do not anchor and do not block the sale', async () => {
+  const calls = [];
+  const mainnet = await boot({
+    NEAR_PRIVATE_KEY: `ed25519:${'M'.repeat(48)}`,
+    NEAR_ACCOUNT_ID: 'alice.near',
+    NEAR_NETWORK: 'mainnet',
+    anchorImpl: async () => { calls.push('called'); return {}; },
+  });
+  const sold = await get(mainnet.merchant, '/v1/base/tip', { 'payment-signature': paymentHeader().header });
+  assert.equal(sold.status, 200);
+  assert.equal(calls.length, 0);
+  const doc = await (await get(mainnet.merchant, '/receipts.json')).json();
+  assert.equal(doc.receipts[0].anchor.status, 'skipped');
+  assert.equal(doc.receipts[0].anchor.reason, 'near_mainnet_refused');
+
+  const collided = await boot({
+    NEAR_PRIVATE_KEY: 'ed25519-priv:not-a-near-key',
+    NEAR_ACCOUNT_ID: 'writer.testnet',
+    anchorImpl: async () => { throw new Error('should not run'); },
+  });
+  const still = await get(collided.merchant, '/v1/base/tip', { 'payment-signature': paymentHeader().header });
+  assert.equal(still.status, 200);
+  const skipped = await (await get(collided.merchant, '/receipts.json')).json();
+  assert.equal(skipped.receipts[0].anchor.reason, 'near_key_malformed');
 });

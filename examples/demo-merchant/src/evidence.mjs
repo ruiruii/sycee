@@ -59,6 +59,14 @@ export function presentEvidence(config, stats, meta) {
       external: stats.traffic.external,
       note: 'self-test is a label (header x-sycee-traffic: self-test, or agent_id sycee:self-test), not an authentication. Unlabeled calls are counted as external, including any self-traffic that omitted the label.',
     },
+    near: {
+      anchoring: meta.near?.enabled === true,
+      contract: meta.near?.contract ?? 'sycee-anchor.testnet',
+      network: meta.near?.network ?? 'testnet',
+      account_id: meta.near?.account_id ?? null,
+      problems: meta.near?.problems ?? [],
+      note: 'Anchoring writes the receipt fingerprint only. It does not move USDC. It is off until a NEAR function-call key is configured.',
+    },
     recent: stats.recent.map((row) => ({
       proof_hash: truncateProofHash(row.proof_hash),
       redeem_count: row.redeem_count,
@@ -165,6 +173,7 @@ export function renderDashboard(view) {
     <dt>Asset</dt><dd><code>${esc(c.asset ?? 'not configured')}</code></dd>
     <dt>Merchant Ed25519</dt><dd><code>${esc(c.public_key ?? 'not configured')}</code></dd>
     <dt>Store</dt><dd>${esc(view.store)}</dd>
+    <dt>NEAR anchor</dt><dd>${view.near.anchoring ? 'on' : 'off'} · <code>${esc(view.near.contract)}</code>${view.near.problems.length ? ` (${esc(view.near.problems.join(', '))})` : ''}</dd>
   </dl>
 
   <h2>Decisions</h2>
@@ -208,6 +217,7 @@ export function renderDashboard(view) {
 <footer>
   Paid route <code>GET /v1/base/tip</code>. Agent receipts <code>POST /v1/agent-receipt</code>.
   Machine-readable copy at <a href="/evidence.json">/evidence.json</a>.
+  Receipt list and verifier at <a href="/evidence">/evidence</a>.
 </footer>
 </body>
 </html>`;

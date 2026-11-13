@@ -24,6 +24,11 @@ function fingerprint(env) {
     env.MAINNET,
     env.RPC_URL,
     env.RATE_LIMIT_PER_MINUTE,
+    env.NEAR_ACCOUNT_ID,
+    env.NEAR_CONTRACT_ID,
+    env.NEAR_RPC_URL,
+    env.NEAR_NETWORK,
+    env.NEAR_PRIVATE_KEY,
   ].join('\n');
 }
 

@@ -13,15 +13,18 @@
 import { linkReceipts } from '@sycee/agent-sdk';
 import { verifyVSR } from '@sycee/core';
 import { createGates } from '@sycee/middleware';
+import { anchorSignedReceipt, lookupAnchor } from './anchor.mjs';
 import {
   RESOURCE_PATH,
   clientIp,
   keyProblems,
   loadMerchantKeys,
   readConfig,
+  readNearConfig,
   trafficClass,
 } from './config.mjs';
 import { presentEvidence, renderDashboard, truncateProofHash } from './evidence.mjs';
+import { digestHex, judgeReceipt, receiptHash } from './fingerprint.mjs';
 import { d1Store, memoryStore } from './store.mjs';
 import {
   createVerifyPayment,
@@ -29,6 +32,7 @@ import {
   paymentRequired,
   paymentRequirements,
   readPaymentHeader,
+  writePaymentResponse,
 } from './x402.mjs';
 
 const BLOCKING = new Set([
@@ -68,6 +72,9 @@ export async function createMerchant(env = {}) {
   if (keys.publicKey) problems.push(...keyProblems({ publicKey: keys.publicKey, payTo: config.payTo }));
   problems.push(...config.problems);
 
+  const near = readNearConfig(env);
+  near.sourceChain = config.network;
+  near.merchantId = config.payTo || config.agentId;
   const opened = await openStore(env);
   const fetchImpl = env.fetchImpl ?? ((url, init) => globalThis.fetch(url, init));
   const uniqueProblems = [...new Set(problems)];
@@ -84,15 +91,18 @@ export async function createMerchant(env = {}) {
     problems: uniqueProblems,
     /** @type {{ total: number, accepted: number, refused: number } | null} */
     lastTally: null,
+    near,
     fetch(request) {
       return handle(request, {
         config,
         store: opened.store,
-storeKind: opened.kind,
-    publicKey: keys.publicKey ?? null,
-    keys,
+        storeKind: opened.kind,
+        publicKey: keys.publicKey ?? null,
+        keys,
         problems: uniqueProblems,
         fetchImpl,
+        near,
+        anchorImpl: env.anchorImpl ?? null,
         merchant,
       });
     },
@@ -115,6 +125,12 @@ async function handle(request, ctx) {
     if (url.pathname === '/health' && request.method === 'GET') return health(ctx);
     if (url.pathname === '/' && request.method === 'GET') return dashboard(ctx);
     if (url.pathname === '/evidence.json' && request.method === 'GET') return evidence(ctx);
+    if ((url.pathname === '/evidence' || url.pathname === '/evidence.html') && request.method === 'GET') {
+      return evidencePanel();
+    }
+    if (url.pathname === '/receipts.json' && request.method === 'GET') return receipts(ctx);
+    if (url.pathname === '/v1/verify' && request.method === 'POST') return verifyReceipt(request, ctx);
+    if (url.pathname === '/v1/verify') return json(405, { error: 'method_not_allowed' });
     if (url.pathname === '/.well-known/sycee.json' && request.method === 'GET') return wellKnown(ctx, url);
     if (url.pathname === RESOURCE_PATH) return paid(request, ctx, url);
     if (url.pathname === '/v1/agent-receipt' && request.method === 'POST') return agentReceipt(request, ctx);
@@ -137,6 +153,7 @@ function health(ctx) {
     configured: blocking(ctx).length === 0,
     store: ctx.storeKind,
     mainnet: ctx.config.mainnetEnabled === true,
+    anchoring: ctx.near.enabled === true,
   });
 }
 
@@ -169,8 +186,11 @@ function wellKnown(ctx, url) {
     resource_id: ctx.config.resourceId,
     paid_path: RESOURCE_PATH,
     resource_url: `${url.origin}${RESOURCE_PATH}`,
+    evidence_panel: `${url.origin}/evidence`,
+    receipts: `${url.origin}/receipts.json`,
     mainnet_enabled: ctx.config.mainnetEnabled,
     configured: blocking(ctx).length === 0,
+    near: ctx.near.public,
   });
 }
 
@@ -215,7 +235,7 @@ async function paid(request, ctx, url) {
   const originalEnd = nodeRes.end.bind(nodeRes);
   nodeRes.end = (payload) => {
     if (nodeReq.sycee?.paymentResponse && !nodeRes.getHeader('payment-response')) {
-      nodeRes.setHeader('payment-response', encodeJsonHeader(nodeReq.sycee.paymentResponse));
+      writePaymentResponse(nodeRes, nodeReq.sycee.paymentResponse);
     }
     if (nodeRes.statusCode === 402 && !nodeRes.getHeader('payment-required')) {
       nodeRes.setHeader('payment-required', encodeJsonHeader(paymentRequired(ctx.config, resourceUrl)));
@@ -227,7 +247,7 @@ async function paid(request, ctx, url) {
     const block = req.sycee?.block;
     if (!block) return { status: 502, body: { error: 'block_unavailable' } };
     if (req.sycee?.paymentResponse) {
-      res.setHeader('payment-response', encodeJsonHeader(req.sycee.paymentResponse));
+      writePaymentResponse(res, req.sycee.paymentResponse);
     }
     return { status: 200, body: block };
   })(nodeReq, nodeRes);
@@ -235,7 +255,24 @@ async function paid(request, ctx, url) {
   const tally = gates.tally();
   ctx.merchant.lastTally = tally;
   await persistAttempts(ctx, gates.ledger(), nodeReq, envelope);
+  if (envelope?.vsr && nodeRes.statusCode === 200) {
+    await recordAnchor(ctx, envelope);
+  }
   return toResponse(nodeRes);
+}
+
+async function recordAnchor(ctx, envelope) {
+  try {
+    const anchor = await anchorSignedReceipt({
+      envelope,
+      near: ctx.near,
+      anchorImpl: ctx.anchorImpl,
+    });
+    const proofHash = envelope.vsr?.payment?.proof_hash;
+    if (anchor && typeof proofHash === 'string') await ctx.store.setAnchor(proofHash, anchor);
+  } catch {
+    console.error('anchor_record_failed');
+  }
 }
 
 async function persistAttempts(ctx, rows, nodeReq, envelope) {
@@ -356,8 +393,130 @@ function hasRawCredential(value, depth = 0) {
   return false;
 }
 
+async function receipts(ctx) {
+  const rows = await ctx.store.listReceipts(20);
+  const listed = [];
+  for (const row of rows) {
+    try {
+      const envelope = { vsr: row.receipt.vsr, signature: row.receipt.signature };
+      listed.push({
+        ...envelope,
+        at: row.at,
+        decision: row.decision,
+        settlement: row.settlement,
+        delivery: row.delivery,
+        traffic: row.traffic,
+        redeem_count: row.redeem_count,
+        receipt_hash: receiptHash(envelope),
+        anchor: row.anchor ?? null,
+      });
+    } catch {
+      continue;
+    }
+  }
+  return json(200, {
+    service: 'sycee-demo-merchant',
+    statement: 'Signed merchant receipts only. No scoring, no custody, no fund movement. Raw payment proofs are not included.',
+    config: {
+      network: ctx.config.network,
+      pay_to: ctx.config.payTo || null,
+      merchant_agent_id: ctx.config.agentId,
+    },
+    near: ctx.near.public,
+    receipts: listed,
+  });
+}
+
+async function verifyReceipt(request, ctx) {
+  const type = request.headers.get('content-type') ?? '';
+  if (!type.toLowerCase().includes('application/json')) return json(415, { error: 'json_required' });
+  const limit = await ctx.store.rateLimit(`verify:${clientIp(request)}`, ctx.config.rateLimitPerMinute, 60_000);
+  if (!limit.allowed) return json(429, { error: 'rate_limited' }, { 'retry-after': '60' });
+  const text = await request.text();
+  if (text.length > 32_768) return json(413, { error: 'too_large' });
+  let body;
+  try {
+    body = JSON.parse(text);
+  } catch {
+    return json(400, { error: 'bad_json' });
+  }
+  if (hasRawCredential(body)) return json(400, { error: 'raw_proof_refused' });
+  const envelope = body?.receipt && typeof body.receipt === 'object' ? body.receipt : body;
+  let digest;
+  try {
+    digest = digestHex(receiptHash(envelope));
+  } catch {
+    return json(400, { error: 'invalid_receipt' });
+  }
+
+  let record = null;
+  let chain = 'skipped';
+  if (ctx.near.lookup) {
+    try {
+      record = await lookupAnchor(ctx.fetchImpl, {
+        rpcUrl: ctx.near.public.rpc_url || ctx.near.rpcUrl,
+        contractId: ctx.near.contractId,
+        digest,
+      });
+      chain = record ? 'found' : 'missing';
+    } catch {
+      chain = 'error';
+    }
+  }
+  let judged;
+  try {
+    // A fake matching record keeps the signature check and suppresses
+    // "not anchored" when this process did not actually ask NEAR.
+    const compared = chain === 'found' || chain === 'missing' ? record : { receipt_hash: digest };
+    judged = judgeReceipt(envelope, compared);
+  } catch {
+    return json(400, { error: 'invalid_receipt' });
+  }
+  if (chain === 'error') {
+    judged.record = null;
+    judged.errors = [...judged.errors, 'chain_lookup_failed'];
+    judged.ok = false;
+  } else if (chain === 'skipped') {
+    judged.record = null;
+    judged.errors = [...judged.errors, 'chain_skipped'];
+    judged.ok = false;
+  }
+  const signatureOk = !judged.errors.some((item) => item.startsWith('vsr:'));
+  return json(200, {
+    ok: judged.ok,
+    signature_ok: signatureOk,
+    anchored: chain === 'found' && judged.ok,
+    errors: judged.errors,
+    hash: judged.hash,
+    digest: judged.digest,
+    level: judged.level,
+    chain,
+    contract: ctx.near.contractId,
+    record: judged.record,
+    verifier: 'verify.mjs',
+  });
+}
+
+async function evidencePanel() {
+  try {
+    const { readFile } = await import('node:fs/promises');
+    const html = await readFile(new URL('../public/evidence.html', import.meta.url), 'utf8');
+    return new Response(html, {
+      status: 200,
+      headers: common({ 'content-type': 'text/html; charset=utf-8' }),
+    });
+  } catch {
+    return json(503, { error: 'panel_unavailable' });
+  }
+}
+
 function meta(ctx) {
-  return { publicKey: ctx.publicKey, storeKind: ctx.storeKind, problems: blocking(ctx) };
+  return {
+    publicKey: ctx.publicKey,
+    storeKind: ctx.storeKind,
+    problems: blocking(ctx),
+    near: ctx.near.public,
+  };
 }
 
 function blocking(ctx) {
@@ -430,8 +589,8 @@ function empty(status) {
 function common(extra = {}) {
   return {
     'access-control-allow-origin': '*',
-    'access-control-expose-headers': 'PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-Gates-Receipt, X-Gates-Redeem-Count, X-Gates-Proof-Hash, X-Gates-Settlement-Status, X-Gates-Refusal, X-Gates-Refusal-Reason',
-    'access-control-allow-headers': 'PAYMENT-SIGNATURE, Content-Type, X-Sycee-Traffic, X-Sycee-Agent-Id',
+    'access-control-expose-headers': 'PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE, X-Gates-Receipt, X-Gates-Redeem-Count, X-Gates-Proof-Hash, X-Gates-Settlement-Status, X-Gates-Refusal, X-Gates-Refusal-Reason',
+    'access-control-allow-headers': 'PAYMENT-SIGNATURE, X-PAYMENT, Content-Type, X-Sycee-Traffic, X-Sycee-Agent-Id',
     'access-control-allow-methods': 'GET, POST, OPTIONS',
     'access-control-max-age': '600',
     'cache-control': 'no-store',

@@ -6,12 +6,17 @@
   "license": "Apache-2.0",
   "type": "module",
   "dependencies": {
-    "@sycee/agent-sdk": "*",
-    "@sycee/core": "*",
-    "@sycee/middleware": "*"
+    "@sycee/agent-sdk": "file:../../packages/agent-sdk",
+    "@sycee/core": "file:../../packages/core",
+    "@sycee/middleware": "file:../../packages/middleware",
+    "near-api-js": "^5.1.1"
+  },
+  "overrides": {
+    "@sycee/core": "file:../../packages/core"
   },
   "scripts": {
     "start": "node src/dev-server.mjs",
+    "postinstall": "node scripts/link-packages.mjs",
     "test": "node --test test/*.test.mjs",
     "self-test": "node scripts/self-test.mjs"
   },

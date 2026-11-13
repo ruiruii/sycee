@@ -25,8 +25,11 @@ if (env.SQLITE_PATH) {
 }
 
 const merchant = await createMerchant(env);
-const port = Number(env.PORT || 8787);
-const host = env.HOST || '127.0.0.1';
+const parsedPort = Number(env.PORT || 8787);
+const port = Number.isInteger(parsedPort) && parsedPort > 0 && parsedPort < 65536 ? parsedPort : 8787;
+// Railway sets PORT and reaches the process on 0.0.0.0. A local run with no
+// PORT stays on loopback.
+const host = env.HOST || (env.PORT ? '0.0.0.0' : '127.0.0.1');
 
 const server = http.createServer(async (req, res) => {
   try {
