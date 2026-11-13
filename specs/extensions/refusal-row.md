@@ -187,6 +187,15 @@ contradiction cases.
 - `reason_detail` is a fixed sentence per reason, not a message from the seller. A seller
   that wants to say more can attach a `_vendor` field; nothing in a `_vendor` field is
   covered by the evidence ceiling.
+- **A row cannot answer the question the buyer is actually asking.** When a `/settle`
+  call is lost in flight, the buyer's question is "did the money move?", and no facilitator
+  surface answers it: the surface is `/supported`, `/verify`, `/settle`, with no read
+  endpoint keyed by the payment authorization (nonce, or the EIP-3009 authorization hash),
+  and `/settle` is an execution call rather than a query. A row here evidences that an
+  attempt happened and how it was decided; it does not evidence that funds moved. Closing
+  that gap needs a settlement lookup this protocol does not define — the seller-side half of
+  which is scoped in x402#4198, and the facilitator-side half of which is an implementation
+  question, not a format one.
 - **One attempt can leave two rows and a wrong claim.** §4's ceiling forbids a row from
   claiming more evidence than its reason allows, but an issuer can get the same effect by
   recording one attempt twice: once with the true, low-ceiling reason, and once with a reason
