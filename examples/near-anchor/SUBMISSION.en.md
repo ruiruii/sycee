@@ -1,3 +1,5 @@
+SYCEE is the evidence layer for AI agent payments: every payment gets a signed receipt, fingerprinted on NEAR, that anyone can verify, and SYCEE never touches the funds.
+
 # SYCEE receipt fingerprints on NEAR
 
 A page you can open, with no wallet:
