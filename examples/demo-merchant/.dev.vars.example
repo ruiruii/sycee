@@ -1,0 +1,4 @@
+# Copy to .dev.vars for `wrangler dev`. Never commit .dev.vars.
+# Generate a key from the repo root:
+#   node --input-type=module -e "import { generateKeyPair } from '@sycee/core'; console.log(generateKeyPair().privateKey)"
+# SYCEE_SIGNING_KEY=ed25519-priv:REPLACE_ME

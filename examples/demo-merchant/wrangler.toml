@@ -1,0 +1,39 @@
+# SYCEE first-party demo merchant.
+# Mainnet is not enabled: NETWORK stays on Base Sepolia and MAINNET is false.
+# Replace database_id after `wrangler d1 create`. Set PAY_TO to an address you
+# control. Put the Ed25519 signing key in a secret, not in this file:
+#   wrangler secret put SYCEE_SIGNING_KEY
+
+name = "sycee-demo-merchant"
+main = "src/worker.mjs"
+compatibility_date = "2026-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+# nodejs_compat is required. @sycee/core uses node:crypto (Ed25519) and Buffer.
+# Do not add nodejs_compat flags you do not need. The worker does not use
+# fs, net, tls, or child_process.
+
+[[d1_databases]]
+binding = "DB"
+database_name = "sycee-demo-merchant"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"
+
+[vars]
+NETWORK = "eip155:84532"
+FACILITATOR_URL = "https://x402.org/facilitator"
+PRICE_ATOMIC = "1000"
+PRICE_DISPLAY = "0.001000"
+CURRENCY = "USDC"
+# Base Sepolia USDC (Circle). EIP-712 domain name "USDC", version "2".
+ASSET = "0x036CbD53842c5426634e7929541eC2318f3dCF7e"
+ASSET_NAME = "USDC"
+ASSET_VERSION = "2"
+# Required before the paid route will serve. Not the Ed25519 signing key.
+PAY_TO = ""
+RPC_URL = "https://sepolia.base.org"
+MAINNET = "false"
+MAX_TIMEOUT_SECONDS = "60"
+RATE_LIMIT_PER_MINUTE = "60"
+MERCHANT_AGENT_ID = "sycee:demo-merchant"
+RESOURCE_ID = "base.tip.v1"
