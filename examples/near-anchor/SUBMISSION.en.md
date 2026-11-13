@@ -147,9 +147,12 @@ flowchart LR
 | Originality | Code before 19 October is the baseline | [compare](https://github.com/ruiruii/sycee/compare/f1af69de1f461d9d656f598473042187e9118db1...cursor/hackathon-e2e-security-a63a) |
 | Sustainability | The agent key cannot move funds | `npm run demo:security` |
 
+The owner posted these. Nothing is posted from here.
+
+- Demo video: [https://x.com/aking_z/status/2121175474265313681](https://x.com/aking_z/status/2121175474265313681) (2-min, posted as a reply under the demo post).
+- Demo post on X: [https://x.com/aking_z/status/2121175201778143394](https://x.com/aking_z/status/2121175201778143394).
+
 Still the owner's, not done here:
 
 - Mainnet payout account: `locallemon5213.near`. The owner created it and it was verified on mainnet. Nothing in this repository is deployed to mainnet, and nothing here moves funds.
-- Demo video: [待填] (TBD).
-- Demo post on X: [待填] (TBD). The owner posts it. Nothing is posted from here.
 - Public demo URL: [https://ruiruii.github.io/sycee/](https://ruiruii.github.io/sycee/). After this pull request merges, re-run the Demo page workflow so the live site gets the paste box and URL parameters.

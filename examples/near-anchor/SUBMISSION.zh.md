@@ -147,9 +147,12 @@ flowchart LR
 | 是不是新做的 | 10 月 19 日前是旧代码 | [对照](https://github.com/ruiruii/sycee/compare/f1af69de1f461d9d656f598473042187e9118db1...cursor/hackathon-e2e-security-a63a) |
 | 能不能接着用 | 代理钥匙不能转账 | `npm run demo:security` |
 
+主人已经发了。这里不发帖。
+
+- 演示视频：[https://x.com/aking_z/status/2121175474265313681](https://x.com/aking_z/status/2121175474265313681)（2 分钟，发在演示帖下面的回复里）。
+- X 上的演示帖：[https://x.com/aking_z/status/2121175201778143394](https://x.com/aking_z/status/2121175201778143394)。
+
 还没做、要主人自己做的：
 
 - 主网收款账号：`locallemon5213.near`。主人已在主网建好，并核对过。这里不部署到主网，也不转账。
-- 演示视频：[待填]（TBD）。
-- X 上的演示帖：[待填]（TBD）。由主人自己发。这里不发帖。
 - 公开演示网址已经是 [https://ruiruii.github.io/sycee/](https://ruiruii.github.io/sycee/)。合并本 PR 之后，再跑一次 Demo page 工作流，线上才会有贴指纹和网址参数。
