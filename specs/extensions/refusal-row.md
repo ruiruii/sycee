@@ -295,3 +295,21 @@ will otherwise conclude that four branches contradict three codes. They do not. 
 three are a coarser answer to the same question; the fourth is a different question. Which of
 the four a tightly-raced loser actually lands in is registered there as timing-sensitive
 behaviour — this table maps the range, not an observed run.
+
+One neighbouring implementation handles the same shape differently, and the difference is
+worth recording because it points at a fix §12 does not consider. vet402's observatory keeps
+a daily hash chain over its purchase ledger and, separately, a corrections log whose rows are
+"added and not rewritten": a correction cites the row it corrects by id, carries the SHA-256
+of that row as it read when the correction was filed, and — when filed by a third party —
+carries its own signature, re-verified on every read (schema as of 2026-11-13,
+`GET /api/v1/observatory/ledger-corrections`). Filing a correction leaves the cited row as it
+is.
+
+It does not forbid the second row. It makes the relation between the two rows explicit and
+checkable. That is the shape a fix would take here too: not "these two rows must agree" —
+which §12 rejects, because rows about one payload are legitimately plural — but "a row that
+corrects another names it, and names what it read", which leaves both rows legitimate while
+making the pair auditable by anyone holding them. It does not close the hole: an issuer can
+still file a correction-shaped row that is not true. What it removes is the property that
+makes the hole cheap — that the second row is indistinguishable from an independent
+observation of the same attempt.
