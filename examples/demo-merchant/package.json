@@ -1,0 +1,21 @@
+{
+  "name": "@sycee/demo-merchant",
+  "version": "0.1.0",
+  "private": true,
+  "description": "SYCEE first-party demo merchant. Standard x402 on Base Sepolia. Records redeem_count and agent-signed consumption. No scoring, no custody, no fund movement.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "dependencies": {
+    "@sycee/agent-sdk": "*",
+    "@sycee/core": "*",
+    "@sycee/middleware": "*"
+  },
+  "scripts": {
+    "start": "node src/dev-server.mjs",
+    "test": "node --test test/*.test.mjs",
+    "self-test": "node scripts/self-test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,13 +1,14 @@
 # Examples
 
-Two ways in, depending on how much you want to read.
+Three ways in, depending on how much you want to read.
 
 | File | What it shows | How to run |
 |---|---|---|
 | `walkthrough.mjs` | A server and a buyer in one process: 402, payment, a counted replay, both sides linking. | `node examples/walkthrough.mjs` |
 | `minimal-server.mjs` + `minimal-client.mjs` | The same flow over real HTTP in two terminals, so you can poke it with `curl`. | see below |
+| `demo-merchant/` | A first-party merchant that speaks standard x402 (`PAYMENT-REQUIRED`) and records `redeem_count` plus agent-signed `consumed`. Base Sepolia by default. No deploy in this repo. | [demo-merchant/README.md](./demo-merchant/README.md) |
 
-Both need nothing beyond `npm install` — no network, no wallet, no accounts.
+`walkthrough.mjs` and the minimal pair need nothing beyond `npm install` — no network, no wallet, no accounts. The demo merchant's unit tests are the same. Its optional self-test script is the one that talks to a real testnet; see its README.
 
 ## `walkthrough.mjs` — start here
 

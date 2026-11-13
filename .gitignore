@@ -23,3 +23,9 @@ coverage/
 
 # npm pack
 *.tgz
+
+# local demo merchant (Cloudflare / sqlite). Never commit secrets.
+.wrangler/
+.dev.vars
+*.sqlite
+*.sqlite3
