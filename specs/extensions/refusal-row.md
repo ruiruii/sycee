@@ -59,6 +59,28 @@ Two gaps worth naming, both real:
 
 - **Plain-text 402 error bodies.** Useful, ephemeral, unsigned. Not a record.
 
+- **§5.5's countersignature obligation, and why this extension refuses to meet it.** §5.5 now
+  requires that a counterparty that countersigns recompute the fingerprint **from the bytes it
+  observed**, and that where it cannot, it refuse and say which failure it is — values differ,
+  or the comparison could not be made. A row here MUST NOT be offered as that countersignature.
+  The decisive reason is not taste, it is arithmetic: a row records a `decision`, and at
+  refusal time the seller holds no observed settlement outcome to recompute anything from. The
+  only attempt at compliance would be to fill an absent observation with a default — `not
+  settled` for a settle that has not returned — and §5's fixed reason set exists in part to
+  make that filling visible rather than silent. So the honest answer is the one §5.5 itself
+  provides for: *could not be compared*, stated as such. If a seller adopts both documents, the
+  row is the record and something else is the countersignature; a row that claims both is
+  claiming an observation it did not make.
+
+  The gap that opens here is worth stating plainly, because it is the shape of the whole
+  problem. A resource server that is the only party holding the paid request cannot normally
+  *prove* it observed that request: it can produce a signature, not a byte range. The
+  correction in x402#3776 `8dcbba3` therefore fixes where the countersignature may come from
+  — the resource server or the payer, never the facilitator, whose `/verify` and `/settle`
+  calls carry no `method`, `path`, `query`, or `body` — but it does not yet say what makes that
+  party's claim checkable by a third party. Until it does, this extension can say what was
+  decided and who said so; it cannot say that anyone observed it.
+
 ## 4. Row structure
 
 | Field | Type | Required | Description |
