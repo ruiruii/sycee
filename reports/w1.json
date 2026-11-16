@@ -1,6 +1,6 @@
 {
   "method_version": "1.1",
-  "generated_at": "2026-11-09T13:00:43.699Z",
+  "generated_at": "2026-11-16T12:54:22.293Z",
   "tool": "gates-probe",
   "ecosystem": {
     "sources": [
@@ -20,7 +20,7 @@
     "sellers": [
       {
         "origin": "https://api.onesource.io",
-        "resourceCount": 31,
+        "resourceCount": 30,
         "sampleResource": "https://api.onesource.io/api/chain/erc20-balance",
         "facilitators": []
       },
@@ -55,21 +55,15 @@
         "facilitators": []
       },
       {
+        "origin": "https://agent.pocket.network",
+        "resourceCount": 4,
+        "sampleResource": "https://agent.pocket.network/v1/agentsearch-web-search-v1",
+        "facilitators": []
+      },
+      {
         "origin": "https://api.bitrefill.com",
         "resourceCount": 3,
         "sampleResource": "https://api.bitrefill.com/x402/gift-cards/search",
-        "facilitators": []
-      },
-      {
-        "origin": "https://blockrun.ai",
-        "resourceCount": 3,
-        "sampleResource": "https://blockrun.ai/api/v1/chat/completions",
-        "facilitators": []
-      },
-      {
-        "origin": "https://agent.pocket.network",
-        "resourceCount": 2,
-        "sampleResource": "https://agent.pocket.network/v1/meadow",
         "facilitators": []
       },
       {
@@ -85,15 +79,15 @@
         "facilitators": []
       },
       {
-        "origin": "https://api.nansen.ai",
+        "origin": "https://blockrun.ai",
         "resourceCount": 2,
-        "sampleResource": "https://api.nansen.ai/api/v1/profiler/address/current-balance",
+        "sampleResource": "https://blockrun.ai/api/v1/chat/completions",
         "facilitators": []
       },
       {
-        "origin": "https://laso.finance",
+        "origin": "https://keyring-agent.blockchhub.link",
         "resourceCount": 2,
-        "sampleResource": "https://laso.finance/auth",
+        "sampleResource": "https://keyring-agent.blockchhub.link/api/send-native",
         "facilitators": []
       },
       {
@@ -118,6 +112,12 @@
         "origin": "https://vibesprings.net",
         "resourceCount": 2,
         "sampleResource": "https://vibesprings.net/api/price/btc-usd",
+        "facilitators": []
+      },
+      {
+        "origin": "https://x402.telnyx.com",
+        "resourceCount": 2,
+        "sampleResource": "https://x402.telnyx.com/v1/chat/completions/_t/deepseek-v4.1-flash",
         "facilitators": []
       },
       {
@@ -157,33 +157,21 @@
         "facilitators": []
       },
       {
-        "origin": "https://api-dev-v2.ixs.finance",
-        "resourceCount": 1,
-        "sampleResource": "https://api-dev-v2.ixs.finance/x402/vaults",
-        "facilitators": []
-      },
-      {
         "origin": "https://api.402rates.com",
         "resourceCount": 1,
         "sampleResource": "https://api.402rates.com/v1/ping",
         "facilitators": []
       },
       {
-        "origin": "https://api.aidress.ai",
+        "origin": "https://api.agents-trust.com",
         "resourceCount": 1,
-        "sampleResource": "https://api.aidress.ai/pay/agent_ottoai_crypto_news",
+        "sampleResource": "https://api.agents-trust.com/recommend",
         "facilitators": []
       },
       {
         "origin": "https://api.arkm.com",
         "resourceCount": 1,
         "sampleResource": "https://api.arkm.com/x402/intelligence/address",
-        "facilitators": []
-      },
-      {
-        "origin": "https://api.chit402.com",
-        "resourceCount": 1,
-        "sampleResource": "https://api.chit402.com/v1/chat/completions",
         "facilitators": []
       },
       {
@@ -196,6 +184,12 @@
         "origin": "https://api.hyperextend.xyz",
         "resourceCount": 1,
         "sampleResource": "https://api.hyperextend.xyz/v1/candles/BTC/1m/latest",
+        "facilitators": []
+      },
+      {
+        "origin": "https://api.nansen.ai",
+        "resourceCount": 1,
+        "sampleResource": "https://api.nansen.ai/api/v1/profiler/address/current-balance",
         "facilitators": []
       },
       {
@@ -241,15 +235,21 @@
         "facilitators": []
       },
       {
-        "origin": "https://keyring-agent.blockchhub.link",
+        "origin": "https://laso.finance",
         "resourceCount": 1,
-        "sampleResource": "https://keyring-agent.blockchhub.link/api/send-native",
+        "sampleResource": "https://laso.finance/auth",
         "facilitators": []
       },
       {
         "origin": "https://minifetch.com",
         "resourceCount": 1,
         "sampleResource": "https://minifetch.com/api/v1/x402/preflight/url-check",
+        "facilitators": []
+      },
+      {
+        "origin": "https://nbu.navistri.com",
+        "resourceCount": 1,
+        "sampleResource": "https://nbu.navistri.com/v1/rates",
         "facilitators": []
       },
       {
@@ -283,12 +283,6 @@
         "facilitators": []
       },
       {
-        "origin": "https://tenjin.sh",
-        "resourceCount": 1,
-        "sampleResource": "https://tenjin.sh/api/x402-router/route",
-        "facilitators": []
-      },
-      {
         "origin": "https://theartillerist.com",
         "resourceCount": 1,
         "sampleResource": "https://theartillerist.com/api/v1/x402-trial",
@@ -316,6 +310,12 @@
         "origin": "https://wiki.use.x402atlas.com",
         "resourceCount": 1,
         "sampleResource": "https://wiki.use.x402atlas.com/summary",
+        "facilitators": []
+      },
+      {
+        "origin": "https://www.blockchainiq.co",
+        "resourceCount": 1,
+        "sampleResource": "https://www.blockchainiq.co/api/x402/v1/brief",
         "facilitators": []
       },
       {
@@ -370,11 +370,11 @@
       "level": "L0",
       "substantiated": true,
       "evidence": {
-        "matched": 55,
-        "total": 55,
+        "matched": 68,
+        "total": 68,
         "badIndices": []
       },
-      "message": "All 55 entries recompute."
+      "message": "All 68 entries recompute."
     },
     {
       "origin": "https://api.automaton-sovereign.workers.dev",
@@ -387,10 +387,10 @@
         "brokenIndices": [],
         "span": [
           0,
-          54
+          67
         ]
       },
-      "message": "Indices 0..54 contiguous; all prevHash links hold."
+      "message": "Indices 0..67 contiguous; all prevHash links hold."
     },
     {
       "origin": "https://api.automaton-sovereign.workers.dev",
@@ -411,8 +411,8 @@
       "level": "L0",
       "substantiated": true,
       "evidence": {
-        "total": 55,
-        "empty": 42,
+        "total": 68,
+        "empty": 55,
         "bound": 13,
         "emptyIndices": [
           12,
@@ -456,11 +456,24 @@
           51,
           52,
           53,
-          54
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63,
+          64,
+          65,
+          66,
+          67
         ],
-        "ratio": 0.23636363636363636
+        "ratio": 0.19117647058823528
       },
-      "message": "42/55 entries sign an empty object (bound 13, ratio 0.236) at indices 12..54."
+      "message": "55/68 entries sign an empty object (bound 13, ratio 0.191) at indices 12..67."
     },
     {
       "origin": "https://api.automaton-sovereign.workers.dev",
