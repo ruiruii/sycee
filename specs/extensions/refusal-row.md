@@ -43,7 +43,7 @@ Two gaps worth naming, both real:
   must resolve to the same `attempt_identity`, and it keeps three identifiers apart —
   operation identity, captured-artifact digest, signed-content identifier. This extension
   consumes the first: `attempt_identity` here is the operation identity, derived from a
-  frozen ingress snapshot **and** from which presentation this is (§3.3). It does not
+  frozen ingress snapshot **and** from which presentation this is (the recipe in §4). It does not
   redefine, narrow or extend that invariant.
 
   The distinction matters for a concrete case. One signed payload presented twice — accepted
@@ -90,7 +90,7 @@ Two gaps worth naming, both real:
 | `reason` | string | When refused | One of the closed set in §5 |
 | `reason_detail` | string | When refused | The fixed sentence for that reason |
 | `evidence_class` | string | When refused | `issuer_asserted`, `client_verifiable`, `chain_verifiable`, `independently_witnessed` |
-| `attempt_identity` | string | Yes | `sha256:<64 hex>`, derived per §3 |
+| `attempt_identity` | string | Yes | `sha256:<64 hex>`, derived per the recipe below |
 | `settlement` | string | Yes | `not_submitted`, `pending`, `settled`, `unknown` |
 | `final` | boolean | Yes | MUST be `false` when `settlement` is `pending` |
 | `proof_hash` | string | No | Hash of the presented proof. The proof itself is never stored |
@@ -103,6 +103,25 @@ Two gaps worth naming, both real:
 
 `key_check` records what the implementation was able to check about its own signing key,
 rather than implying it checked. A verifier that knows the payee re-checks it independently.
+
+`attempt_identity` is derived once, from what the attempt presented, never from the payload
+alone. The recipe:
+
+```
+attempt_identity = sha256( canonicalJSON({
+    spec:          "sycee/refusal/v0.1",
+    payload:       sha256(payload),
+    requirements:  sha256(requirements),
+    presentation:  String(n)
+}) )
+```
+
+`sha256` is SHA-256 returned as `sha256:<64 hex>`; `canonicalJSON` is RFC 8785 (JCS)
+serialisation; `payload` and `requirements` are the bytes as presented — not decoded, not
+re-serialised — each hashed first, the digest entering the object; and `n` is the 1-based
+ordinal of this presentation of the payload. Two presentations of one payload differ only
+in `presentation`, so a settled attempt and its refused replay resolve to two identities
+(§3).
 
 ## 5. The closed reason set
 
@@ -125,6 +144,13 @@ an evidence class, and drifts into marketing.
 | `commercial_refusal` | `issuer_asserted` | declined on business grounds, no technical cause |
 | `internal_error` | `issuer_asserted` | the seller failed and is not claiming a cause |
 | anything else | `issuer_asserted` | fail closed: an unreviewed reason never sounds rigorous |
+
+`insufficient_funds` is the one `chain_verifiable` reason whose check is not monotonic. A
+nonce, once consumed, is consumed; a settlement, once landed, is landed. A balance is a
+value at a block, and this format carries no block reference, so the balance this refusal
+saw cannot be reproduced by a third party — only a similar one at a later block. The
+ceiling above names what the reason could support if a row carried a block reference; as
+the row stands, the honest claim for `insufficient_funds` is `issuer_asserted`.
 
 Six reasons also exist to describe a repeat presentation, and they are not the same fact:
 
@@ -183,6 +209,12 @@ should not both authenticate records and move money, and a record identity that 
 a payout address cannot be a stable identity for the merchant across years. §7.4 of the base
 specification already recommends separation for the payment key; this extension makes it a
 checked rule, in code, with a distinguishable result when the check cannot run.
+
+A rotation is the quieter case this section does not yet cover. When the merchant rotates
+its signing key, every claim signed with the old key stops verifying unless the old key is
+still resolvable. A merchant SHOULD keep retired `verificationMethod` entries published
+when it rotates, and MUST NOT reuse a key fragment for a different key, so a claim issued
+before a rotation stays checkable and a fragment never silently changes meaning.
 
 ## 9. Reference implementation
 
@@ -246,7 +278,8 @@ to a string before hashing:
 
 ```js
 sha256(payload + String(n))                        // wrong: ('A:1', 2) and ('A:', 12) collide
-sha256(canonicalJSON({ payload: sha256(payload),
+sha256(canonicalJSON({ spec: 'sycee/refusal/v0.1',
+                       payload: sha256(payload),
                        requirements: sha256(req),
                        presentation: String(n) })) // right: the fields cannot be spliced
 ```
