@@ -31,11 +31,12 @@ Would you run your reader against `df240da`? That is the part I cannot do for my
 
 <div class="card"><div class="hd"><b>中文对照</b><button onclick="cp(this)">复制</button></div>
 <pre>谢谢你的复看。四条分歧都是我们的问题，你说的文本每一处都对。
-都改在 df240da 了。拒绝向量集从 25 个文件扩到 48 个，你那些读过去没被抓住的十五个错误，现在每一个在集合里都有东西能抓住 —— 我是一个一个验的，不是批量跑的。
-修复过程中还带出两件不在你清单上的事，其中一件改变了我对外描述这个仓库的方式：Python 那个 checker 是「第二实现，同一作者」，不是独立验证。你的这次阅读，是我手上唯一的证据，证明这套文字能被别人读通。
-再跑一遍 df240da？这件事我自己做不了。如果抽检更方便，我挑的四个文件是那四个（原名见英文）。</pre></div>
 
-<div class="note">正文 972 字符。四个文件名已核对，与仓库里的一致。</div>
+都改在 df240da 了。拒绝向量集从 25 个文件扩到 48 个，你那些读过去没被抓住的十五个错误，现在每一个在集合里都有东西能抓住 —— 我是一个一个验的，不是批量跑的。修复过程中还带出两件不在你清单上的事，其中一件改变了我对外描述这个仓库的方式：Python 那个 checker 是「第二实现，同一作者」，不是独立验证。你的这次阅读，是我手上唯一的证据，证明这套文字能被别人读通。
+
+再跑一遍 df240da？这件事我自己做不了。如果抽检更方便，我挑的四个文件是：known-answer-reject-transfer-leg-failed-transfer-unknown、known-answer-insufficient-funds-unread、known-answer-accepted-never-submitted、known-answer-pending-refusal-not-final。</pre></div>
+
+<div class="note">正文 968 字符。四个文件名已核对，与 conformance/refusal/vectors/ 里的一致。</div>
 <script>
 function cp(btn){
   const pre = btn.closest('.card').querySelector('pre');
