@@ -232,7 +232,7 @@ field names, SYCEE adopts theirs.
 |--------|---------|--------|
 | x402-receipts (StelarDigital) | GitHub issue | [#6](https://github.com/StelarDigital/x402-receipts/issues/6) — converged; invariants internalized in SPEC §3.1 |
 | ERC-8004 v2 | GitHub issue | [erc-8004-contracts#102](https://github.com/erc-8004/erc-8004-contracts/issues/102) — open |
-| Vauban Research (IETF) | email | `research@vauban.tech` — draft in [`upstream/email-vauban-liaison.md`](./upstream/email-vauban-liaison.md) |
+| Vauban Research (IETF) | GitHub issue | [x402-stark-receipts-conformance#3](https://github.com/vauban-org/x402-stark-receipts-conformance/issues/3) — open |
 | Predge | GitHub issue | [erc8004-outcome-validator#13](https://github.com/predgeAI/erc8004-outcome-validator/issues/13) — open |
 | Brave `bx402` | GitHub issue | [bx402#141](https://github.com/brave/bx402/issues/141) — open |
 

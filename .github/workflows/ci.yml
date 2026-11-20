@@ -40,3 +40,26 @@ jobs:
 
       - name: Assert the published matrix still describes the vectors
         run: node conformance/vectors/print-matrix.mjs --check
+
+  # The Python implementation is only worth having if it is checked on every
+  # change. Without this job it would drift silently — still present, no longer
+  # agreeing — and the claim in the README would rot from fact into folklore.
+  python:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install
+        run: pip install cryptography
+
+      - name: Verify the same 12 vectors, independently
+        run: PYTHONPATH=python python3 -m sycee_verify conformance/vectors/*.json
+
+      - name: Run the verifier's own tests
+        run: python3 -m unittest discover -s python/tests -v

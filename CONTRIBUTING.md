@@ -4,14 +4,26 @@ Thank you for helping define the `consumed` and `redeem_count` semantics for mac
 
 ## What we need most right now
 
-1. **Independent implementations** in another language (Go, Rust, Python, TypeScript). A
-   minimal Ed25519 signer + JSON canonicalizer is enough.
-2. **Upstream alignment** pull requests:
-   - x402-receipts: extend `delivery` with `consumed` and `payment` with `redeem_count`.
-   - Vauban IETF drafts: adopt `consumed` / `redeem_count` as optional extensions.
-   - ERC-8004 v2: reserve `agent.spend.result.consumed` / `agent.spend.payment.redeem_count`.
-3. **Real-world test vectors**: signed receipts from production agent payment flows.
-4. **Protocol mapping PRs**: for rails we have not yet covered (AP2, card-a2a, etc.).
+1. **Real-world vectors.** Signed receipts from production agent payment flows, and
+   especially the failures: paid and delivered but never used; one proof redeemed against
+   several resources; a buyer that ended up not knowing whether it had paid. Constructed
+   vectors prove an implementation is self-consistent. They cannot show that the semantics
+   describe anything real. See [`conformance/real-world/`](./conformance/real-world).
+2. **One adopter.** An implementation outside this repository using these two field names
+   is worth more than ten issues proposing them.
+3. **More independent implementations.** JavaScript and Python already exist and agree on
+   every vector and every level (`packages/core`, `python/sycee_verify`). Go, Rust and Swift
+   are missing, and a verifier is small — `python/` is the size to aim at, not a port of the
+   whole SDK.
+4. **Upstream alignment**, with the current threads:
+   - x402-receipts: [`StelarDigital/x402-receipts#6`](https://github.com/StelarDigital/x402-receipts/issues/6)
+   - Vauban IETF family: [`vauban-org/x402-stark-receipts-conformance#3`](https://github.com/vauban-org/x402-stark-receipts-conformance/issues/3)
+   - ERC-8004 v2: [`erc-8004-contracts#102`](https://github.com/erc-8004/erc-8004-contracts/issues/102)
+5. **Protocol mapping PRs** for rails not yet covered (AP2, card-a2a, and others in §9).
+
+Two things are already done and do not need a volunteer: the Chinese README
+([`README.zh.md`](./README.zh.md)), and the independent Python verifier
+([`python/`](./python)). Duplicating either would be work, but not progress.
 
 ## Ground rules
 
