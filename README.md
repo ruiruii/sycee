@@ -242,6 +242,10 @@ Draft proposals and the field notes from that outreach are in
 needs at least one adopter published before then, or the adjacent field gets defined first
 by someone else.
 
+What other implementations actually do — read at a dated commit, quoted with line numbers,
+including the ones that reflect badly on nobody and the one that does — is in
+[`docs/observations.md`](./docs/observations.md).
+
 ## Hosted evidence service
 
 The packages here are free and Apache-2.0. A separate hosted service would keep a

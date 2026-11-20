@@ -116,6 +116,7 @@ packages/
 python/                       独立校验器（Ed25519 + 规范化 JSON），不 import 任何 JS
 examples/                     走查、双边演示、五分钟接入、演示商家、NEAR 锚定
 upstream/                     给 x402-receipts、Vauban、ERC-8004 的现成提案稿
+docs/observations.md          别的实现的实际情况，按日期+行号记录
 ```
 
 所有包零依赖，用 Node 原生 Ed25519。
@@ -193,6 +194,9 @@ SYCEE 是叠加，不是竞争。
 
 一个值得点明的期限：Vauban 的 `draft-vauban-x402-stark-receipts` 在 **2026-11-26** 到期，
 `consumed` 语义需要在那之前有至少一个采纳方，否则相邻字段会被别人先定义。
+
+别的实现究竟怎么做的——按日期读的快照、带行号的引用，包括对我们不利的那一条——记在
+[docs/observations.md](./docs/observations.md)。
 
 ## 托管证据服务
 
