@@ -238,7 +238,7 @@ field names, SYCEE adopts theirs.
 
 Draft proposals and the field notes from that outreach are in
 [`upstream/`](./upstream). One deadline is worth naming: Vauban's
-`draft-vauban-x402-stark-receipts` expires **2026-11-29**, so the `consumed` semantic
+`draft-vauban-x402-stark-receipts` expires **2026-11-26**, so the `consumed` semantic
 needs at least one adopter published before then, or the adjacent field gets defined first
 by someone else.
 

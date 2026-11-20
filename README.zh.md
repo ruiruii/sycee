@@ -191,7 +191,7 @@ SYCEE 是叠加，不是竞争。
 | Predge | GitHub issue | [erc8004-outcome-validator#13](https://github.com/predgeAI/erc8004-outcome-validator/issues/13) — open |
 | Brave `bx402` | GitHub issue | [bx402#141](https://github.com/brave/bx402/issues/141) — open |
 
-一个值得点明的期限：Vauban 的 `draft-vauban-x402-stark-receipts` 在 **2026-11-29** 到期，
+一个值得点明的期限：Vauban 的 `draft-vauban-x402-stark-receipts` 在 **2026-11-26** 到期，
 `consumed` 语义需要在那之前有至少一个采纳方，否则相邻字段会被别人先定义。
 
 ## 托管证据服务
