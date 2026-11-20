@@ -185,7 +185,8 @@ that returns a constant differs from every wrong file, and passes.
 - **No private conversations.** If it was a DM, it does not go in this file, even when we have
   permission to quote it. A public channel is quotable; the sender chose the audience.
 - **No repaired quotations.** If a quoted string looks wrong — a space in a hash, a lowercase
-  address — it is reproduced as posted and flagged. Fixing it makes the quotation ours.
+  address — it is reproduced as posted and the doubt is flagged. Fixing it makes the quotation
+  ours.
 - **No third-party scores.** No stars, no adoption counts, no "maturity" columns. Those invite
   an argument about reputation and this file is about code.
 - **No conclusions.** An entry says what an implementation does. Whether SYCEE's answer is
