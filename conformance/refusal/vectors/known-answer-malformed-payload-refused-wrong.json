@@ -1,20 +1,19 @@
 {
- "id": "permit2-transfer-unread",
- "note": "same scheme, honest silence: the authorization leg was submitted and nothing conclusive came back. Silence about a leg is a different sentence from a failed leg.",
+ "id": "malformed-payload-refused-wrong",
+ "note": "same input, one field answered wrongly: the claim is downgraded to the issuer's word even though the buyer or the ledger can check it.",
  "input": {
   "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
   "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
   "decision": "refused",
-  "reason": "transfer_leg_failed",
+  "reason": "malformed_payload",
   "legs": {
-   "authorization": "unknown",
-   "transfer": "failed"
+   "authorization": "not_reached"
   },
-  "settlement": "unknown"
+  "settlement": "not_submitted"
  },
  "observed": {
   "evidence_class": "issuer_asserted",
-  "settlement": "unknown",
+  "settlement": "not_submitted",
   "final": true
  },
  "expected": {

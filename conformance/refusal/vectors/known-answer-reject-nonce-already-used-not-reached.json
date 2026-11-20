@@ -1,0 +1,19 @@
+{
+ "id": "reject-nonce-already-used-not-reached",
+ "note": "a nonce cannot be reported spent by an attempt that never reached the authorization leg. The observation contradicts the reason.",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "refused",
+  "reason": "nonce_already_used",
+  "legs": {
+   "authorization": "not_reached"
+  },
+  "settlement": "not_submitted"
+ },
+ "expected": {
+  "outcome": "REJECT",
+  "code": "leg_contradicts_reason"
+ },
+ "twin": "nonce-spent-refused"
+}

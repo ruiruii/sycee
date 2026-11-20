@@ -68,7 +68,7 @@ test('refusalRow refuses to build a row that overclaims', () => {
 });
 
 test('an unrecognised reason cannot be built at all — a refusal needs a name', () => {
-  assert.throws(() => row({ reason: 'because_i_said_so' }), /unknown reason/);
+  assert.throws(() => row({ reason: 'because_i_said_so' }), /unreviewed_reason/);
 });
 
 test('an accepted row carries no reason and no class', () => {
@@ -90,12 +90,27 @@ test('an accepted row carries no reason and no class', () => {
 test('a pending settlement can never be marked final', () => {
   const f = finalityCheck({ settlement: 'pending', final: true, decision: 'refused' });
   assert.equal(f.ok, false);
-  assert.match(f.error, /cannot be final/);
+  assert.equal(f.code, 'finality_pending_is_not_final');
+  assert.match(f.detail, /may still land/);
   assert.equal(finalityCheck({ settlement: 'pending', final: false, decision: 'refused' }).ok, true);
 });
 
-test('an accepted attempt cannot claim nothing was submitted', () => {
-  assert.equal(finalityCheck({ settlement: 'not_submitted', final: true, decision: 'accepted' }).ok, false);
+// This test used to assert the opposite, and that assertion was the bug: the
+// format has no rule against an accepted attempt that never reached the rail.
+// §13 lists the pair as the output for a purchase_not_settled loser, and
+// classifyRepeat returns it for a first presentation. A third-party reader read
+// the text, produced the pair, and was rejected by this repository's own
+// constructor — which is how the contradiction surfaced.
+test('an accepted attempt that never reached the rail is a legal row', () => {
+  assert.equal(finalityCheck({ settlement: 'not_submitted', final: true, decision: 'accepted' }).ok, true);
+
+  // and the two halves of this module agree about it
+  const first = classifyRepeat({ priorCount: 0 });
+  assert.deepEqual(first, { decision: 'accepted', reason: null, settlement: 'not_submitted' });
+  assert.equal(finalityCheck({ ...first, final: true }).ok, true);
+
+  const notSettled = classifyRepeat({ priorCount: 1, priorSettlement: 'not_submitted' });
+  assert.equal(finalityCheck({ ...notSettled, final: true }).ok, true);
 });
 
 test('a settlement state outside the closed set is rejected', () => {

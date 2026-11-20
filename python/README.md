@@ -1,8 +1,13 @@
 # sycee-verify (Python)
 
-An independent verifier for SYCEE v0.1 VSR envelopes. It is written from the
-normative text of `SPEC.md` and does not import or call the JavaScript
-implementation in `packages/`.
+A second verifier for SYCEE v0.1 VSR envelopes, written in Python from the
+normative text of `SPEC.md`. It does not import or call the JavaScript
+implementation in `packages/`, and it shares no code with it.
+
+**"Second" rather than "independent".** Both implementations were written by the
+same author, so their agreeing shows that the author is consistent with himself.
+It does not show that a reader who has only `SPEC.md` reaches the same answer —
+for that, see the third reader credited in `conformance/refusal/README.md`.
 
 It verifies; it never signs.
 
@@ -32,9 +37,10 @@ script is available.
 
 ## Parity
 
-This implementation and the JavaScript reference are independent, and both
-return the same verdict for all 12 conformance vectors (7 valid, 5 rejected),
-including the `L0`/`L1`/`L2` level of every file.
+This implementation and the JavaScript reference return the same verdict for all
+12 conformance vectors (7 valid, 5 rejected), including the `L0`/`L1`/`L2` level
+of every file. They were written by one author, so read that as parity, not as
+independent confirmation.
 
 ## Known boundaries
 

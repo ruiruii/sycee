@@ -1,0 +1,20 @@
+{
+ "id": "reject-transfer-leg-failed-transfer-unknown",
+ "note": "the reason says the transfer leg failed. `unknown` means the merchant submitted it and learned nothing \u2014 the drift this reason exists to name, recorded as its opposite.",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "refused",
+  "reason": "transfer_leg_failed",
+  "legs": {
+   "authorization": "executed",
+   "transfer": "unknown"
+  },
+  "settlement": "unknown"
+ },
+ "expected": {
+  "outcome": "REJECT",
+  "code": "leg_contradicts_reason"
+ },
+ "twin": "permit2-transfer-reverted"
+}

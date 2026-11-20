@@ -1,0 +1,19 @@
+{
+ "id": "reject-authorization-expired-executed",
+ "note": "an expired window is a reason the authorization never ran. Recording that it executed turns a refusal into the description of a payment.",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "refused",
+  "reason": "authorization_expired",
+  "legs": {
+   "authorization": "executed"
+  },
+  "settlement": "not_submitted"
+ },
+ "expected": {
+  "outcome": "REJECT",
+  "code": "leg_contradicts_reason"
+ },
+ "twin": "authorization-expired-refused"
+}

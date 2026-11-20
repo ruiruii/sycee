@@ -1,0 +1,22 @@
+{
+ "id": "pending-refusal-not-final-wrong",
+ "note": "same input, one field answered wrongly: a row that may still land, closed as final.",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "refused",
+  "reason": "facilitator_timeout",
+  "legs": {
+   "authorization": "unknown"
+  },
+  "settlement": "pending"
+ },
+ "observed": {
+  "evidence_class": "issuer_asserted",
+  "settlement": "pending",
+  "final": true
+ },
+ "expected": {
+  "outcome": "ACCEPT"
+ }
+}

@@ -1,0 +1,22 @@
+{
+ "id": "malformed-payload-refused",
+ "note": "a payload that could not be decoded is a fact the holder of the bytes can reproduce",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "refused",
+  "reason": "malformed_payload",
+  "legs": {
+   "authorization": "not_reached"
+  },
+  "settlement": "not_submitted"
+ },
+ "observed": {
+  "evidence_class": "client_verifiable",
+  "settlement": "not_submitted",
+  "final": true
+ },
+ "expected": {
+  "outcome": "ACCEPT"
+ }
+}

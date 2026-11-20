@@ -1,0 +1,22 @@
+{
+ "id": "authorization-expired-refused",
+ "note": "the window closed before the attempt; the authorization leg never produced a conclusion, which the reason permits.",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "refused",
+  "reason": "authorization_expired",
+  "legs": {
+   "authorization": "unknown"
+  },
+  "settlement": "not_submitted"
+ },
+ "observed": {
+  "evidence_class": "chain_verifiable",
+  "settlement": "not_submitted",
+  "final": true
+ },
+ "expected": {
+  "outcome": "ACCEPT"
+ }
+}

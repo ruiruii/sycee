@@ -94,10 +94,17 @@ test('a leg observed the wrong way round contradicts the reason', () => {
     () => row({ legs: { authorization: 'not_reached', transfer: 'failed' } }),
     /leg_contradicts_reason/,
   );
-  // and the same reason with the authorization leg merely unread is allowed —
-  // that is what an unattributable positive observation looks like from outside
+  // The reason is a conjunction, so the authorization leg may not be unread
+  // either: a merchant that did not see it run cannot claim it ran. That
+  // merchant records facilitator_timeout or internal_error (§15.3).
+  assert.throws(
+    () => row({ legs: { authorization: 'unknown', transfer: 'failed' } }),
+    /leg_contradicts_reason/,
+  );
+  // and an honest facilitator timeout with the same unread leg is fine
   assert.equal(
-    row({ legs: { authorization: 'unknown', transfer: 'failed' } }).legs.authorization,
+    row({ reason: 'facilitator_timeout', legs: { authorization: 'unknown' }, settlement: 'unknown' })
+      .legs.authorization,
     'unknown',
   );
 });

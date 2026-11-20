@@ -27,7 +27,11 @@ CEILING = {
     "malformed_payload": "client_verifiable",
     "authorization_expired": "chain_verifiable",
     "authorization_not_yet_valid": "chain_verifiable",
-    "insufficient_funds": "chain_verifiable",
+    # §5: the balance is a value at a block and the row carries no block
+    # reference, so a third party can check a similar balance later, never
+    # this one. The table records what a row may claim, not what the reason
+    # could reach if the format were different.
+    "insufficient_funds": "issuer_asserted",
     "duplicate_payment": "chain_verifiable",
     "nonce_already_used": "chain_verifiable",
     "transfer_leg_failed": "chain_verifiable",
@@ -60,7 +64,11 @@ LEG_CONTRACT = {
     "authorization_not_yet_valid": {"authorization": ("failed", "unknown")},
     "insufficient_funds": {"authorization": ("failed", "unknown")},
     "nonce_already_used": {"authorization": ("failed", "executed")},
-    "transfer_leg_failed": {"authorization": ("executed", "unknown"), "transfer": ("failed",)},
+    # §5 defines the reason as a conjunction: the authorization leg executed and
+    # the transfer leg did not. Both halves are pinned, so `unknown` on either leg
+    # is out — a merchant who saw neither conclusion records facilitator_timeout
+    # or internal_error instead (§15.3).
+    "transfer_leg_failed": {"authorization": ("executed",), "transfer": ("failed",)},
     "facilitator_timeout": {"authorization": ("unknown",)},
     "internal_error": {"authorization": ("executed", "unknown")},
     "risk_policy_rejected": {"authorization": ("not_reached", "unknown")},
@@ -143,8 +151,10 @@ def build(vec_input):
         raise Refused("bad_settlement")
     if settlement == "pending" and final:
         raise Refused("finality_pending_is_not_final")
-    if decision == "accepted" and settlement == "not_submitted":
-        raise Refused("finality_accepted_not_submitted")
+    # `accepted` + `not_submitted` is legal: §13 lists it as the output for a
+    # purchase_not_settled loser, and the reference constructor produces it for a
+    # first presentation. An earlier version of this reader refused the pair; the
+    # text does not, so neither does this.
 
     evidence = None
     if decision == "refused":

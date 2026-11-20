@@ -138,12 +138,13 @@ alone with every guess logged before the run:
 > [`research/sycee-section-15-third-reader`](https://github.com/holistis/agent-receipt-verify/tree/main/research/sycee-section-15-third-reader),
 > 2026-11-20, against `sycee@632c2f56`.
 
-21 of 25 files agree on the first run, and all eight wrong twins differ from their right twin.
+Against the 25 files that existed then, 21 agreed on the first run, and all eight wrong twins
+differed from their right twin.
 The four that do not agree are places where the text and the vectors disagree with each other —
 recorded, not resolved — in [`conformance/refusal/README.md`](./conformance/refusal/README.md).
 
 The part worth reading twice: the same report plants 21 plausible mistakes in a reader that
-passes all 25 files, and **15 of them still pass**. A vector set that cannot fail on a wrong
+passes every file, and **15 of them still pass**. A vector set that cannot fail on a wrong
 implementation is a vector set that has not been tested, and this is the only measurement of that
 we have from outside.
 
@@ -160,7 +161,7 @@ packages/
   conformance/                validator and CLI
   adapter-automaton/          binds a hash-chained attestation ledger (RW-001)
   probe/                      evidence-layer CLI (probe / verify / batch)
-python/                       independent verifier (Ed25519 + canonical JSON), no JS imports
+python/                       second verifier (Ed25519 + canonical JSON), no JS imports, same author
 examples/                     walkthroughs, bilateral demo, quickstart, demo merchant, NEAR anchor
 upstream/                     ready-to-send proposals to x402-receipts, Vauban, ERC-8004
 ```

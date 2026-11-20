@@ -1,9 +1,9 @@
 # Section 15 known-answer vectors
 
-Vectors for the refusal row defined in [`specs/extensions/refusal-row.md`](../../specs/extensions/refusal-row.md), and a judge that checks two independent implementations against them.
+Vectors for the refusal row defined in [`specs/extensions/refusal-row.md`](../../specs/extensions/refusal-row.md), and a judge that checks two implementations against them.
 
 ```
-node conformance/refusal/judge.mjs --expect=25
+node conformance/refusal/judge.mjs --expect=48
 ```
 
 Exit 0 means no violation. Exit 2 means the judge itself could not run, which is never a pass.
@@ -18,26 +18,36 @@ The fix is the **twin rule**. Every accepted vector has a `-wrong` twin carrying
 
 ## The files
 
-`vectors/known-answer-*.json`, 25 files in three kinds.
+`vectors/known-answer-*.json`, 48 files, sixteen of each kind.
 
-**Accepted, 8** (`known-answer-<name>.json`) — a legal constructor input, the fields it must produce, and the wrong twin:
+**Accepted, 16** (`known-answer-<name>.json`) — a legal constructor input, the fields it must produce, and the wrong twin:
 
 | file | what it pins down |
 |---|---|
 | `eip3009-nonce-spent` | one-leg scheme: the nonce is per-attempt, so the claim stays `chain_verifiable` |
 | `permit2-transfer-reverted` | the drift state: authorization executed, transfer reverted, class closes at `issuer_asserted` |
-| `permit2-transfer-unread` | the authorization leg was submitted and read as nothing: honest silence |
 | `facilitator-timeout-auth-unread` | no claim is made about the transfer leg, so none is recorded |
-| `wrong-amount-refused` | a fact the client can check without trusting the merchant |
 | `internal-error-no-legs` | omitting `legs` asserts nothing about either leg |
 | `risk-policy-not-reached` | `not_reached` is the observation that makes a pre-submission refusal honest |
 | `accepted-settled` | an accepted row asserts no reason and therefore no evidence class |
+| `accepted-never-submitted` | `decision` and `settlement` are independent: an accepted attempt may never have reached the rail (§13) |
+| `insufficient-funds-unread` | a `chain_verifiable`-shaped reason whose check is not reproducible, so the row closes at `issuer_asserted` |
+| `pending-refusal-not-final` | a pending settlement is a legal row when it is not presented as final |
+| `wrong-amount-refused` | a fact the client can check without trusting the merchant |
+| `invalid-signature-refused` | the buyer can re-check the signature, so the class is `client_verifiable` |
+| `wrong-recipient-refused` | the recipient is in the payload the buyer signed |
+| `malformed-payload-refused` | a payload that would not decode is a fact the holder of the bytes can reproduce |
+| `authorization-expired-refused` | an expired window with the authorization unread: the reason permits it |
+| `nonce-spent-refused` | a spent nonce is a negative read on this attempt's own signature, so `chain_verifiable` survives |
+| `duplicate-payment-refused` | the earlier settlement is public ledger state |
 
-**Wrong twins, 8** (`known-answer-<name>-wrong.json`) — same input, one field answered wrongly. Among them: `issuer_asserted` where a third party can check, `chain_verifiable` where nobody can, an unread leg promoted to a settled one, and an evidence class attached to a row that asserts no reason.
+The last six exist because a reason's **default** class is a claim about who can check it. An implementation that gets the default wrong is wrong on every row it ever writes, and before this set was widened five of these reasons had no vector at all.
 
-**Rejected, 9** (`known-answer-reject-*.json`) — inputs no row should be constructible from, the code the constructor must fail with, and a `twin` naming an accepted file that differs in exactly one place:
+**Wrong twins, 16** (`known-answer-<name>-wrong.json`) — same input, one field answered wrongly. Among them: `issuer_asserted` where a third party can check, `chain_verifiable` where nobody can, `chain_verifiable` where the class is unreachable, an unread leg promoted to a settled one, and an evidence class attached to a row that asserts no reason.
 
-`leg_contradicts_reason` (transfer recorded as executed; wrong amount with an executed authorization; a risk refusal after submission), `leg_not_observed`, `unknown_leg`, `unknown_leg_status`, `not_reproducible`, `finality_pending_is_not_final`, `finality_accepted_not_submitted`.
+**Rejected, 16** (`known-answer-reject-*.json`) — inputs no row should be constructible from, the code the constructor must fail with, and a `twin` naming an accepted file that differs in exactly one place:
+
+`leg_contradicts_reason` (eight files: transfer recorded as executed; wrong amount with an executed authorization; a risk refusal after submission; an expired authorization recorded as executed; a spent nonce recorded as `not_reached`; `transfer_leg_failed` with the authorization unread; with the transfer unread; with the transfer never reached), `leg_not_observed`, `unknown_leg`, `unknown_leg_status`, `not_reproducible`, `finality_pending_is_not_final`, `bad_decision`, `bad_settlement`, `unreviewed_reason`.
 
 The rejected family exists because the accepted family alone cannot catch a constructor that accepts everything. Each rejected file's near-miss twin is accepted, so a constructor that refuses everything fails as well.
 
@@ -67,6 +77,8 @@ The rejected family exists because the accepted family alone cannot catch a cons
 
 The Python checker exists to make disagreement possible. It was written after the vectors, from the text alone; where it and the JavaScript disagree, the disagreement is the finding, not a bug to be silenced by copying one into the other.
 
+**It is not an independent implementation, and this file used to imply that it was.** One person wrote the prose, the JavaScript, the vectors and the Python. Two implementations agreeing therefore shows that the author is consistent with himself. It does not show that the text can be read by someone else, and the check that does show it is the third reader below.
+
 Both emit the same shape:
 
 ```json
@@ -88,11 +100,42 @@ A reader written from the prose alone, by holistis, one sitting, guesses logged 
 [research/sycee-section-15-third-reader](https://github.com/holistis/agent-receipt-verify/tree/main/research/sycee-section-15-third-reader)
 (2026-11-20, against commit `632c2f56`). It did not open either checker here.
 
-First run: 21 of 25 files agree; all eight wrong twins differ from their right twin. The four
-disagreements are recorded below rather than resolved in the reader's favour, because in each
-case the text and the vectors say different things and one of them has to change.
+First run, against the 25 files that existed then: 21 agree; all eight wrong twins differ from
+their right twin. The four disagreements were resolved by changing this repository, not the
+reader.
 
-The same report plants 21 plausible mistakes in a reader that agrees with all 25 files. **15 of
-them pass every vector.** That number, not the 21 of 25, is the useful one: it says what this
-directory does not yet pin down, and it is why the set below grows by named holes rather than by
-count.
+### What the four disagreements changed
+
+Each one is a place where the text and the vectors said different things. In all four the reader
+was right about the text.
+
+**`reject-accepted-never-submitted` — the vector was wrong, and so was a unit test.** §13 lists
+`accepted` + `not_submitted` as the output for a `purchase_not_settled` loser, and `classifyRepeat`
+returns it for a first presentation. Meanwhile `finalityCheck` refused the pair, from a rule that
+existed only in code, and `packages/core/test/refusal.test.mjs` asserted that refusal — so the
+contradiction was three-deep: prose, constructor and test, all disagreeing with each other and
+none of them failing. The file is now `accepted-never-submitted`, the rule is gone, and the test
+asserts the opposite with a comment saying what it used to assert.
+
+**`reject-risk-policy-after-submission` — the text was incomplete.** The reason was right and the
+vector was right, but the table saying which leg statuses each reason permits lived only in
+`packages/core/src/refusal.mjs`. A reader with the prose alone could not know it. That table is
+now in §15.4, and this directory's copy is the one a reader cited.
+
+**`permit2-transfer-unread` — the vector was wrong twice over.** Its name and note described a
+leg that was submitted and not read; its fields recorded `transfer: failed` and
+`authorization: unknown`. §5 defines `transfer_leg_failed` as a conjunction, and `unknown` on the
+authorization does not satisfy it. It is now `reject-transfer-leg-failed-auth-unknown`, expecting
+`leg_contradicts_reason`, and both implementations pin the authorization leg to `executed`.
+
+**The fifteen planted mistakes that passed.** Of 21 plausible mistakes planted in a reader that
+agreed with every file, 15 passed the set as it stood. That number — not the 21 of 25 — is the
+one that measured this directory, because it asks what a wrong implementation can get away with
+rather than what a careful one got right.
+
+The set is now 40 files: eight new rejected vectors for the mistakes that were passing, and four
+new accepted vectors with their wrong twins, because three of those mistakes were only reachable
+through a row the set had no example of. The one worth naming: `transfer_leg_failed` with
+`transfer: unknown` passed before, and §15.7 claimed a mutant covered it — the only vector that
+could have covered it recorded the transfer as `failed` instead, so the rule was asserted and
+never tested.

@@ -1,20 +1,16 @@
 {
- "id": "permit2-transfer-unread-wrong",
- "note": "same input as permit2-transfer-unread.json, one field answered wrongly: promotes an unread leg to a checkable one",
+ "id": "duplicate-payment-refused",
+ "note": "the earlier settlement is public ledger state, so the claim survives without the seller",
  "input": {
   "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
   "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
   "decision": "refused",
-  "reason": "transfer_leg_failed",
-  "legs": {
-   "authorization": "unknown",
-   "transfer": "failed"
-  },
-  "settlement": "unknown"
+  "reason": "duplicate_payment",
+  "settlement": "settled"
  },
  "observed": {
   "evidence_class": "chain_verifiable",
-  "settlement": "unknown",
+  "settlement": "settled",
   "final": true
  },
  "expected": {

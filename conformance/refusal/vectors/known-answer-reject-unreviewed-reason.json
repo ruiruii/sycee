@@ -1,0 +1,16 @@
+{
+ "id": "reject-unreviewed-reason",
+ "note": "a reason outside the closed set closes at issuer_asserted at best; here the row claims the weakest class and still cannot be published, because an unreviewed name has no defined evidence ceiling to bound it.",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "refused",
+  "reason": "payment_declined",
+  "settlement": "not_submitted"
+ },
+ "expected": {
+  "outcome": "REJECT",
+  "code": "unreviewed_reason"
+ },
+ "twin": "internal-error-no-legs"
+}

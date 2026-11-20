@@ -108,12 +108,12 @@ npm run matrix       # 12 个判定打成一页
 > [`research/sycee-section-15-third-reader`](https://github.com/holistis/agent-receipt-verify/tree/main/research/sycee-section-15-third-reader)，
 > 2026-11-20，针对 `sycee@632c2f56`。
 
-第一次跑：25 个文件里 21 个一致，8 个错误孪生全部与其正确孪生不同。4 个不一致的地方，
+第一次跑（当时是 25 个文件，现在是 40 个）：21 个一致，8 个错误孪生全部与其正确孪生不同。4 个不一致的地方，
 是文字和向量互相矛盾的地方——记录下来，不裁定谁对，见
 [`conformance/refusal/README.md`](./conformance/refusal/README.md)。
 
-值得读两遍的是另一组数：同一份报告在一个能通过全部 25 个文件的读者里植入了 21 个看似
-合理的错误，**15 个照样全过**。一套抓不住错误实现的向量集，等于没被测过——而这是我们目前
+值得读两遍的是另一组数：同一份报告在（当时那）25 个文件里植入了 21 个看似合理的错误，
+**15 个照样全过**。一套抓不住错误实现的向量集，等于没被测过——而这是我们目前
 唯一一次来自外部的这种测量。
 
 ## 仓库里有什么
@@ -129,7 +129,7 @@ packages/
   conformance/                校验器与 CLI
   adapter-automaton/          绑定哈希链存证账本（RW-001）
   probe/                      证据层 CLI（probe / verify / batch）
-python/                       独立校验器（Ed25519 + 规范化 JSON），不 import 任何 JS
+python/                       第二套校验器（Ed25519 + 规范化 JSON），不 import 任何 JS，同一作者
 examples/                     走查、双边演示、五分钟接入、演示商家、NEAR 锚定
 upstream/                     给 x402-receipts、Vauban、ERC-8004 的现成提案稿
 docs/observations.md          别的实现的实际情况，按日期+行号记录

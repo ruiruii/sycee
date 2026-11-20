@@ -137,10 +137,10 @@ an evidence class, and drifts into marketing.
 | `malformed_payload` | `client_verifiable` | the payload could not be decoded |
 | `authorization_expired` | `chain_verifiable` | the authorization window has closed |
 | `authorization_not_yet_valid` | `chain_verifiable` | the window has not opened |
-| `insufficient_funds` | `chain_verifiable` | balance does not cover the authorized amount |
+| `insufficient_funds` | `issuer_asserted` | balance does not cover the authorized amount (§5.1) |
 | `duplicate_payment` | `chain_verifiable` | the proof was already settled |
 | `nonce_already_used` | `chain_verifiable` | the authorization nonce is consumed |
-| `transfer_leg_failed` | `chain_verifiable` | the authorization leg executed and the transfer leg did not, in one attempt (§15). A row for this reason cannot actually claim `chain_verifiable` — see §15.5 |
+| `transfer_leg_failed` | `issuer_asserted` | the authorization leg executed and the transfer leg did not, in one attempt (§15). Closes here, not at `chain_verifiable` — see §15.5 |
 | `facilitator_timeout` | `issuer_asserted` | the facilitator did not answer in budget |
 | `risk_policy_rejected` | `issuer_asserted` | declined by an undisclosed policy |
 | `commercial_refusal` | `issuer_asserted` | declined on business grounds, no technical cause |
@@ -150,11 +150,13 @@ an evidence class, and drifts into marketing.
 `insufficient_funds` is the one `chain_verifiable` reason whose check is not monotonic. A
 nonce, once consumed, is consumed; a settlement, once landed, is landed. A balance is a
 value at a block, and this format carries no block reference, so the balance this refusal
-saw cannot be reproduced by a third party — only a similar one at a later block. The
-ceiling above names what the reason could support if a row carried a block reference; as
-the row stands, the honest claim for `insufficient_funds` is `issuer_asserted`.
+saw cannot be reproduced by a third party — only a similar one at a later block. The table
+above records `issuer_asserted` for this reason rather than the `chain_verifiable` it could
+reach if a row carried a block reference, because a ceiling column that names an unreachable
+class is a column a reader will follow into a rejection. If a later version adds a block
+reference, this row moves back up.
 
-Six reasons also exist to describe a repeat presentation, and they are not the same fact:
+Three reasons also exist to describe a repeat presentation, and they are not the same fact:
 
 | `reason` | Settlement claimed | Meaning |
 |---|---|---|
@@ -496,8 +498,45 @@ leg, and the recorded status MUST be one the reason permits. A reason that makes
 (`wrong_amount`, `authorization_expired`) MUST NOT carry leg observations that contradict the
 absence of a claim.
 
-**L3.** An unknown leg name, or an unknown status, is a malformed row. It is rejected, not
-ignored: a reader cannot tell an ignored field from a field that was never written.
+The permitted statuses are part of the format, not of one implementation, so they are listed
+here. A row whose recorded status is outside its reason's row is rejected with
+`leg_contradicts_reason`; a row that omits a leg the reason requires is rejected with
+`leg_not_observed`.
+
+| `reason` | `authorization` | `transfer` |
+|---|---|---|
+| `invalid_signature` | `failed`, `unknown` | — |
+| `wrong_amount` | `failed`, `unknown` | — |
+| `wrong_recipient` | `failed`, `unknown` | — |
+| `malformed_payload` | `failed`, `unknown`, `not_reached` | — |
+| `authorization_expired` | `failed`, `unknown` | — |
+| `authorization_not_yet_valid` | `failed`, `unknown` | — |
+| `insufficient_funds` | `failed`, `unknown` | — |
+| `nonce_already_used` | `failed`, `executed` | — |
+| `transfer_leg_failed` | `executed` | `failed` |
+| `facilitator_timeout` | `unknown` | — |
+| `internal_error` | `executed`, `unknown` | — |
+| `risk_policy_rejected` | `not_reached`, `unknown` | — |
+| `commercial_refusal` | `not_reached`, `unknown` | — |
+| `replay_already_settled` | `executed` | — |
+| `replay_in_flight` | — | — |
+| `could_not_compare` | — | — |
+| anything else | not pinned; the reason is unknown and the row already fails closed | — |
+
+— means the leg is neither required nor forbidden: the reason claims nothing about it, so
+recording it or leaving it out both stand, provided the status is legal under the table in
+15.4.
+
+Two entries carry the weight of this section. `transfer_leg_failed` is pinned on **both** legs,
+because the sentence is a conjunction: a merchant that did not observe the authorization run
+cannot claim it ran, and one that did not observe the transfer conclude cannot claim it failed.
+A merchant in that position uses `facilitator_timeout` or `internal_error`, per 15.3.
+`nonce_already_used` admits `executed` because the nonce being spent is a negative read on the
+attempt's own signature — the transfer having run beside it does not weaken the claim (15.2).
+
+**L3.** An unknown leg name, or an unknown status, is a malformed row. It is rejected with
+`unknown_leg` or `unknown_leg_status`, not ignored: a reader cannot tell an ignored field from
+a field that was never written.
 
 ### 15.5 Reproducibility: why `transfer_leg_failed` closes at `issuer_asserted`
 
@@ -544,10 +583,16 @@ precondition for anyone proposing one.
 - The default `evidence_class` for a refused row is the reproducible ceiling, not the reason's
   base ceiling. A row that picks its own default would claim more than anyone can check by
   omission, which is the same failure as over-claiming on purpose.
-- `conformance/refusal/` — 25 known-answer files and a judge, `node conformance/refusal/judge.mjs
-  --expect=25`. Eight accepted vectors, each with a `-wrong` twin; nine rejected vectors, each
-  with an accepted near miss; two implementations written independently of each other, one in
-  JavaScript against the constructor and one in Python from the prose above.
+- `conformance/refusal/` — 48 known-answer files and a judge, `node conformance/refusal/judge.mjs
+  --expect=48`. Sixteen accepted vectors, each with a `-wrong` twin; sixteen rejected vectors, each
+  with an accepted near miss; two implementations, one in JavaScript against the constructor and
+  one in Python from the prose above.
+
+  The word "independently" used to sit in that sentence. It does not belong there: one person
+  wrote both implementations and the prose, so the two agreeing says the author is consistent
+  with himself, not that the text is unambiguous. That distinction is not a technicality — the
+  pairs below were accepted by both implementations while contradicting the prose, and nothing
+  in this directory noticed until a reader who had only the prose was asked to build one.
 
 #### 15.7.1 Why a unit test is not enough
 

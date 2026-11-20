@@ -70,7 +70,10 @@ test('a refused payment records a row, and the row names a reason with a bounded
   assert.equal(rows.length, 1, 'a refused attempt must leave something behind');
   assert.equal(rows[0].decision, 'refused');
   assert.equal(rows[0].reason, 'insufficient_funds');
-  assert.equal(rows[0].evidence_class, 'chain_verifiable');
+  // The balance is a value at a block and the row carries no block reference, so
+  // a third party can check a similar balance later, never this one. The row
+  // closes at the issuer's word (§5, §15.5).
+  assert.equal(rows[0].evidence_class, 'issuer_asserted');
   assert.equal(rows[0].proof_hash, rows[0].proof_hash.match(/^sha256:[0-9a-f]{64}$/)[0]);
   assert.equal(rows[0].signer.role, 'merchant');
 });

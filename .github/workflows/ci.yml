@@ -41,6 +41,18 @@ jobs:
       - name: Assert the published matrix still describes the vectors
         run: node conformance/vectors/print-matrix.mjs --check
 
+      # The section 15 vectors are the strongest claim in this repository and the
+      # one that failed hardest when a third party read the prose. A reader who
+      # has only the markdown must reach the same rules as the constructor, so the
+      # two tables a reader depends on are compared here on every change: the
+      # closed reason set and the leg contract. A rule that lives in one place and
+      # is written in another is a rule a reader will get wrong.
+      - name: Assert the prose and the constructor agree on the rules
+        run: npm run verify:docs
+
+      - name: Judge the refusal vectors
+        run: npm run verify:refusal
+
   # The Python implementation is only worth having if it is checked on every
   # change. Without this job it would drift silently — still present, no longer
   # agreeing — and the claim in the README would rot from fact into folklore.

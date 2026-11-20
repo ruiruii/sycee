@@ -25,8 +25,6 @@ export const FIELDS = ['evidence_class', 'settlement', 'final']
  */
 export function codeOf(message) {
   if (/is not reproducible/.test(message)) return 'not_reproducible'
-  if (/settlement is pending/.test(message)) return 'finality_pending_is_not_final'
-  if (/cannot have settlement = not_submitted/.test(message)) return 'finality_accepted_not_submitted'
   const m = /^refusalRow: ([a-z_]+) —/.exec(message)
   return m ? m[1] : `unclassified: ${message.slice(0, 80)}`
 }

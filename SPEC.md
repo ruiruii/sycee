@@ -274,14 +274,21 @@ that class or lower, and MUST NOT claim higher. An unrecognised reason closes at
 | `malformed_payload` | `client_verifiable` | same |
 | `authorization_expired` | `chain_verifiable` | the window is public |
 | `authorization_not_yet_valid` | `chain_verifiable` | same |
-| `insufficient_funds` | `chain_verifiable` | balance and transfer are public ledger state |
+| `insufficient_funds` | `issuer_asserted` | the balance is a value at a block, and this record carries no block reference — so a third party can check a similar balance later, never *this* one. See §15.5 |
 | `duplicate_payment` | `chain_verifiable` | the earlier settlement is public |
 | `nonce_already_used` | `chain_verifiable` | the nonce is public |
+| `transfer_leg_failed` | `issuer_asserted` | the transfer leg's only marker is a balance change, which the ledger cannot attribute to one attempt. See §15.5 |
 | `facilitator_timeout` | `issuer_asserted` | only the seller saw the timeout |
 | `risk_policy_rejected` | `issuer_asserted` | the policy is not disclosed |
 | `commercial_refusal` | `issuer_asserted` | a business decision, with no technical cause |
 | `internal_error` | `issuer_asserted` | a failure the seller cannot characterise |
 | anything else | `issuer_asserted` | fail closed |
+
+`transfer_leg_failed` applies to split-leg schemes — the authorization and the transfer are
+separate calls, so they can disagree — and §15 defines it, the row it produces, and why it can
+never be stronger than the issuer's word. **Section 15 is normative and lives in
+[`specs/extensions/refusal-row.md`](./specs/extensions/refusal-row.md);** it is the extension
+this subsection depends on, and a reader who needs the leg table will not find it here.
 
 `independently_witnessed` exists in the enum and no reason in this version may point at it:
 nothing here produces a witness.

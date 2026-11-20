@@ -54,10 +54,13 @@ export const REASON_CEILING = Object.freeze({
   wrong_amount: 'client_verifiable',
   wrong_recipient: 'client_verifiable',
   malformed_payload: 'client_verifiable',
-  // public ledger state settles these
+  // public ledger state settles these, and a third party holds the reference
   authorization_expired: 'chain_verifiable',
   authorization_not_yet_valid: 'chain_verifiable',
-  insufficient_funds: 'chain_verifiable',
+  // A balance is ledger state, but this row carries no block reference, so the
+  // balance it saw is not reproducible — only a similar one at a later block.
+  // The ceiling names what a row may claim, so it names the reachable class.
+  insufficient_funds: 'issuer_asserted',
   duplicate_payment: 'chain_verifiable',
   nonce_already_used: 'chain_verifiable',
   // both legs are public, but whether THIS attempt moved funds is not — see POSITIVE_MARKERS
@@ -95,6 +98,7 @@ export const REFUSAL_REASONS = Object.freeze({
   authorization_expired: 'the authorization window has already closed',
   authorization_not_yet_valid: 'the authorization window has not opened yet',
   insufficient_funds: 'the payer balance does not cover the authorized amount',
+  duplicate_payment: 'the proof being presented was settled on an earlier attempt',
   nonce_already_used: 'the authorization nonce was already consumed on chain',
   transfer_leg_failed: 'the authorization leg executed and the transfer leg did not, in the same attempt',
   facilitator_timeout: 'the facilitator did not answer within the request budget',
@@ -148,13 +152,15 @@ export const REQUIRED_LEG_STATUS = Object.freeze({
   insufficient_funds: { authorization: ['failed', 'unknown'] },
   nonce_already_used: { authorization: ['failed', 'executed'] },
   transfer_leg_failed: {
-    // The transfer leg must at least have been reached and failed. `unknown` is
-    // deliberately excluded: "I submitted it and learned nothing" is a different
-    // sentence from "it reverted", and merging the two is the drift this reason
-    // exists to name. The authorization leg is left unpinned — recording
-    // `not_reached` alongside a failed transfer is caught by the authorization
-    // leg's own contract below, and recording `unknown` there is honest silence.
-    authorization: ['executed', 'unknown'],
+    // The reason is the sentence "the authorization leg executed and the transfer
+    // leg did not". Both halves are pinned. `transfer: unknown` is excluded
+    // because "I submitted it and learned nothing" is a different sentence from
+    // "it reverted", and merging the two is the drift this reason exists to name.
+    // `authorization: unknown` is excluded for the same reason on the other leg:
+    // the reason claims the authorization ran, and a merchant who did not see it
+    // run cannot claim that. A merchant in that position records
+    // `facilitator_timeout` or `internal_error`, which is what §15.3 says.
+    authorization: ['executed'],
     transfer: ['failed'],
   },
   facilitator_timeout: { authorization: ['unknown'] },
@@ -361,28 +367,45 @@ export function signingKeyCheck({ signingPublicKey, payTo, known = {} }) {
 /**
  * A pending settlement may not be presented as a final refusal, and a settling
  * attempt may not be recorded as if nothing was submitted.
+ *
+ * The two enum checks carry codes rather than prose, because a caller cannot act
+ * on a message and a conformance vector cannot name one. Everything this function
+ * rejects is a malformed row, not a judgement about a payment.
+ *
  * @param {{settlement: string, final: boolean, decision: string}} row
- * @returns {{ok: boolean, error?: string}}
+ * @returns {{ok: boolean, code?: string, detail?: string}}
  */
 export function finalityCheck({ settlement, final, decision }) {
-  if (!SETTLEMENT_STATES.includes(settlement)) {
-    return { ok: false, error: `settlement: must be ${SETTLEMENT_STATES.join(' | ')}` };
-  }
+  // Order matters when both are wrong: `decision` is checked first so the code
+  // does not depend on which implementation answers. The Python reader in
+  // conformance/ orders them the same way.
   if (!DECISIONS.includes(decision)) {
-    return { ok: false, error: `decision: must be ${DECISIONS.join(' | ')}` };
+    return {
+      ok: false,
+      code: 'bad_decision',
+      detail: `decision must be ${DECISIONS.join(' | ')}, got ${JSON.stringify(decision)}`,
+    };
+  }
+  if (!SETTLEMENT_STATES.includes(settlement)) {
+    return {
+      ok: false,
+      code: 'bad_settlement',
+      detail: `settlement must be ${SETTLEMENT_STATES.join(' | ')}, got ${JSON.stringify(settlement)}`,
+    };
   }
   if (settlement === 'pending' && final) {
     return {
       ok: false,
-      error: 'finality: settlement is pending, so the decision cannot be final — the payment may still land',
+      code: 'finality_pending_is_not_final',
+      detail: 'settlement is pending, so the row cannot be final — the payment may still land',
     };
   }
-  if (decision === 'accepted' && settlement === 'not_submitted') {
-    return {
-      ok: false,
-      error: 'finality: an accepted attempt cannot have settlement = not_submitted',
-    };
-  }
+  // `accepted` + `not_submitted` is legal, and load-bearing: classifyRepeat()
+  // returns exactly that for a first presentation, and §13 lists it as the
+  // output for a `purchase_not_settled` loser. An earlier version of this
+  // function rejected the pair, which made the two halves of this file
+  // disagree; a third-party reader found it. `decision` describes the attempt,
+  // `settlement` describes the rail, and they are independent by construction.
   return { ok: true };
 }
 
@@ -465,12 +488,14 @@ export function attemptIdentity({ payload, requirements, presentation = 1 }) {
 export function refusalRow(input) {
   const decision = input.decision;
   if (!DECISIONS.includes(decision)) {
-    throw new TypeError(`refusalRow: decision must be ${DECISIONS.join(' | ')}`);
+    throw new TypeError(
+      `refusalRow: bad_decision — decision must be ${DECISIONS.join(' | ')}, got ${JSON.stringify(decision)}`,
+    );
   }
   const reason = decision === 'refused' ? input.reason : null;
   if (decision === 'refused' && !REFUSAL_REASONS[reason]) {
     throw new TypeError(
-      `refusalRow: unknown reason ${String(reason)} — refusing needs a name, so add it to REFUSAL_REASONS`,
+      `refusalRow: unreviewed_reason — ${String(reason)} is not in the closed set, and an unreviewed name has no ceiling to bound it`,
     );
   }
   if (typeof input.attemptIdentity !== 'string' || !/^sha256:[0-9a-f]{64}$/.test(input.attemptIdentity)) {
@@ -480,7 +505,7 @@ export function refusalRow(input) {
   const settlement = input.settlement ?? 'not_submitted';
   const final = input.final ?? settlement !== 'pending';
   const f = finalityCheck({ settlement, final, decision });
-  if (!f.ok) throw new TypeError(`refusalRow: ${f.error}`);
+  if (!f.ok) throw new TypeError(`refusalRow: ${f.code} — ${f.detail}`);
 
   const k = signingKeyCheck({ signingPublicKey: input.signingPublicKey, payTo: input.payTo });
   if (!k.ok) throw new TypeError(`refusalRow: ${k.code} — ${k.detail}`);

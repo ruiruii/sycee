@@ -11,7 +11,7 @@ Thank you for helping define the `consumed` and `redeem_count` semantics for mac
    describe anything real. See [`conformance/real-world/`](./conformance/real-world).
 2. **One adopter.** An implementation outside this repository using these two field names
    is worth more than ten issues proposing them.
-3. **More independent implementations.** JavaScript and Python already exist and agree on
+3. **An implementation by someone else.** JavaScript and Python already exist and agree on
    every vector and every level (`packages/core`, `python/sycee_verify`). Go, Rust and Swift
    are missing, and a verifier is small — `python/` is the size to aim at, not a port of the
    whole SDK.
@@ -22,7 +22,7 @@ Thank you for helping define the `consumed` and `redeem_count` semantics for mac
 5. **Protocol mapping PRs** for rails not yet covered (AP2, card-a2a, and others in §9).
 
 Two things are already done and do not need a volunteer: the Chinese README
-([`README.zh.md`](./README.zh.md)), and the independent Python verifier
+([`README.zh.md`](./README.zh.md)), and the second Python verifier
 ([`python/`](./python)). Duplicating either would be work, but not progress.
 
 ## Ground rules
