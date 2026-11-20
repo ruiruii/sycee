@@ -250,7 +250,7 @@ records only accepted attempts MUST NOT claim conformance to this section.
 | Attribute | Type | Definition | Requirement |
 |-----------|------|------------|-------------|
 | `agent.spend.refusal.decision` | enum | `accepted` \| `refused` | **MUST** |
-| `agent.spend.refusal.reason` | enum | One of the closed reasons in §5.5.3; absent when `decision = accepted` | **MUST** when refused |
+| `agent.spend.refusal.reason` | enum | One of the closed reasons in §5.5.2, or one of the three repeat-presentation reasons in §5.5.3; absent when `decision = accepted` | **MUST** when refused |
 | `agent.spend.refusal.evidence_class` | enum | `issuer_asserted` \| `client_verifiable` \| `chain_verifiable` \| `independently_witnessed` | **MUST** when refused |
 | `agent.spend.refusal.settlement` | enum | `not_submitted` \| `pending` \| `settled` \| `unknown` | **MUST** |
 | `agent.spend.refusal.final` | bool | `false` whenever `settlement = pending` | **MUST** |

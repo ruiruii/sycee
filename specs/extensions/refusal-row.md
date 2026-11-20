@@ -147,7 +147,7 @@ an evidence class, and drifts into marketing.
 | `internal_error` | `issuer_asserted` | the seller failed and is not claiming a cause |
 | anything else | `issuer_asserted` | fail closed: an unreviewed reason never sounds rigorous |
 
-`insufficient_funds` is the one `chain_verifiable` reason whose check is not monotonic. A
+`insufficient_funds` is the one reason whose check is not monotonic. A
 nonce, once consumed, is consumed; a settlement, once landed, is landed. A balance is a
 value at a block, and this format carries no block reference, so the balance this refusal
 saw cannot be reproduced by a third party — only a similar one at a later block. The table
@@ -231,7 +231,7 @@ before a rotation stays checkable and a fragment never silently changes meaning.
 - `npm run demo:refusal` — five attempts, one ledger, four claims verified offline, and the
   two things a claim is not allowed to do.
 
-Test coverage as of this draft: 42 tests over the core rules and 21 over the handler
+Test coverage as of this draft: 46 tests over the core rules and 21 over the handler
 behaviour, including the overclaim, the pending-finality, the key/payee collision and the
 contradiction cases.
 
@@ -262,7 +262,7 @@ contradiction cases.
   requirement x402#4198's seller-side claim is stated over, which is why it is phrased over
   the payload rather than over an endpoint. Schemes without an equivalent read keep the
   wider claim: for them there is nothing to ask, and the gap is a protocol one.
-- **One attempt can leave two rows and a wrong claim.** §4's ceiling forbids a row from
+- **One attempt can leave two rows and a wrong claim.** §5's ceiling forbids a row from
   claiming more evidence than its reason allows, but an issuer can get the same effect by
   recording one attempt twice: once with the true, low-ceiling reason, and once with a reason
   whose ceiling is higher but which is not true. Each row is internally consistent, so §6's
@@ -273,12 +273,11 @@ contradiction cases.
   rows may say together, and nothing in this version detects it. See §12 for
   why no fix belongs in this section.
 
-## 11. Reference: the collision this document's binding must avoid
+## 11. Reference: the collision the identity recipe has to avoid
 
-`attempt_binding` here is a digest of the payment payload and the requirements. If a future
-revision adds an ordinal — the price a content-addressed binding cannot tell a settled
-attempt from its refused replay — the field must go into a canonical object, not be appended
-to a string before hashing:
+`attempt_identity` is a digest of the payment payload, the requirements, and the presentation
+ordinal (§4). The ordinal has to enter a canonical object, not be appended to a string before
+hashing. That is not a style preference:
 
 ```js
 sha256(payload + String(n))                        // wrong: ('A:1', 2) and ('A:', 12) collide
@@ -290,13 +289,15 @@ sha256(canonicalJSON({ spec: 'sycee/refusal/v0.1',
 
 The first line is not hypothetical. `packages/core/test/refusal.test.mjs` pins the collision
 and the fix side by side, because the easy way to add an ordinal is the one that breaks the
-property the ordinal was added for.
+property the ordinal was added for. An earlier draft of this document carried the digest under
+the name `attempt_binding` and described the ordinal as something a later revision might add;
+both were superseded by §4, and the name is not used anywhere in the format.
 
 ## 12. Why the surviving hole is not fixed here
 
 Section 10 names a hole: an issuer can say something worse than the ceiling allows by saying
-it twice rather than by over-claiming once. The obvious fix is to compare rows sharing an
-`attempt_binding` and require them to agree. That fix cannot live in this document, and the
+it twice rather than by over-claiming once. The obvious fix is to compare rows that share a
+payload and require them to agree. That fix cannot live in this document, and the
 reason is worth stating rather than hiding behind scope:
 
 - **Rows about one payload are legitimately plural.** Each presentation of a payload is its
@@ -464,11 +465,11 @@ calls — is what this section is about.
 
 `transfer_leg_failed` enters the closed set of §5:
 
-| `reason` | Ceiling | Meaning |
+| `reason` | Base ceiling | Meaning |
 |---|---|---|
 | `transfer_leg_failed` | `chain_verifiable` | the authorization leg executed and the transfer leg did not, in the same attempt |
 
-The base ceiling reflects that both legs are public. §15.4 then takes most of it away, which is
+The base ceiling reflects that both legs are public. §15.5 then takes most of it away, which is
 the intended shape: the ceiling names what the reason could support, and the reproducibility
 rule names what a row may actually claim.
 
