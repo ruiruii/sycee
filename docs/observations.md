@@ -137,28 +137,52 @@ The Tempo legs resolve. All three, read from `explore.tempo.xyz` on 2026-11-20:
 | reverse | Success | 46,974,328 | 2026-11-01T20:24:46Z | 0.00675 USDC.e → `0x5882…4a36` |
 
 Three transfers, all on 1 Nov, in the order the message gives them. In the reverse case the payee
-is the same address that paid in the first two — the pairing is visible on chain, which is the
-part of the claim that does not need trusting.
+is the same address that paid in the first two. That address, `0x5882…4a36`, is also the
+`recipient` in the router's own published Tempo price quote, so the money reached the operator
+and not a pass-through. This half of the claim is now **verified**, and does not need trusting.
 
-**The Solana legs do not resolve.** `getSignatureStatuses` on a public mainnet RPC returns `null`
-for both, with `searchTransactionHistory: true`; `getTransaction` returns `null`. The same RPC
-answers `finalized` for a signature taken from a block of the same vintage, so the node is
-serving history and the query works. Two candidate strings were tried: purchase 1 as transcribed,
-and purchase 2 with the space closed up.
+**The Solana legs do not resolve, and the strongest case is the one that is not a screenshot.**
 
-We are not going to turn this into a conclusion. Three readings are consistent with it, and we
-cannot tell them apart:
+The repository's own `README.md` states, in the section on `/tempo/buy`:
 
-1. the two Solana hashes are misread from a screenshot, and the real ones resolve;
-2. the signatures are on a network other than mainnet-beta;
-3. the addresses are right and the records are not there.
+> That crossing ran on mainnet on 1 November 2026: the payment to us on Tempo was
+> `0x1bed21aef1a8f0b9293a838511b5381bcbf670018bfef055fc220b55688deaba`, our payment to the service
+> on Solana was
+> `HVcNrcGb9RZixMG5SLgp238KR9q1aBM38Q5tyJrt3fucrDmoTkvF6kNNkZfwL9foUWjS5PHMGA5rrU8SSqQ5zF3`, and
+> both are on chain to read.
 
-Only the first would be our error, and only the third would be a finding about the claim. Naming
-the observation without picking a reading is the honest form here.
+The Tempo half of that sentence is true — we read the block. The Solana half is not readable:
+`getSignatureStatuses` with `searchTransactionHistory: true` returns `null`, and `getTransaction`
+returns `null`. This is a **64-character signature copied out of a file**, not read off a
+screenshot, so misreading is ruled out as an explanation.
 
-What this does to the entry: the Tempo side is now **verified**, not quoted. The Solana side stays
-**a claim**, and the table below is written so that the asymmetry is visible rather than averaged
-out.
+Two further observations, recorded because they narrow the space rather than because they settle
+it:
+
+- The payee address in the router's published x402 quote, `8HdCdZ1V…12V`, is a valid 32-byte
+  address and exists on mainnet, but it is a **System Program account holding only a rent
+  balance, with no signature history at all**. A payee that has never been paid is not what one
+  expects from a router whose price quote names it, though it is consistent with rent having been
+  sent to it separately.
+- The router's quote names `solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp`, which is mainnet-beta's
+  genesis hash. So "probably another network" does not fit the reverse case: mainnet is what they
+  say it is.
+
+That leaves two readings, and we can no longer pick between them on evidence:
+
+1. The transaction exists and our two independent reads of a full public RPC are both wrong. This
+   requires the RPC to be lying in a specific direction, which we cannot test from here.
+2. The signature is not a mainnet signature, whether by construction or by a field mix-up in
+   publishing.
+
+We put this in the issue rather than in a verdict. The question we asked is a question they can
+answer in one line, and their answer is worth more than our inference.
+
+**A third reading, for the two purchases.** The message's two Solana hashes are 87 and 88
+characters and one contains a space; they were read off a screenshot and may simply be
+transcribed wrong by whoever composed the message. Those two we hold loosely. The `README`
+signature is a different matter: it came out of a text file, and it is the one that does not
+resolve.
 
 **Resolution note (2026-11-20):** an earlier draft of this entry said "two purchases, first agent
 ever, both directions work" in one breath. The message supports each of those, but the reverse
@@ -167,12 +191,16 @@ apart.
 
 | The claim establishes | The claim does not establish |
 |---|---|
-| Three Tempo transfers on 2026-11-01, verified on chain | That the Solana legs exist — both hashes resolve to nothing on a public RPC (see above) |
-| Two purchases plus one reverse-direction purchase, in that order | That the agent and the seller agree on which attempt settled |
+| Three Tempo transfers on 2026-11-01, verified on chain | That the Solana legs exist — the README's own signature resolves to nothing |
+| The Tempo payee is the operator's address, not a pass-through | That the agent and the seller agree on which attempt settled |
 | The buying agent was not known to Sasona and was not directed by them | That either purchase was ever audited by the seller |
 | The reverse purchase paid back to the address that paid in the first two | Whether the delivered bytes were consumed |
 | A third-party discovery layer (Bazaar) may have routed it | That the discovery happened — "best guess" is their word |
 |  | That one payment proof was redeemed exactly once |
+
+The rows are deliberately not balanced. One side has a block height, a timestamp and an amount on
+each row; the other side has no chain to read. Averaging the two would produce a summary that
+reads as more settled than either half is.
 
 Two things in the message are more specific than the popular summary of it, and both point the
 same way:
@@ -190,13 +218,12 @@ means, or it means nothing when read from the other side. SYCEE's `agent.spend.p
 and the per-rail mapping in [SPEC.md](../SPEC.md) §9 exist for that; the field is one string and
 the table is longer.
 
-**Status:** the Tempo half is now verified against the chain; the Solana half is not, and the entry
-says which is which. We have asked Sasona for a worked failure sample — one attempt, both sides,
-whatever it shows — in
-[`sasona-network/sasona-router#1`](https://github.com/sasona-network/sasona-router/issues/1), and
-the same thread is where the unresolvable Solana hashes should be raised, because a screenshot
-transcription is a bad reason to doubt a real payment and a bad reason to accept one. No reply as
-of 2026-11-20.
+**Status:** the Tempo half is verified against the chain; the Solana half is not, and the entry
+says which is which. The request for original Solana signatures went to
+[`sasona-network/sasona-router#1`](https://github.com/sasona-network/sasona-router/issues/1) on
+2026-11-21, phrased as a question about the README rather than a challenge: a `null` from one
+node is a weak reason to doubt a payment, and their answer is worth more than our inference. No
+reply as of 2026-11-21.
 
 ---
 
