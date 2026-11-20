@@ -1,0 +1,19 @@
+{
+ "id": "reject-wrong-amount-with-executed-authorization",
+ "note": "wrong_amount is a claim that the authorization was rejected before it ran. Recording the authorization as executed contradicts the reason it is offered under.",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "refused",
+  "reason": "wrong_amount",
+  "legs": {
+   "authorization": "executed"
+  },
+  "settlement": "not_submitted"
+ },
+ "expected": {
+  "outcome": "REJECT",
+  "code": "leg_contradicts_reason"
+ },
+ "twin": "wrong-amount-refused"
+}

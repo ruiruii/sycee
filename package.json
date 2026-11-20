@@ -10,7 +10,7 @@
     "examples/demo-merchant"
   ],
   "scripts": {
-    "test": "node --test packages/*/test/*.test.mjs examples/demo-merchant/test/*.test.mjs",
+    "test": "node --test packages/*/test/*.test.mjs conformance/*/test/*.test.mjs examples/demo-merchant/test/*.test.mjs",
     "vectors": "node packages/conformance/src/cli.mjs gen-vectors",
     "verify": "node packages/conformance/src/cli.mjs verify --manifest conformance/vectors/valid-*.json conformance/vectors/invalid-*.json",
     "verify:l0": "node packages/conformance/src/cli.mjs verify --level=L0",
@@ -19,6 +19,7 @@
     "demo": "node examples/walkthrough.mjs",
     "demo:refusal": "node examples/refusal-walkthrough.mjs",
     "demo:merchant": "node examples/demo-merchant/src/dev-server.mjs",
-    "matrix": "node conformance/vectors/print-matrix.mjs"
+    "matrix": "node conformance/vectors/print-matrix.mjs",
+    "verify:refusal": "node conformance/refusal/judge.mjs --expect=25"
   }
 }

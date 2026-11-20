@@ -1,0 +1,19 @@
+{
+ "id": "internal-error-no-legs",
+ "note": "no leg was observed, and the row says so by omitting legs. Omitting is not the same as recording both legs as failed.",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "refused",
+  "reason": "internal_error",
+  "settlement": "unknown"
+ },
+ "observed": {
+  "evidence_class": "issuer_asserted",
+  "settlement": "unknown",
+  "final": true
+ },
+ "expected": {
+  "outcome": "ACCEPT"
+ }
+}

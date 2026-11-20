@@ -1,0 +1,18 @@
+{
+ "id": "accepted-settled",
+ "note": "an accepted row asserts no reason and therefore no evidence class. The field is absent, which is a statement, not a gap.",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "accepted",
+  "settlement": "settled"
+ },
+ "observed": {
+  "evidence_class": null,
+  "settlement": "settled",
+  "final": true
+ },
+ "expected": {
+  "outcome": "ACCEPT"
+ }
+}

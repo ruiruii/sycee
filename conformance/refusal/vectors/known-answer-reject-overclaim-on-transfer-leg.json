@@ -1,0 +1,21 @@
+{
+ "id": "reject-overclaim-on-transfer-leg",
+ "note": "the caller asks for chain_verifiable on the one claim no third party can attribute. The base ceiling says the reason could support it; the reproducibility rule says no.",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "refused",
+  "reason": "transfer_leg_failed",
+  "legs": {
+   "authorization": "executed",
+   "transfer": "failed"
+  },
+  "settlement": "not_submitted",
+  "evidence_class": "chain_verifiable"
+ },
+ "expected": {
+  "outcome": "REJECT",
+  "code": "not_reproducible"
+ },
+ "twin": "permit2-transfer-reverted"
+}

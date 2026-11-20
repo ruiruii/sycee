@@ -1,0 +1,23 @@
+{
+ "id": "permit2-transfer-reverted-wrong",
+ "note": "same input as permit2-transfer-reverted.json, one field answered wrongly: claims chain_verifiable for a claim resting on an unattributable balance",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "refused",
+  "reason": "transfer_leg_failed",
+  "legs": {
+   "authorization": "executed",
+   "transfer": "failed"
+  },
+  "settlement": "not_submitted"
+ },
+ "observed": {
+  "evidence_class": "chain_verifiable",
+  "settlement": "not_submitted",
+  "final": true
+ },
+ "expected": {
+  "outcome": "ACCEPT"
+ }
+}

@@ -1,0 +1,20 @@
+{
+ "id": "reject-transfer-ran-and-succeeded",
+ "note": "the reason says the transfer leg failed; the row records it as executed. One of the two is wrong, and the constructor refuses to publish either.",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "refused",
+  "reason": "transfer_leg_failed",
+  "legs": {
+   "authorization": "executed",
+   "transfer": "executed"
+  },
+  "settlement": "settled"
+ },
+ "expected": {
+  "outcome": "REJECT",
+  "code": "leg_contradicts_reason"
+ },
+ "twin": "permit2-transfer-reverted"
+}

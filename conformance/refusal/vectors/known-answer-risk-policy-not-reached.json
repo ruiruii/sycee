@@ -1,0 +1,22 @@
+{
+ "id": "risk-policy-not-reached",
+ "note": "the merchant refused before submitting anything. not_reached is the observation that makes that refusal honest, and it is the only leg state the contract allows here.",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "refused",
+  "reason": "risk_policy_rejected",
+  "legs": {
+   "authorization": "not_reached"
+  },
+  "settlement": "not_submitted"
+ },
+ "observed": {
+  "evidence_class": "issuer_asserted",
+  "settlement": "not_submitted",
+  "final": true
+ },
+ "expected": {
+  "outcome": "ACCEPT"
+ }
+}

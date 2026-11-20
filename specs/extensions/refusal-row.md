@@ -544,3 +544,39 @@ precondition for anyone proposing one.
 - The default `evidence_class` for a refused row is the reproducible ceiling, not the reason's
   base ceiling. A row that picks its own default would claim more than anyone can check by
   omission, which is the same failure as over-claiming on purpose.
+- `conformance/refusal/` — 25 known-answer files and a judge, `node conformance/refusal/judge.mjs
+  --expect=25`. Eight accepted vectors, each with a `-wrong` twin; nine rejected vectors, each
+  with an accepted near miss; two implementations written independently of each other, one in
+  JavaScript against the constructor and one in Python from the prose above.
+
+#### 15.7.1 Why a unit test is not enough
+
+The tests above answer a narrow question: when the rule is removed, does something fail. They
+cannot answer the question a reader of this section actually has, which is whether their own
+implementation — written from the prose, by someone who has not read the tests — computes the
+right answer.
+
+The difference matters concretely. If a wrong answer only has to *differ* from the recorded one,
+then an implementation that returns the same constant for every field passes every wrong vector,
+for a reason unrelated to the rule under test; it also passes every accepted vector, because
+half of them are `issuer_asserted` by design. Such a checker reports a clean run while measuring
+nothing.
+
+So every accepted vector carries a **wrong twin**: the same input, a plausible wrong answer. An
+implementation must compute, on the wrong file, the value its *right twin* records. Differing is
+not the test; differing for the right reason is. The near-miss twins on the rejected family do
+the same work from the other side: a constructor that refuses everything fails, because the file
+it should have accepted is right there beside it.
+
+The judge is a pure function so that the claim is testable rather than asserted. Its own test
+suite feeds it four degenerate implementations — a constant, an accept-everything, a
+refuse-everything, and the plausible mistake of taking `transfer_leg_failed`'s base ceiling as
+its default — and requires a violation for each. A judge that has only ever been run against
+correct input has been run, not tested.
+
+The shape of this directory follows `interop/` in
+[holistis/agent-receipt-verify](https://github.com/holistis/agent-receipt-verify), where the twin
+rule was first written down against the §5.5 known-answer vectors. The vectors and both checkers
+here are independent of that repository, and the debt is worth naming: the rule that makes a
+degenerate implementation visible came from reading someone else's harness, not from this
+document.

@@ -1,0 +1,22 @@
+{
+ "id": "facilitator-timeout-auth-unread-wrong",
+ "note": "same input as facilitator-timeout-auth-unread.json, one field answered wrongly: invents certainty the merchant does not have",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "refused",
+  "reason": "facilitator_timeout",
+  "legs": {
+   "authorization": "unknown"
+  },
+  "settlement": "unknown"
+ },
+ "observed": {
+  "evidence_class": "issuer_asserted",
+  "settlement": "settled",
+  "final": true
+ },
+ "expected": {
+  "outcome": "ACCEPT"
+ }
+}

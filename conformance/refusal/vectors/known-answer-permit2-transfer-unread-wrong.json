@@ -1,0 +1,23 @@
+{
+ "id": "permit2-transfer-unread-wrong",
+ "note": "same input as permit2-transfer-unread.json, one field answered wrongly: promotes an unread leg to a checkable one",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "refused",
+  "reason": "transfer_leg_failed",
+  "legs": {
+   "authorization": "unknown",
+   "transfer": "failed"
+  },
+  "settlement": "unknown"
+ },
+ "observed": {
+  "evidence_class": "chain_verifiable",
+  "settlement": "unknown",
+  "final": true
+ },
+ "expected": {
+  "outcome": "ACCEPT"
+ }
+}

@@ -1,0 +1,20 @@
+{
+ "id": "reject-unknown-leg-status",
+ "note": "reverted is what an engineer says about the chain, not what the row is allowed to say about the leg. The vocabulary is closed.",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "refused",
+  "reason": "transfer_leg_failed",
+  "legs": {
+   "authorization": "executed",
+   "transfer": "reverted"
+  },
+  "settlement": "not_submitted"
+ },
+ "expected": {
+  "outcome": "REJECT",
+  "code": "unknown_leg_status"
+ },
+ "twin": "permit2-transfer-reverted"
+}
