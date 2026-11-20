@@ -177,24 +177,56 @@ export function createSpend(config) {
 
 /**
  * Cross-check a merchant receipt against an agent receipt.
- * Both must reference the same `proof_hash`; otherwise they describe different events.
+ *
+ * This function is where L2 is decided. `completeness: bilateral` inside one
+ * envelope is a claim the envelope cannot support — the counterpart may not
+ * exist, may be unsigned, or may describe a different attempt. The verdict is
+ * computed here, from two artifacts that each verify on their own.
+ *
+ * Requirements for a pair to be bilateral:
+ *   - both envelopes verify (signature, schema, red lines);
+ *   - the same `payment.proof_hash` — otherwise they describe different payments;
+ *   - the same `resource_id` — one attempt against one resource;
+ *   - one signer is `merchant` and the other is `agent` — two signatures from
+ *     the same side are one party talking twice.
  *
  * @param {any} merchantEnvelope
  * @param {any} agentEnvelope
+ * @returns {{ complete: boolean, completeness: 'bilateral'|'unilateral',
+ *             level: 'L2'|'L1', problems: string[], warnings: string[] }}
  */
 export function linkReceipts(merchantEnvelope, agentEnvelope) {
   const m = verifyVSR(merchantEnvelope);
   const a = verifyVSR(agentEnvelope);
   const problems = [...m.errors, ...a.errors];
+
   if (merchantEnvelope?.vsr?.payment?.proof_hash !== agentEnvelope?.vsr?.payment?.proof_hash) {
     problems.push('proof_hash mismatch: the two receipts describe different payments');
   }
   if (merchantEnvelope?.vsr?.resource_id !== agentEnvelope?.vsr?.resource_id) {
     problems.push('resource_id mismatch');
   }
+
+  // An unsigned receipt is L0 telemetry, not a counterpart: pairing two artifacts
+  // where one has no signature would let the unsigned side borrow the other's
+  // evidence.
+  if (m.level === 'L0' || a.level === 'L0') {
+    problems.push('signature: both sides must be signed — an unsigned receipt is telemetry, not a counterpart');
+  }
+
+  const roles = [merchantEnvelope?.vsr?.signer?.role, agentEnvelope?.vsr?.signer?.role];
+  const oneEach = roles.includes('merchant') && roles.includes('agent') && roles[0] !== roles[1];
+  if (!oneEach) {
+    problems.push(
+      `signer roles: a pair must be one merchant and one agent, got ${roles.map(String).join(' + ')}`,
+    );
+  }
+
+  const complete = problems.length === 0;
   return {
-    complete: problems.length === 0,
-    completeness: problems.length === 0 ? 'bilateral' : 'unilateral',
+    complete,
+    completeness: complete ? 'bilateral' : 'unilateral',
+    level: complete ? 'L2' : 'L1',
     problems,
     warnings: [...m.warnings, ...a.warnings],
   };

@@ -83,10 +83,12 @@ HTTP `200` 不会告诉你 agent 有没有把结果：
 |---|---|---|
 | **L0** | 输出 `payment.proof_hash`、`delivery.status`、`result.consumed`、`payment.redeem_count` | 只有遥测 |
 | **L1** | L0 + 单边签名收据 | 声明，不是证明 |
-| **L2** | L1 + 商家签名 **和** agent 运行时联签 | `consumed` 被证实；`completeness = bilateral` |
+| **L2** | 两张已签名收据（一张商家、一张 agent），`proof_hash` 与 `resource_id` 配对成功 | `consumed` 被证实；等级是这一对的判定结果 |
 
-关键区别：商家可以说 `delivered`，但**必须**说 `consumed: unknown`。商家签
-`consumed: yes` 是在声明它观测不到的事——合规套件会拒绝，上面那个演示也演了这一点。
+两个区别。第一，商家可以说 `delivered`，但**必须**说 `consumed: unknown`（除非结果块已联签）；
+商家单独签 `consumed: yes` 是在声明它观测不到的事。第二，**L2 是对一对收据的判定，不是一个字段**：
+单张信封写 `completeness: bilateral` 仍然只到 L1——因为对方那张可能不存在、可能没签名、也可能
+描述的是另一次尝试。`linkReceipts()` 只有在两边都验过、且角色不同时才返回 `level: 'L2'`。
 
 ```bash
 npm run verify       # 12 个签名向量，期望值强制校验
@@ -145,7 +147,7 @@ const receipt = res.gates.consumedBy('task_4829');   // 或 .notConsumed()
 import { verifyVSR } from '@sycee/core';
 verifyVSR(envelope);                            // { valid, level, errors, warnings }
 import { linkReceipts } from '@sycee/agent-sdk';
-linkReceipts(merchantEnvelope, agentEnvelope);  // { completeness: 'bilateral', ... }
+linkReceipts(merchantEnvelope, agentEnvelope);  // { level: 'L2', completeness: 'bilateral', ... }
 ```
 
 线格式里的 `x-gates-*` 头和收据里的 `gates_spec` 字段是给已接入的传输层留的兼容名，

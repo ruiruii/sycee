@@ -86,15 +86,16 @@ try {
 
   rule('5. do the two sides line up?');
   const link = linkReceipts(merchantEnvelope, agentEnvelope);
-  line(`   complete=${link.complete}  completeness=${link.completeness}`);
+  line(`   complete=${link.complete}  completeness=${link.completeness}  level=${link.level}`);
   for (const p of link.problems) line(`   problem: ${p}`);
 
   rule('6. both receipts verify offline');
   for (const [who, envelope] of [['seller', merchantEnvelope], ['buyer', agentEnvelope]]) {
     const v = verifyVSR(envelope);
-    line(`   ${who.padEnd(7)} valid=${v.valid}  level=${v.level}  ` +
+    line(`   ${who.padEnd(7)} valid=${v.valid}  alone=${v.level}  ` +
          `settlement=${v.settlement.status} (final=${v.settlement.finalized})`);
   }
+  line('   each envelope alone is L1; L2 is the verdict on the pair above');
 
   line('');
   line('The seller was charged nothing and holds no payment proof — only its hash.');

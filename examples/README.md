@@ -1,6 +1,6 @@
 # Examples
 
-Five ways in, depending on how much you want to read.
+Four ways in, depending on how much you want to read.
 
 | File | What it shows | How to run |
 |---|---|---|

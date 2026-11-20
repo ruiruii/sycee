@@ -17,8 +17,8 @@ there. Everything above it is a service that is in pilot and is **not** implemen
 | Specification | `SPEC.md` | Yes |
 
 The open packages are not crippled versions of the service. A merchant and an agent can
-produce, exchange, and verify L2 bilateral receipts with nothing but this repository, and
-nothing in the format is withheld for the paid tier.
+produce, exchange, and pair two receipts into an L2 verdict with nothing but this
+repository, and nothing in the format is withheld for the paid tier.
 
 ## Above the line: what the hosted service would do
 

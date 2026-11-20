@@ -366,8 +366,10 @@ Reference implementation: `packages/core/src/refusal.mjs`, `refusalLedger()` in
 |-----------|------|------------|
 | `agent.spend.completeness` | enum | `bilateral` \| `unilateral_merchant` \| `unilateral_agent` |
 
-`bilateral` — both seller and buyer runtime signed. This is the only state in which
-`consumed` is attested rather than asserted.
+`bilateral` is a **claim about a pair**, not a property one envelope can carry. An envelope
+may declare it to mean "the counterpart is expected at this identity", but a lone envelope
+verifies at most L1 (§10). `consumed` is attested only when a verifier holds both envelopes
+and they pair.
 
 ---
 
@@ -543,10 +545,26 @@ contacting the seller, the buyer, the rail, or the spec author. Verification MUS
 
 ### L2 — Bilateral
 - All L1 requirements.
-- Two signatures present (merchant + agent), or one signature plus a co-signed
-  `result` block.
-- `completeness = bilateral`.
+- Two independently verifiable artifacts, one signed by `merchant` and one by `agent`,
+  describing the same `payment.proof_hash` and the same `resource_id`.
+- The level is decided by a verifier holding **both**, not read from either: two
+  signatures from the same side are one party talking twice, and a missing counterpart
+  is not a counterpart.
 - This is the only level at which `consumed` is *attested* rather than asserted.
+
+**A single envelope MUST NOT be reported as L2**, whatever its `completeness` field says.
+A verifier given one envelope reports L1 and a warning that names the claim. The field is a
+pointer to a pair, not evidence of one; if it were evidence, any signer could reach L2 by
+writing one word.
+
+Rejected alternative: carrying both signatures inside one envelope. It was considered and
+not adopted. The assembler is always one of the two parties, so it can withhold the
+counterpart; it signs over a payload that may already contain the other signature; and the
+resulting artifact proves "one party assembled two signatures", not "two parties each hold
+one". Pair verification keeps the anti-withholding property that L2 exists for. If a
+consumer appears that can only accept a single artifact — an auditor, an on-chain anchor —
+the additive form is an optional `co_signature` object inside the envelope, never a second
+required signature field.
 
 A conforming implementation MUST:
 
@@ -555,7 +573,8 @@ A conforming implementation MUST:
 3. distinguish `consumed = yes | no | unknown`, never collapsing `unknown` into `yes`;
 4. produce offline-verifiable Ed25519 signatures over the VSR envelope;
 5. map `agent.spend.protocol` to a registered value;
-6. confine vendor extensions to a `_vendor.*` namespace, never redefining core fields.
+6. confine vendor extensions to a `_vendor.*` namespace, never redefining core fields;
+7. report L2 only for a pair it has verified, never for a single envelope that claims it.
 
 ### Refusal rows
 

@@ -117,8 +117,8 @@ try {
     const link = linkReceipts(m, a);
     const v = verifyVSR(a);
     say(
-      `  ${label}  completeness=${link.completeness}  ` +
-        `agent receipt valid=${v.valid} level=${v.level}  ` +
+      `  ${label}  completeness=${link.completeness}  pair level=${link.level}  ` +
+        `agent receipt alone=${v.level} valid=${v.valid}  ` +
         `problems=${link.problems.length}`,
     );
   }

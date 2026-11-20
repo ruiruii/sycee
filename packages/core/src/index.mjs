@@ -304,7 +304,7 @@ export function settlementConsistency({ deliveryStatus = 'delivered', settlement
  *
  * @param {unknown} envelope
  * @param {{ now?: number, maxSkewMs?: number, requireSettled?: boolean, allowUnpaidDelivery?: boolean }} [opts]
- * @returns {{ valid: boolean, errors: string[], warnings: string[], level: 'L0'|'L1'|'L2'|'invalid',
+ * @returns {{ valid: boolean, errors: string[], warnings: string[], level: 'L0'|'L1'|'invalid',
  *            settlement: { status: string, finalized: boolean, consistency: string } }}
  */
 export function verifyVSR(envelope, opts = {}) {
@@ -438,7 +438,18 @@ export function verifyVSR(envelope, opts = {}) {
     warnings.push('signature: absent — L0 telemetry only, not a verifiable receipt');
   }
 
-  const level = errors.length ? 'invalid' : !signed ? 'L0' : vsr.completeness === 'bilateral' ? 'L2' : 'L1';
+  // `completeness: bilateral` is a claim about a pair, not a property of one
+  // envelope. No single envelope can prove it — the counterpart may not exist,
+  // may be unsigned, or may describe a different attempt. So a lone envelope
+  // verifies at most L1; L2 is the verdict of linkReceipts() on two envelopes.
+  if (vsr.completeness === 'bilateral') {
+    warnings.push(
+      'completeness = bilateral: a claim about a pair, not a property of one envelope; ' +
+        'pair it with the other side (linkReceipts) to reach L2',
+    );
+  }
+
+  const level = errors.length ? 'invalid' : !signed ? 'L0' : 'L1';
   return {
     valid: errors.length === 0,
     errors,

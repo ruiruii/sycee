@@ -108,11 +108,15 @@ noticing. SYCEE makes both observable.
 |-------|----------|-------|
 | **L0** | Emit `payment.proof_hash`, `delivery.status`, `result.consumed`, `payment.redeem_count` | Telemetry only |
 | **L1** | L0 + a signed receipt from one side | Assertion, not attestation |
-| **L2** | L1 + merchant signature **and** agent runtime co-signature | `consumed` attested; `completeness = bilateral` |
+| **L2** | Two signed artifacts, one merchant and one agent, paired on the same `proof_hash` and `resource_id` | `consumed` attested; the level is the pair's verdict |
 
-The distinction that matters: a merchant can say `delivered`, and must say
-`consumed: unknown`. A merchant that signs `consumed: yes` is claiming something it cannot
-observe. The conformance suite rejects that, and so does the demo above.
+Two distinctions matter. First, a merchant can say `delivered`, and must say
+`consumed: unknown` unless the result block is bilaterally co-signed; a merchant that signs
+`consumed: yes` alone is claiming something it cannot observe. Second, **L2 is a verdict
+about a pair, not a field**: a single envelope that writes `completeness: bilateral` still
+verifies at L1, because the counterpart may not exist, may be unsigned, or may describe a
+different attempt. `linkReceipts()` returns `level: 'L2'` only when both sides verify and
+the roles differ.
 
 ```bash
 npm run verify       # 12 signed vectors, expectations enforced
@@ -187,7 +191,7 @@ import { verifyVSR } from '@sycee/core';
 const check = verifyVSR(envelope);   // { valid, level, errors, warnings }
 
 import { linkReceipts } from '@sycee/agent-sdk';
-linkReceipts(merchantEnvelope, agentEnvelope);   // { completeness: 'bilateral', ... }
+linkReceipts(merchantEnvelope, agentEnvelope);   // { level: 'L2', completeness: 'bilateral', ... }
 ```
 
 Wire-format headers keep the `x-gates-*` prefix and the receipt carries a `gates_spec`
