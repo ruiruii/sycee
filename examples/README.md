@@ -1,17 +1,30 @@
 # Examples
 
-Four ways in, depending on how much you want to read.
+Five ways in, depending on how much you want to read.
 
 | File | What it shows | How to run |
 |---|---|---|
+| `bilateral-consumption.mjs` | **The core idea in one run.** The same search is bought twice: one result is used (`consumed=yes`), one is thrown away (`consumed=no`). The seller's record is identical for both. | `node examples/bilateral-consumption.mjs` |
 | `walkthrough.mjs` | A server and a buyer in one process: 402, payment, a counted replay, both sides linking. | `node examples/walkthrough.mjs` |
 | `minimal-server.mjs` + `minimal-client.mjs` | The same flow over real HTTP in two terminals, so you can poke it with `curl`. | see below |
 | `demo-merchant/` | A first-party merchant that speaks standard x402 (`PAYMENT-REQUIRED`, with `X-PAYMENT` as an alias) and records `redeem_count` plus agent-signed `consumed`. Base Sepolia by default. Public evidence panel at `/evidence`. Optional NEAR anchor. No deploy in this repo. | [demo-merchant/README.md](./demo-merchant/README.md) |
 | `near-anchor/` | Anchors a SYCEE receipt hash on NEAR testnet: a timestamped log, not a payment. No account is created here. | [near-anchor/README.md](./near-anchor/README.md) |
 
-`walkthrough.mjs` and the minimal pair need nothing beyond `npm install` — no network, no wallet, no accounts. The demo merchant's unit tests are the same. Its optional self-test script is the one that talks to a real testnet; see its README.
+`bilateral-consumption.mjs`, `walkthrough.mjs` and the minimal pair need nothing beyond `npm install` — no network, no wallet, no accounts. The demo merchant's unit tests are the same. Its optional self-test script is the one that talks to a real testnet; see its README.
 
-## `walkthrough.mjs` — start here
+## `bilateral-consumption.mjs` — start here
+
+```bash
+node examples/bilateral-consumption.mjs
+```
+
+Two calls, two HTTP 200s, two charged payments. The seller records
+`consumed=unknown` for both, because the seller cannot see downstream. The buyer's
+runtime signs `yes` for the one it passed into a prompt and `no` for the one it
+dropped. That is the difference a delivery receipt cannot express, and it takes
+about forty lines to run.
+
+## `walkthrough.mjs`
 
 ```bash
 node examples/walkthrough.mjs

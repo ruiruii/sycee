@@ -1,0 +1,226 @@
+# SYCEE
+
+[![CI](https://github.com/ruiruii/sycee/actions/workflows/ci.yml/badge.svg)](https://github.com/ruiruii/sycee/actions/workflows/ci.yml)
+
+**别人证明“送到了”，SYCEE 证明“被用了”。**
+
+HTTP `200` 只说明字节到达了，不说明 agent 把它们放进了 prompt、传给了工具，还是压根没留。
+SYCEE 记录这个差别，并统计同一份付款凭证被兑现了几次。
+
+`SYCEE` 是机器支付上的语义层，不绑定具体协议。它回答两个上游协议至今没有定义的问题：
+
+1. **付过钱的那份结果，真的被下游用了吗？**
+2. **同一份付款凭证，被兑现了几次？**
+
+> 我们只记录，不打分。不托管，不碰钱，不做信誉分。
+
+英文版：[README.md](./README.md)
+
+---
+
+## 三步跑通
+
+Node 20 以上。不需要钱包、不需要联网、不需要账号——演示里的付款凭证只是一个字符串，
+SYCEE 全程只处理它的哈希。
+
+```bash
+git clone https://github.com/ruiruii/sycee.git
+cd sycee
+npm install
+npm test                              # 198 个测试
+node examples/bilateral-consumption.mjs
+```
+
+最后一条命令把同一个搜索接口买了两次。一次结果被用了，一次被扔了：
+
+```text
+WHAT THE SELLER RECORDED
+  call 1  status=delivered  consumed=unknown  redeem_count=1
+  call 2  status=delivered  consumed=unknown  redeem_count=1
+
+WHAT THE BUYER RECORDED
+  call 1  consumed=yes  consumed_by=["msg_4829"]
+  call 2  consumed=no   consumed_by=[]
+```
+
+两笔付款、两次交付、两张签名收据——**而商家分不出这两笔的区别**。只有买方的运行时知道
+哪份结果进了 prompt，也只有买方能签这个字。这个签名就是产品本身。
+
+其他入口：`npm run demo`（一个收款服务端 + 一个买家，同一进程）、
+`npm run demo:refusal`（四次被拒，每张拒付声明离线核验）、
+`npm run verify`（12 个签名向量）。
+
+## 问题在哪
+
+| 层 | 回答什么 | 现状 | 缺什么 |
+|---|---|---|---|
+| x402、MPP、AP2 | agent 怎么付钱 | 标准和 SDK 已有 | — |
+| x402-receipts、Vauban | 付款发生了吗、商家交付了吗 | 生产代码、IETF 草案 | 消费证据 |
+| ERC-8183、VCAP | 评估者判定完成了吗 | 托管 / 裁定层 | 非托管、非评分的证据 |
+| **SYCEE** | **结果被用了吗？兑现了几次？** | **本仓库** | — |
+
+HTTP `200` 不会告诉你 agent 有没有把结果：
+
+- 放进 prompt
+- 传给另一个工具
+- 存进工作记忆
+- 给用户看
+
+这个缺口叫**空转消费**（idle spend）：钱花了、字节到了、价值没用上。也是同一份
+`payment_proof` 被拿去兑现多个资源而没人发现的缺口。SYCEE 让这两件事都能被看见。
+
+## SYCEE 不是什么
+
+- **不是支付协议**。它站在 x402（或任何支付通道）旁边，记录通道记不了的东西。
+- **不是收据格式的竞争者**。它只给已有格式加两个字段。
+- **不是评分系统**。没有信任分、没有信用分、没有黑名单。
+- **不是托管方**。不托管、不转账、不记余额。
+- **不是锚定产品**。NEAR 只是可选时间戳层的一种实现。
+
+## 合规等级
+
+| 等级 | 要求 | 含义 |
+|---|---|---|
+| **L0** | 输出 `payment.proof_hash`、`delivery.status`、`result.consumed`、`payment.redeem_count` | 只有遥测 |
+| **L1** | L0 + 单边签名收据 | 声明，不是证明 |
+| **L2** | L1 + 商家签名 **和** agent 运行时联签 | `consumed` 被证实；`completeness = bilateral` |
+
+关键区别：商家可以说 `delivered`，但**必须**说 `consumed: unknown`。商家签
+`consumed: yes` 是在声明它观测不到的事——合规套件会拒绝，上面那个演示也演了这一点。
+
+```bash
+npm run verify       # 12 个签名向量，期望值强制校验
+npm run verify:l0    # 按等级跑
+npm run matrix       # 12 个判定打成一页
+```
+
+[`conformance/vectors/matrix.svg`](./conformance/vectors/matrix.svg) 把每个向量要证明什么、
+校验器给出什么判定、文件 SHA-256 打在一页上，由 `manifest.json` 生成，不手工维护。
+
+## 仓库里有什么
+
+```
+SPEC.md                       规范 v0.1
+schema/vsr-v0.1.schema.json   可验证消费收据的 JSON Schema
+conformance/vectors/          签名合规向量 + 矩阵
+packages/
+  core/                       规范化 JSON、Ed25519、收据构造、离线校验
+  middleware/                 商家侧 HTTP 守卫（统计重复兑现）
+  agent-sdk/                  agent 运行时 SDK（记录消费、联签）
+  conformance/                校验器与 CLI
+  adapter-automaton/          绑定哈希链存证账本（RW-001）
+  probe/                      证据层 CLI（probe / verify / batch）
+examples/                     走查、双边演示、演示商家、NEAR 锚定
+upstream/                     给 x402-receipts、Vauban、ERC-8004 的现成提案稿
+```
+
+所有包零依赖，用 Node 原生 Ed25519。
+
+## 接入方式
+
+**商家侧。** `createGates` 包住一个 handler：发 402 挑战、按 `proof_hash` 统计兑现次数、
+附上签名收据。
+
+```js
+import { createGates, memoryStore } from '@sycee/middleware';
+const gates = createGates({
+  resourceId: 'search.v1', protocol: 'x402',
+  price: { value: '0.010000', currency: 'USDC' },
+  publicKey, privateKey,
+  store: memoryStore(),        // 生产环境用 redisStore(client)
+});
+app.get('/search', gates.guard(async () => ({ status: 200, body: { ok: true } })));
+```
+
+**Agent 侧。** `createSpend` 包住 `fetch`，拿到商家收据，并让运行时声明结果被怎么处理了。
+
+```js
+const res = await spend.fetch('https://api.example/search?q=ai');
+const receipt = res.gates.consumedBy('task_4829');   // 或 .notConsumed()
+```
+
+**校验。** 两边都不需要对方，也不需要联网：
+
+```js
+import { verifyVSR } from '@sycee/core';
+verifyVSR(envelope);                            // { valid, level, errors, warnings }
+import { linkReceipts } from '@sycee/agent-sdk';
+linkReceipts(merchantEnvelope, agentEnvelope);  // { completeness: 'bilateral', ... }
+```
+
+线格式里的 `x-gates-*` 头和收据里的 `gates_spec` 字段是给已接入的传输层留的兼容名，
+不是包名。
+
+---
+
+## 红线
+
+合规实现**不得**：
+
+1. 存储或传输原始付款凭证正文。
+2. 产出信任、信用或信誉评分。
+3. 转移资金或充当托管。
+
+这些是结构约束，不是政策承诺。见 [SPEC.md](./SPEC.md)。
+
+## 与相邻项目的关系
+
+SYCEE 是叠加，不是竞争。
+
+| 项目 | 定义什么 | SYCEE 补什么 |
+|---|---|---|
+| **x402-receipts** | 收据格式、请求哈希、交付状态、双签 | `consumed` / `redeem_count`；多通道 |
+| **IETF draft-vauban-x402-*** | 收据格式、后量子签名、Starknet 锚定 | `consumed` / `redeem_count`；与协议无关 |
+| **ERC-8183** | 链上托管、评估裁定 | 链下、非托管的消费证据 |
+| **VCAP / SwarmSync** | 托管结算、交付证明、信誉 | 不托管、不评分 |
+| **ERC-8004** | agent 身份与付款凭证 schema | 为 `consumed` / `redeem_count` 预留字段 |
+
+## 上游推进
+
+目标是**一套词汇，而不是一个新项目**。如果别的标准采纳了这两个字段名，SYCEE 就采纳他们的。
+
+| 对象 | 渠道 | 状态 |
+|---|---|---|
+| x402-receipts (StelarDigital) | GitHub issue | [#6](https://github.com/StelarDigital/x402-receipts/issues/6) — 已收敛 |
+| ERC-8004 v2 | GitHub issue | [erc-8004-contracts#102](https://github.com/erc-8004/erc-8004-contracts/issues/102) — open |
+| Vauban Research (IETF) | 邮件 | `research@vauban.tech` — 稿在 [`upstream/`](./upstream) |
+| Predge | GitHub issue | [erc8004-outcome-validator#13](https://github.com/predgeAI/erc8004-outcome-validator/issues/13) — open |
+| Brave `bx402` | GitHub issue | [bx402#141](https://github.com/brave/bx402/issues/141) — open |
+
+一个值得点明的期限：Vauban 的 `draft-vauban-x402-stark-receipts` 在 **2026-11-29** 到期，
+`consumed` 语义需要在那之前有至少一个采纳方，否则相邻字段会被别人先定义。
+
+## 托管证据服务
+
+本仓库的包永久免费、Apache-2.0。另有一个托管服务，替客户保存已签名收据的第三方副本、
+按需锚定。它在试点中，**不在本仓库实现**，不托管资金。哪些是开源的、哪些是商业层、
+试点覆盖什么：[docs/hosted-service.md](./docs/hosted-service.md)。
+
+## 路线图
+
+| 阶段 | 目标 | 状态 |
+|---|---|---|
+| 1 | 发布仓库 + SPEC v0.1 | 完成 |
+| 2 | 向 x402-receipts、Vauban、ERC-8004 做字段对齐 | 完成，线仍开着 |
+| 3 | 第一个独立实现采用 `consumed` / `redeem_count` | 待定 |
+| 4 | 商家 + agent SDK 跑通真实卖家（Brave / bx402） | 待定 |
+| 5 | 跨通道支持（APOP、alipay-a2m、a2p2） | 待定 |
+
+## 命名
+
+v0.1 之前叫 `gates-spec`，现名 `SYCEE`。旧 `gates-spec/v0.1` 收据签名仍有效；12 个向量
+因版本串参与指纹而重新生成。包名从 `@gates-spec/*` 迁到 `@sycee/*`。
+
+## 参与
+
+见 [CONTRIBUTING.md](./CONTRIBUTING.md)。最需要两件事：其他语言的独立实现、上游对齐。
+
+## 许可证
+
+Apache-2.0，见 [LICENSE](./LICENSE)。
+
+---
+
+<sub>黑客松提交材料（NEAR，2026 年 10 月）原样保存在
+[docs/hackathon.md](./docs/hackathon.md)。组件设计见
+[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)。</sub>
