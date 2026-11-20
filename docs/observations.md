@@ -120,10 +120,11 @@ Quoted in full, because the wording carries most of the information:
 >
 > - Tempo `0x1bed21aef1a8f0b9293a838511b5381bcbf670018bfef055fc220b55688deaba` · Solana *(hash not visible in the screenshot we hold)*
 
-The Solana hash in purchase 2 is reproduced exactly as posted, including the space — it reads as
-lowercase where the other hashes read as mixed case, and it is one character long. We have not
-corrected it. A transcription that silently repairs a transaction hash is worth less than one
-that flags it, and the original is the claim.
+The Solana hash in purchase 2 is reproduced as we read it off the screenshot, and it is probably
+misread: it contains a space, it reads as lowercase where the others read as mixed case, and it is
+one character long. Two independent readings of the same image agree, so we have kept that rather
+than a guess at the intended string. A transcription that silently repairs a transaction hash is
+worth less than one that says which character it is unsure about.
 
 **Resolution note (2026-11-20):** an earlier draft of this entry said "two purchases, first agent
 ever, both directions work" in one breath. The message supports each of those, but the reverse
