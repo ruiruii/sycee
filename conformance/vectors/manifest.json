@@ -10,7 +10,7 @@
       "schemaValid": true,
       "signatureValid": true,
       "level": "L1",
-      "note": "bilateral hint present; claims bilateral, unpaired \u2014 L2 needs the pair"
+      "note": "claims bilateral; unpaired, so L1"
     },
     {
       "file": "valid-consumed-unknown.json",
@@ -24,35 +24,35 @@
       "schemaValid": true,
       "signatureValid": true,
       "level": "L1",
-      "note": "delivered, never referenced; claims bilateral, unpaired \u2014 L2 needs the pair"
+      "note": "delivered, never referenced; claims bilateral, unpaired"
     },
     {
       "file": "valid-redeem-count-3.json",
       "schemaValid": true,
       "signatureValid": true,
       "level": "L1",
-      "note": "one proof, three completions; claims bilateral, unpaired \u2014 L2 needs the pair"
+      "note": "one proof, three completions; claims bilateral, unpaired"
     },
     {
       "file": "valid-agent-side-bilateral.json",
       "schemaValid": true,
       "signatureValid": true,
       "level": "L1",
-      "note": "agent attests consumption; claims bilateral, unpaired \u2014 L2 needs the pair"
+      "note": "agent attests consumption; claims bilateral, unpaired"
     },
     {
       "file": "valid-settlement-in-flight.json",
       "schemaValid": true,
       "signatureValid": true,
       "level": "L1",
-      "note": "delivered before finality \u2014 incomplete, fail-closed"
+      "note": "delivered before finality — incomplete, fail-closed"
     },
     {
       "file": "valid-settlement-settled-undelivered.json",
       "schemaValid": true,
       "signatureValid": true,
       "level": "L1",
-      "note": "paid without fulfilment \u2014 dispute material"
+      "note": "paid without fulfilment — dispute material"
     },
     {
       "file": "invalid-settlement-absent-delivered.json",
@@ -80,7 +80,7 @@
       "schemaValid": true,
       "signatureValid": true,
       "level": "invalid",
-      "note": "raw credential hidden in _vendor \u2014 red line caught by semantic check"
+      "note": "raw credential hidden in _vendor — red line caught by semantic check"
     },
     {
       "file": "invalid-unsigned-l0.json",

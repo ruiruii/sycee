@@ -137,7 +137,7 @@ function genVectors() {
   const cases = [
     {
       name: 'valid-consumed-yes',
-      expect: { schemaValid: true, signatureValid: true, level: 'L1', note: 'bilateral hint present' },
+      expect: { schemaValid: true, signatureValid: true, level: 'L1', note: 'claims bilateral; unpaired, so L1' },
       build: () => envelope(buildVSR({
         protocol: 'x402',
         resourceId: 'search.v1',
@@ -181,7 +181,7 @@ function genVectors() {
     },
     {
       name: 'valid-consumed-no-idle-spend',
-      expect: { schemaValid: true, signatureValid: true, level: 'L1', note: 'delivered, never referenced' },
+      expect: { schemaValid: true, signatureValid: true, level: 'L1', note: 'delivered, never referenced; claims bilateral, unpaired' },
       build: () => envelope(buildVSR({
         protocol: 'x402',
         resourceId: 'search.v1',
@@ -198,7 +198,7 @@ function genVectors() {
     },
     {
       name: 'valid-redeem-count-3',
-      expect: { schemaValid: true, signatureValid: true, level: 'L1', note: 'one proof, three completions' },
+      expect: { schemaValid: true, signatureValid: true, level: 'L1', note: 'one proof, three completions; claims bilateral, unpaired' },
       build: () => envelope(buildVSR({
         protocol: 'x402',
         resourceId: 'search.v1',
@@ -220,7 +220,7 @@ function genVectors() {
       // The whole point of SYCEE: the seller never sees consumption.
       // This receipt is signed by the agent runtime instead.
       name: 'valid-agent-side-bilateral',
-      expect: { schemaValid: true, signatureValid: true, level: 'L1', note: 'agent attests consumption' },
+      expect: { schemaValid: true, signatureValid: true, level: 'L1', note: 'agent attests consumption; claims bilateral, unpaired' },
       build: () => envelope(buildVSR({
         protocol: 'x402',
         resourceId: 'search.v1',
