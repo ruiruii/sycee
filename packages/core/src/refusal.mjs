@@ -60,6 +60,8 @@ export const REASON_CEILING = Object.freeze({
   insufficient_funds: 'chain_verifiable',
   duplicate_payment: 'chain_verifiable',
   nonce_already_used: 'chain_verifiable',
+  // both legs are public, but whether THIS attempt moved funds is not — see POSITIVE_MARKERS
+  transfer_leg_failed: 'chain_verifiable',
   // no third party can check these; the issuer's word is all there is
   facilitator_timeout: 'issuer_asserted',
   risk_policy_rejected: 'issuer_asserted',
@@ -94,6 +96,7 @@ export const REFUSAL_REASONS = Object.freeze({
   authorization_not_yet_valid: 'the authorization window has not opened yet',
   insufficient_funds: 'the payer balance does not cover the authorized amount',
   nonce_already_used: 'the authorization nonce was already consumed on chain',
+  transfer_leg_failed: 'the authorization leg executed and the transfer leg did not, in the same attempt',
   facilitator_timeout: 'the facilitator did not answer within the request budget',
   risk_policy_rejected: 'the issuer declined for a policy it does not disclose',
   commercial_refusal: 'the issuer declined commercially; no technical cause',
@@ -108,6 +111,189 @@ export const SETTLEMENT_STATES = Object.freeze(['not_submitted', 'pending', 'set
 /* ------------------------------------------------------------------ *
  * 2. Pure rules (each one is a single testable function)
  * ------------------------------------------------------------------ */
+
+/**
+ * The two legs of a split-leg authorization, in the order they execute.
+ *
+ * A scheme that arrives as one call — EIP-3009 `transferWithAuthorization` is
+ * the reference case — cannot produce a row split across these, because the
+ * nonce and the balance change in one transaction. The gaps below are
+ * unreachable for those schemes, which is the property that makes them gaps.
+ */
+export const LEGS = Object.freeze(['authorization', 'transfer']);
+
+/** What the merchant could see about each leg at the moment it recorded. */
+export const LEG_STATUS = Object.freeze({
+  not_reached: 'the merchant never submitted this leg',
+  executed: 'the merchant observed this leg complete',
+  failed: 'the merchant observed this leg revert or be rejected',
+  unknown: 'the merchant submitted this leg and learned nothing conclusive',
+});
+
+/**
+ * A refusal may name a cause only when it holds the observation that cause
+ * requires. Fill an absent observation with a default and the row claims more
+ * than it saw — which is the defect this whole extension exists to catch.
+ *
+ * `transfer` is not always required: when the authorization leg never executed,
+ * there is no second leg to have an opinion about.
+ */
+export const REQUIRED_LEG_STATUS = Object.freeze({
+  invalid_signature: { authorization: ['failed', 'unknown'] },
+  wrong_amount: { authorization: ['failed', 'unknown'] },
+  wrong_recipient: { authorization: ['failed', 'unknown'] },
+  malformed_payload: { authorization: ['failed', 'unknown', 'not_reached'] },
+  authorization_expired: { authorization: ['failed', 'unknown'] },
+  authorization_not_yet_valid: { authorization: ['failed', 'unknown'] },
+  insufficient_funds: { authorization: ['failed', 'unknown'] },
+  nonce_already_used: { authorization: ['failed', 'executed'] },
+  transfer_leg_failed: {
+    // The transfer leg must at least have been reached and failed. `unknown` is
+    // deliberately excluded: "I submitted it and learned nothing" is a different
+    // sentence from "it reverted", and merging the two is the drift this reason
+    // exists to name. The authorization leg is left unpinned — recording
+    // `not_reached` alongside a failed transfer is caught by the authorization
+    // leg's own contract below, and recording `unknown` there is honest silence.
+    authorization: ['executed', 'unknown'],
+    transfer: ['failed'],
+  },
+  facilitator_timeout: { authorization: ['unknown'] },
+  internal_error: { authorization: ['executed', 'unknown'] },
+  risk_policy_rejected: { authorization: ['not_reached', 'unknown'] },
+  commercial_refusal: { authorization: ['not_reached', 'unknown'] },
+  replay_already_settled: { authorization: ['executed'] },
+});
+
+/**
+ * The evidence ceiling is a claim about third parties, not about the scheme.
+ *
+ * Three facts sit close together and are easy to conflate. A nonce read against
+ * a single attempt is a negative observation, and it carries over exactly: the
+ * nonce is spent, so *this* attempt cannot have executed. A refusal that says
+ * "the nonce was already spent" therefore stays checkable. A refusal that says
+ * "the transfer leg of this attempt executed and then failed" rests on a
+ * positive observation of a balance movement, and the ledger carries no attempt
+ * identity to attribute it to. That one can never be stronger than the issuer's
+ * word, and no scheme change fixes it — only a per-attempt marker on the
+ * transfer leg would, and none exists in the reference schemes.
+ */
+export const POSITIVE_MARKERS = Object.freeze({
+  authorization: 'nonce consumed on chain',
+  transfer: 'balance moved — not attributable to one attempt',
+});
+
+/** Legs whose "executed" is a positive, unattributable observation. */
+const UNATTRIBUTABLE_LEGS = Object.freeze(['transfer']);
+
+/**
+ * Which legs a reason's truth actually depends on having run.
+ *
+ * Separate from `REQUIRED_LEG_STATUS` on purpose: that table says what a row must
+ * *observe*; this one says what the reason needs to be *true*. They differ for
+ * `nonce_already_used`, where the nonce being spent is a fact about the attempt's
+ * own signature and reads as a negative — checkable — while the transfer leg of a
+ * split authorization reads as a positive nobody can attribute.
+ */
+export const DEPENDS_ON_EXECUTED = Object.freeze({
+  transfer_leg_failed: ['authorization', 'transfer'],
+});
+
+/**
+ * Can a third party reproduce the observation behind this claim?
+ *
+ * A reason reaches its own ceiling unless it relies on a leg whose executed
+ * state no third party can attribute to one attempt. Absence of a contract
+ * means the reason makes no leg claim at all, so it keeps its ceiling.
+ *
+ * @param {string} reason
+ * @param {string} evidenceClass  what the row claims
+ * @returns {{ok: boolean, ceiling: string, reason?: string}}
+ */
+export function reproducibleCeiling(reason, evidenceClass) {
+  const contract = REQUIRED_LEG_STATUS[reason] ?? {};
+  // A reason relies on a leg when executing that leg is a state the reason needs
+  // in order to be true at all — single-valued `executed`, or `executed` sitting
+  // beside a failure state that no third party can tell apart from it.
+  // `nonce_already_used` is the exception the doc argues for: a spent nonce is a
+  // negative read with a positive marker.
+  // A reason depends on a leg for its *positive* claim when it needs the leg to
+  // have run. `transfer_leg_failed` is the reference case: the reason only exists
+  // because the transfer ran and then failed, so the row's causal claim rests on
+  // the one observation no third party can attribute to a single attempt.
+  const dependedOn = DEPENDS_ON_EXECUTED[reason] ?? [];
+  const unattributable = dependedOn.filter((leg) => UNATTRIBUTABLE_LEGS.includes(leg));
+  const ceiling = unattributable.length > 0 ? 'issuer_asserted' : ceilingFor(reason);
+
+  const ci = EVIDENCE_ORDER.indexOf(evidenceClass);
+  if (ci < 0) return { ok: false, ceiling, reason: 'evidence class is not in the enum' };
+  if (ci > EVIDENCE_ORDER.indexOf(ceiling)) {
+    const why = unattributable.length > 0
+      ? THE_UNATTRIBUTED_BALANCE
+      : `no leg this reason relies on is unattributable, so its ceiling is ${ceiling}`;
+    return {
+      ok: false,
+      ceiling,
+      reason: `${evidenceClass} exceeds a reproducible ceiling of ${ceiling}: ${why}`,
+    };
+  }
+  return { ok: true, ceiling };
+}
+
+/** The sentence that carries the whole argument, kept in one place. */
+export const THE_UNATTRIBUTED_BALANCE =
+  'the ledger shows a balance moved, not which attempt moved it — the second leg of a split '
+  + 'authorization has no per-attempt marker a third party can read, so a claim resting on it '
+  + 'cannot be reproduced by anyone but the issuer';
+
+/**
+ * Check an observation record against the reason it is offered for.
+ *
+ * This is the function that rejects the plausible-but-unsupported row. It does
+ * not judge whether the reason is true — nothing can. It judges whether the row
+ * is in a position to have known.
+ *
+ * @param {{legs?: object, reason?: string}} input
+ * @returns {{ok: boolean, code?: string, detail?: string}}
+ */
+export function legSupport({ legs, reason }) {
+  if (!reason || !REFUSAL_REASONS[reason]) {
+    return { ok: false, code: 'unreviewed_reason', detail: `no closed reason to support: ${String(reason)}` };
+  }
+  if (!legs || typeof legs !== 'object') {
+    // Silence about both legs is not evidence that both failed.
+    return { ok: true, code: 'not_measured', detail: 'no leg observation was supplied; the row asserts only its reason' };
+  }
+  for (const [leg, status] of Object.entries(legs)) {
+    if (!LEGS.includes(leg)) {
+      return { ok: false, code: 'unknown_leg', detail: `${leg} is not a leg of a split-leg authorization` };
+    }
+    if (!LEG_STATUS[status]) {
+      return { ok: false, code: 'unknown_leg_status', detail: `${leg}: ${status} is not an observable state` };
+    }
+  }
+  const required = REQUIRED_LEG_STATUS[reason];
+  if (!required) {
+    return { ok: false, code: 'no_leg_contract', detail: `${reason} has no leg contract; it cannot carry leg observations` };
+  }
+  for (const [leg, allowed] of Object.entries(required)) {
+    const observed = legs[leg];
+    if (observed === undefined) {
+      return {
+        ok: false,
+        code: 'leg_not_observed',
+        detail: `${reason} is a claim about the ${leg} leg; the row records nothing about it`,
+      };
+    }
+    if (!allowed.includes(observed)) {
+      return {
+        ok: false,
+        code: 'leg_contradicts_reason',
+        detail: `${reason} needs ${leg} = ${allowed.join(' | ')}, the row records ${observed}`,
+      };
+    }
+  }
+  return { ok: true, code: 'supported' };
+}
 
 /**
  * The highest evidence class a reason is allowed to claim.
@@ -272,6 +458,7 @@ export function attemptIdentity({ payload, requirements, presentation = 1 }) {
  * @param {string} input.settlement              not_submitted | pending | settled | unknown
  * @param {boolean} [input.final]
  * @param {string} [input.evidenceClass]         defaults to the reason's ceiling
+ * @param {object} [input.legs]                  { authorization, transfer } — what was observed
  * @param {string} [input.observedAt]
  * @returns {object}
  */
@@ -300,11 +487,29 @@ export function refusalRow(input) {
 
   // An accepted row asserts no reason; a refused row's class is capped by its
   // reason. A caller may lower the class, never raise it.
-  const claimed = decision === 'refused' ? (input.evidenceClass ?? ceilingFor(reason)) : null;
+  // Default to the reproducible ceiling, not the reason's base ceiling: a row that
+  // picks its own default would be claiming more than anyone can check, by omission.
+  const claimed = decision === 'refused'
+    ? (input.evidenceClass ?? reproducibleCeiling(reason, ceilingFor(reason)).ceiling)
+    : null;
   if (decision === 'refused' && !withinCeiling(claimed, reason)) {
     throw new TypeError(
       `refusalRow: evidence ${claimed} exceeds the ceiling for ${reason} (${ceilingFor(reason)})`,
     );
+  }
+
+  // A cause needs the observation that cause requires, and the class needs to be
+  // one a third party could reproduce. Both checks run before the row exists, so
+  // an unsupported row is never constructible — not merely unflattering.
+  if (decision === 'refused') {
+    const support = legSupport({ legs: input.legs, reason });
+    if (!support.ok) {
+      throw new TypeError(`refusalRow: ${support.code} — ${support.detail}`);
+    }
+    const reproducible = reproducibleCeiling(reason, claimed);
+    if (!reproducible.ok) {
+      throw new TypeError(`refusalRow: evidence ${claimed} is not reproducible — ${reproducible.reason}`);
+    }
   }
 
   const row = {
@@ -328,6 +533,9 @@ export function refusalRow(input) {
     row.evidence_class = claimed;
   }
   if (input.proofHash) row.proof_hash = input.proofHash;
+  // Recorded as observed, not as inferred. Absent means nothing was observed,
+  // which is a different statement from "both legs failed".
+  if (input.legs) row.legs = input.legs;
   if (input.amount) row.amount = input.amount;
   if (input.agentId) row.signer.agent_id = input.agentId;
 
