@@ -100,6 +100,22 @@ npm run matrix       # 12 个判定打成一页
 [`conformance/vectors/matrix.svg`](./conformance/vectors/matrix.svg) 把每个向量要证明什么、
 校验器给出什么判定、文件 SHA-256 打在一页上，由 `manifest.json` 生成，不手工维护。
 
+### 第三方读者
+
+§15 那些拒绝行向量，由一份不是我们写的实现读过一遍——只读文字，所有猜测在运行前就写下来：
+
+> [holistis/agent-receipt-verify](https://github.com/holistis/agent-receipt-verify)，
+> [`research/sycee-section-15-third-reader`](https://github.com/holistis/agent-receipt-verify/tree/main/research/sycee-section-15-third-reader)，
+> 2026-11-20，针对 `sycee@632c2f56`。
+
+第一次跑：25 个文件里 21 个一致，8 个错误孪生全部与其正确孪生不同。4 个不一致的地方，
+是文字和向量互相矛盾的地方——记录下来，不裁定谁对，见
+[`conformance/refusal/README.md`](./conformance/refusal/README.md)。
+
+值得读两遍的是另一组数：同一份报告在一个能通过全部 25 个文件的读者里植入了 21 个看似
+合理的错误，**15 个照样全过**。一套抓不住错误实现的向量集，等于没被测过——而这是我们目前
+唯一一次来自外部的这种测量。
+
 ## 仓库里有什么
 
 ```

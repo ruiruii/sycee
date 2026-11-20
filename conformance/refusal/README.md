@@ -81,3 +81,18 @@ gates-spec, conformance/refusal, 2026-11-20.
 ```
 
 The format of this directory — known-answer files, wrong twins, a pure judge, a degenerate-implementation self-test — follows `interop/` in [holistis/agent-receipt-verify](https://github.com/holistis/agent-receipt-verify), where the twin rule was first written down. The vectors and both checkers here are independent of that repository; the shape is not.
+
+### Third reader
+
+A reader written from the prose alone, by holistis, one sitting, guesses logged before the run:
+[research/sycee-section-15-third-reader](https://github.com/holistis/agent-receipt-verify/tree/main/research/sycee-section-15-third-reader)
+(2026-11-20, against commit `632c2f56`). It did not open either checker here.
+
+First run: 21 of 25 files agree; all eight wrong twins differ from their right twin. The four
+disagreements are recorded below rather than resolved in the reader's favour, because in each
+case the text and the vectors say different things and one of them has to change.
+
+The same report plants 21 plausible mistakes in a reader that agrees with all 25 files. **15 of
+them pass every vector.** That number, not the 21 of 25, is the useful one: it says what this
+directory does not yet pin down, and it is why the set below grows by named holes rather than by
+count.

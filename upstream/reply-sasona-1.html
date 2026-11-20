@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8">
+<title>Sasona #1 补充回复</title>
+<style>
+:root{--bg:#0f1115;--card:#171a21;--line:#262b36;--tx:#e6e9ef;--dim:#9aa4b2;--acc:#4c8dff;}
+*{box-sizing:border-box}
+body{margin:0;padding:24px;background:var(--bg);color:var(--tx);font:15px/1.7 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+.wrap{max-width:880px;margin:0 auto}
+h1{font-size:17px;margin:0 0 4px;font-weight:600}
+.sub{color:var(--dim);font-size:13px;margin-bottom:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:16px}
+.hd{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line)}
+.hd b{font-size:13px;font-weight:600}
+button{background:var(--acc);color:#fff;border:0;border-radius:7px;padding:6px 14px;font-size:13px;cursor:pointer;font-family:inherit}
+button.ok{background:#1f8a4c}
+pre{margin:0;padding:14px;white-space:pre-wrap;word-break:break-word;font:13px/1.65 ui-monospace,SFMono-Regular,Menlo,monospace;color:#cfd6e4;max-height:60vh;overflow:auto}
+.note{color:var(--dim);font-size:12.5px;padding:0 4px 12px}
+</style></head><body><div class="wrap">
+<h1>Sasona · sasona-router#1 补充回复</h1>
+<div class="sub">英文正文，直接贴进 issue 评论框</div>
+
+<div class="card"><div class="hd"><b>Issue comment</b><button onclick="cp(this)">复制</button></div>
+<pre>HTMLEOF
+python3 - <<'EOF'
+import html
+body=open('/workspace/sycee/upstream/reply-sasona-1.md').read()
+card='/tmp/card.html'
+with open(card,'a') as f:
+    f.write(html.escape(body))
+EOF
+cat >> /tmp/card.html <<'HTMLEOF'
+</pre></div>
+<div class="note">正文里 4 个 Tempo 哈希已核实；Solana 那个来自仓库 README 原文，逐字符比对一致。</div>
+<script>
+function cp(btn){
+  const pre = btn.closest('.card').querySelector('pre');
+  const txt = pre.innerText;
+  const done = ()=>{const o=btn.textContent;btn.textContent='已复制';btn.classList.add('ok');setTimeout(()=>{btn.textContent=o;btn.classList.remove('ok')},1600);};
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(done).catch(()=>fallback(pre,btn,done));
+  } else { fallback(pre,btn,done); }
+}
+function fallback(pre,btn,done){
+  const r=document.createRange();r.selectNodeContents(pre);
+  const s=window.getSelection();s.removeAllRanges();s.addRange(r);
+  try{ document.execCommand('copy'); done(); }
+  catch(e){ alert('请按 Ctrl+C 复制'); }
+}
+</script></div></body></html>

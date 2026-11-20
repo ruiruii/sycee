@@ -129,6 +129,24 @@ npm run matrix       # all 12 verdicts as one page
 purpose, the checker's verdict, and the file's SHA-256, generated from `manifest.json`
 rather than maintained by hand.
 
+### Third reader
+
+The §15 refusal vectors were read by an implementation that was not ours, written from the prose
+alone with every guess logged before the run:
+
+> [holistis/agent-receipt-verify](https://github.com/holistis/agent-receipt-verify),
+> [`research/sycee-section-15-third-reader`](https://github.com/holistis/agent-receipt-verify/tree/main/research/sycee-section-15-third-reader),
+> 2026-11-20, against `sycee@632c2f56`.
+
+21 of 25 files agree on the first run, and all eight wrong twins differ from their right twin.
+The four that do not agree are places where the text and the vectors disagree with each other —
+recorded, not resolved — in [`conformance/refusal/README.md`](./conformance/refusal/README.md).
+
+The part worth reading twice: the same report plants 21 plausible mistakes in a reader that
+passes all 25 files, and **15 of them still pass**. A vector set that cannot fail on a wrong
+implementation is a vector set that has not been tested, and this is the only measurement of that
+we have from outside.
+
 ## What is in this repo
 
 ```
