@@ -447,10 +447,11 @@ The temptation is to treat the drift state as a generic "partial execution" and 
 scheme a new reason. That would be wrong, and saying why is the point of this section.
 
 Under a one-leg scheme, `authorizationState(authorizer, nonce)` returns true only after the
-transfer executed. Reading it is a *negative* observation with exact carryover: if the nonce is
-spent, this attempt cannot have failed to execute; if it is unspent, this attempt cannot have
-executed. The marker is scoped to the attempt's own signature, so a third party can attribute
-it. Nothing here needs a new reason, and `nonce_already_used` and `insufficient_funds` keep the
+transfer executed. Reading it as spent is a *negative* observation with exact carryover: the
+nonce cannot be spent by an attempt that did not execute, so "spent" refutes exactly this
+attempt. The marker is scoped to the attempt's own signature, so a third party can attribute
+it. (Reading it as unspent carries no such force — it may simply mean the attempt was never
+broadcast — which is why no reason in §5 rests on that reading.) Nothing here needs a new reason, and `nonce_already_used` and `insufficient_funds` keep the
 meanings §5 already gives them.
 
 Under a split-leg scheme the second leg carries no equivalent marker. The ledger shows that a
