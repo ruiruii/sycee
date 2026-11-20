@@ -101,24 +101,52 @@ was ever asked to answer, drawn at the place where the answer stops.
 
 ## 2. Sasona cross-rail settlement — a public claim, not yet a sample
 
-**Source:** Sasona's announcement in the shared Slack channel, 2026-11-01. Their summary of it: the
-first agent purchase routed across rails, paid on Solana x402 and settled onto a Tempo MPP
-resource, with transaction hashes attached.
+**Source:** `#random`, 2026-11-02 05:35, from *Sasona Developer*. Announced on 2026-11-01.
 
-This is a **published claim**. We have not independently verified the hashes, and we are not
-restating it as a fact about the rails. It is listed here because it is the only public report we
-have found of a cross-rail agent purchase that reached settlement at all, and because of what it
-does not report.
+Quoted in full, because the wording carries most of the information:
+
+> Sasona: a router that lets an x402 agent buy from sellers on other rails.
+>
+> On 1 Nov, for the first time, an agent we don't know bought through it, twice. Nobody pointed
+> it at us; our best guess from its request is that it found the resource in the Bazaar. It can
+> only pay x402 on Solana. The service it bought (Judge0 code runs, via Locus) only accepts MPP
+> on Tempo.
+>
+> - Purchase 1: Solana `A2p45Hp6odL1W71qM7dKxwJDznDv1PmejPgoTDPcyReddhRL6pvzLVwM1CbV9j5km2Y6f14mN8hNEBBXK4aeAaB` · Tempo `0xb29cc90edf8013e1834a357cb4eb1bf087d7f76d16b7f1b6e356391ef03bacd6`
+> - Purchase 2: Solana `4HtpWc596HnBAoHgUjf4hEgfUjfegDp7sTb5bYRtvBbn uRXBaV4qrsUSbiAzs17MNUQsnFmezVvBEWbvKp52JBSD` · Tempo `0x8bad4587db9c163c93a1029a1df5586f7803016a152972c84a104f56fb865493`
+>
+> The other direction works too: an MPP payment on Tempo bought a Bazaar resource that only
+> settles x402 on Solana (api.mekler.ai, certificate inspection).
+>
+> - Tempo `0x1bed21aef1a8f0b9293a838511b5381bcbf670018bfef055fc220b55688deaba` · Solana *(hash not visible in the screenshot we hold)*
+
+The Solana hash in purchase 2 is reproduced exactly as posted, including the space — it reads as
+lowercase where the other hashes read as mixed case, and it is one character long. We have not
+corrected it. A transcription that silently repairs a transaction hash is worth less than one
+that flags it, and the original is the claim.
+
+**Resolution note (2026-11-20):** an earlier draft of this entry said "two purchases, first agent
+ever, both directions work" in one breath. The message supports each of those, but the reverse
+direction is a *separate* example and says nothing about the first two. The table below keeps them
+apart.
 
 | The claim establishes | The claim does not establish |
 |---|---|
-| A cross-rail purchase can reach settlement | That the payer and the payee agree on which attempt settled |
-| The reverse direction was exercised too | Whether the delivered bytes were consumed |
-| On-chain hashes were published | That one payment proof was redeemed exactly once |
+| On 2026-11-01 an agent bought twice through the router, Solana x402 paying into Tempo MPP | That the agent and the seller agree on which attempt settled |
+| The buying agent was not known to Sasona and was not directed by them | That either purchase was ever audited by the seller |
+| A third-party discovery layer (Bazaar) may have routed it | That the discovery actually happened — "best guess" is their word |
+| The reverse pairing (Tempo paying, Solana settling) also ran | Whether the delivered bytes were consumed |
+| Chain-level records exist for four of the five legs above | That one payment proof was redeemed exactly once |
 
-The left column is why the claim is worth keeping. The right column is why it is not yet a
-sample: a hash shows that a transfer happened, and every question SYCEE asks begins one step
-later.
+Two things in the message are more specific than the popular summary of it, and both point the
+same way:
+
+- **`redeem_count` is not in question here.** Each purchase has its own payment, so there is no
+  reuse to detect. The claim is about routing, not about redemptions.
+- **The agent could not pay the supplier's rail, and the supplier could not accept the agent's.**
+  The router resolved that. What it did not produce is any artifact the *agent* can hold saying
+  what it got and what it paid — the two records live on two chains, and nothing in this message
+  joins them.
 
 A cross-rail path also carries *two* finality semantics that can disagree — Tempo's is
 deterministic, Solana's is probabilistic — so "settled" has to name which rail's finality it
@@ -154,7 +182,9 @@ that returns a constant differs from every wrong file, and passes.
 ## 4. What is not in here
 
 - **No private conversations.** If it was a DM, it does not go in this file, even when we have
-  permission to quote it.
+  permission to quote it. A public channel is quotable; the sender chose the audience.
+- **No repaired quotations.** If a quoted string looks wrong — a space in a hash, a lowercase
+  address — it is reproduced as posted and flagged. Fixing it makes the quotation ours.
 - **No third-party scores.** No stars, no adoption counts, no "maturity" columns. Those invite
   an argument about reputation and this file is about code.
 - **No conclusions.** An entry says what an implementation does. Whether SYCEE's answer is
