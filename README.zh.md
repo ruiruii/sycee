@@ -27,7 +27,8 @@ SYCEE 全程只处理它的哈希。
 git clone https://github.com/ruiruii/sycee.git
 cd sycee
 npm install
-npm test                              # 198 个测试
+npm test                              # 203 个测试
+npm run verify:py                     # 同一批 12 个向量，用 Python 再验一遍
 node examples/bilateral-consumption.mjs
 ```
 
@@ -112,7 +113,8 @@ packages/
   conformance/                校验器与 CLI
   adapter-automaton/          绑定哈希链存证账本（RW-001）
   probe/                      证据层 CLI（probe / verify / batch）
-examples/                     走查、双边演示、演示商家、NEAR 锚定
+python/                       独立校验器（Ed25519 + 规范化 JSON），不 import 任何 JS
+examples/                     走查、双边演示、五分钟接入、演示商家、NEAR 锚定
 upstream/                     给 x402-receipts、Vauban、ERC-8004 的现成提案稿
 ```
 

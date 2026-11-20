@@ -1,0 +1,22 @@
+{
+  "name": "@sycee/example-quickstart-express",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Five-minute Express + SYCEE quickstart: count redemptions on one paid route.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "dependencies": {
+    "@sycee/core": "file:../../packages/core",
+    "@sycee/middleware": "file:../../packages/middleware",
+    "express": "^4.21.2"
+  },
+  "overrides": {
+    "@sycee/core": "file:../../packages/core"
+  },
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

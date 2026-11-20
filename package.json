@@ -21,6 +21,7 @@
     "demo:merchant": "node examples/demo-merchant/src/dev-server.mjs",
     "matrix": "node conformance/vectors/print-matrix.mjs",
     "verify:refusal": "node conformance/refusal/judge.mjs --expect=25",
-    "demo:bilateral": "node examples/bilateral-consumption.mjs"
+    "demo:bilateral": "node examples/bilateral-consumption.mjs",
+    "verify:py": "PYTHONPATH=python python3 -m sycee_verify conformance/vectors/*.json"
   }
 }

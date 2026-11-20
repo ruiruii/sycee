@@ -27,7 +27,8 @@ string, and SYCEE only ever handles its hash.
 git clone https://github.com/ruiruii/sycee.git
 cd sycee
 npm install
-npm test                              # 198 tests
+npm test                              # 203 tests
+npm run verify:py                     # the same 12 vectors, verified in Python
 node examples/bilateral-consumption.mjs
 ```
 
@@ -141,7 +142,8 @@ packages/
   conformance/                validator and CLI
   adapter-automaton/          binds a hash-chained attestation ledger (RW-001)
   probe/                      evidence-layer CLI (probe / verify / batch)
-examples/                     walkthroughs, bilateral demo, demo merchant, NEAR anchor
+python/                       independent verifier (Ed25519 + canonical JSON), no JS imports
+examples/                     walkthroughs, bilateral demo, quickstart, demo merchant, NEAR anchor
 upstream/                     ready-to-send proposals to x402-receipts, Vauban, ERC-8004
 ```
 
