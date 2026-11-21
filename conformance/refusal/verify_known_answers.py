@@ -155,8 +155,15 @@ def build(vec_input):
         raise Refused("bad_decision")
     if settlement not in SETTLEMENT_STATES:
         raise Refused("bad_settlement")
+    # §4 types `final` as boolean. "yes" reads as truthy but is a different
+    # statement, and the reference constructor rejects it; so does this.
+    if not isinstance(final, bool):
+        raise Refused("final_not_boolean")
     if settlement == "pending" and final:
         raise Refused("finality_pending_is_not_final")
+    # An accepted row asserts no reason, so it has no leg contract to satisfy.
+    if decision == "accepted" and vec_input.get("legs") is not None:
+        raise Refused("legs_without_reason")
     # `accepted` + `not_submitted` is legal: §13 lists it as the output for a
     # purchase_not_settled loser, and the reference constructor produces it for a
     # first presentation. An earlier version of this reader refused the pair; the

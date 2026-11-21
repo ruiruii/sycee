@@ -41,7 +41,7 @@ test('transfer_leg_failed is in the closed set and closes at issuer_asserted whe
   // but a row cannot actually get there — see the repro test below
   assert.throws(
     () => row({ evidenceClass: 'chain_verifiable' }),
-    /not reproducible/,
+    /not_reproducible/,
     'a claim resting on "the transfer executed" cannot be chain_verifiable',
   );
 });
@@ -62,7 +62,7 @@ test('the canonical reject: authorization executed, transfer reverted, class cha
   // and the row still cannot get there: the transfer leg has no per-attempt marker
   assert.throws(
     () => row({ evidenceClass: 'chain_verifiable' }),
-    /refusalRow: evidence chain_verifiable is not reproducible/,
+    /refusalRow: not_reproducible — chain_verifiable exceeds a reproducible ceiling of issuer_asserted/,
   );
   // the honest version of the same event
   const honest = row();

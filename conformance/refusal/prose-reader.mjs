@@ -212,8 +212,8 @@ const cases = [
     input: { decision: 'refused', reason: 'replay_in_flight', settlement: 'pending', legs: { authorization: 'executed' } },
   },
   {
-    label: 'refused internal_error recording what it saw on the transfer leg',
-    input: { decision: 'refused', reason: 'internal_error', settlement: 'not_submitted', legs: { transfer: 'failed' } },
+    label: 'refused internal_error recording what it saw on both legs',
+    input: { decision: 'refused', reason: 'internal_error', settlement: 'not_submitted', legs: { authorization: 'unknown', transfer: 'failed' } },
   },
   {
     label: 'refused could_not_compare with a leg observation',
@@ -222,28 +222,52 @@ const cases = [
   {
     label: 'accepted with a failed leg recorded',
     input: { decision: 'accepted', settlement: 'settled', legs: { authorization: 'failed' } },
+    expect: 'refuse',
+    code: 'legs_without_reason',
   },
   {
-    label: 'accepted with a non-boolean final',
+    label: 'a row whose final is a string',
     input: { decision: 'accepted', settlement: 'settled', final: 'yes' },
+    expect: 'refuse',
+    code: 'final_not_boolean',
   },
 ]
 
 let built = 0
+let refusedAsExpected = 0
 let rejectedByProse = 0
+// A case says which way the prose decides it. Without that, a checker can only
+// notice a constructor that is too loose; one that is too strict looks like a
+// refusal it has no opinion about, and the difference is the whole point.
 for (const c of cases) {
+  const build = () => refusalRow({
+    ...c.input,
+    attemptIdentity: identity(1),
+    signingPublicKey: keys.publicKey,
+    resourceId: 'probe',
+    protocol: 'x402',
+    observedAt: '2026-11-21T00:00:00.000Z',
+  })
+
+  if (c.expect === 'refuse') {
+    try {
+      build()
+      add('C-too-lax', c.label, 'the prose forbids this row; the constructor built it')
+    } catch (err) {
+      const code = /^refusalRow: ([a-z_]+) — /.exec(String(err.message))?.[1]
+      if (c.code && code !== c.code) {
+        add('C-wrong-code', c.label, `refused, but as ${code} rather than ${c.code}: ${err.message}`)
+      }
+      refusedAsExpected++
+    }
+    continue
+  }
+
   let row
   try {
-    row = refusalRow({
-      ...c.input,
-      attemptIdentity: identity(1),
-      signingPublicKey: keys.publicKey,
-      resourceId: 'probe',
-      protocol: 'x402',
-      observedAt: '2026-11-21T00:00:00.000Z',
-    })
+    row = build()
   } catch (err) {
-    add('C-constructor', c.label, `the constructor refused to build it: ${err.message}`)
+    add('C-too-strict', c.label, `the prose allows this row; the constructor refused it: ${err.message}`)
     continue
   }
   built++
@@ -281,7 +305,7 @@ for (const k of Object.keys(claim)) {
 /* ------------------------------------------------------------------ */
 
 const label = (p) => `  ${p.code.padEnd(13)} ${p.where}\n${' '.repeat(18)}${p.detail}`
-console.log(`prose reader: ${built} rows built, ${cases.length - built} the constructor would not build`)
+console.log(`prose reader: ${built} rows built, ${refusedAsExpected} refused as the prose says they must be`)
 console.log(`              ${rejectedByProse} of those rows fail a rule the prose states`)
 console.log(`              ${problems.length} finding(s)\n`)
 for (const p of problems) console.log(label(p))

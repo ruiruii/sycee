@@ -508,11 +508,21 @@ export function refusalRow(input) {
     );
   }
   if (typeof input.attemptIdentity !== 'string' || !/^sha256:[0-9a-f]{64}$/.test(input.attemptIdentity)) {
-    throw new TypeError('refusalRow: attemptIdentity must be sha256:<64 hex>');
+    throw new TypeError(
+      `refusalRow: bad_attempt_identity — attemptIdentity must be sha256:<64 hex>, got ${JSON.stringify(input.attemptIdentity)}`,
+    );
   }
 
   const settlement = input.settlement ?? 'not_submitted';
   const final = input.final ?? settlement !== 'pending';
+  // §4 types `final` as boolean. A string that a reader would treat as truthy is
+  // not the same statement, and accepting it puts a value in the row that every
+  // consumer has to guess at.
+  if (typeof final !== 'boolean') {
+    throw new TypeError(
+      `refusalRow: final_not_boolean — §4 types final as boolean, got ${JSON.stringify(final)}`,
+    );
+  }
   const f = finalityCheck({ settlement, final, decision });
   if (!f.ok) throw new TypeError(`refusalRow: ${f.code} — ${f.detail}`);
 
@@ -528,13 +538,21 @@ export function refusalRow(input) {
     : null;
   if (decision === 'refused' && !withinCeiling(claimed, reason)) {
     throw new TypeError(
-      `refusalRow: evidence ${claimed} exceeds the ceiling for ${reason} (${ceilingFor(reason)})`,
+      `refusalRow: evidence_above_ceiling — ${claimed} exceeds the ceiling for ${reason} (${ceilingFor(reason)})`,
     );
   }
 
   // A cause needs the observation that cause requires, and the class needs to be
   // one a third party could reproduce. Both checks run before the row exists, so
   // an unsupported row is never constructible — not merely unflattering.
+  // An accepted row asserts no reason, so it has no leg contract and nothing a
+  // leg observation could be evidence for. Carrying one attaches an observation
+  // to a claim the row does not make.
+  if (decision === 'accepted' && input.legs !== undefined) {
+    throw new TypeError(
+      'refusalRow: legs_without_reason — an accepted row asserts no reason, so it cannot carry leg observations',
+    );
+  }
   if (decision === 'refused') {
     const support = legSupport({ legs: input.legs, reason });
     if (!support.ok) {
@@ -542,7 +560,7 @@ export function refusalRow(input) {
     }
     const reproducible = reproducibleCeiling(reason, claimed);
     if (!reproducible.ok) {
-      throw new TypeError(`refusalRow: evidence ${claimed} is not reproducible — ${reproducible.reason}`);
+      throw new TypeError(`refusalRow: not_reproducible — ${reproducible.reason}`);
     }
   }
 
