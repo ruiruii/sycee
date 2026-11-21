@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8">
+<title>给 holistis 的回复 · 第二轮读后</title>
+<style>
+:root{--bg:#0f1115;--card:#171a21;--line:#262b36;--tx:#e6e9ef;--dim:#9aa4b2;--acc:#4c8dff;}
+*{box-sizing:border-box}
+body{margin:0;padding:24px;background:var(--bg);color:var(--tx);font:15px/1.7 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+.wrap{max-width:880px;margin:0 auto}
+h1{font-size:17px;margin:0 0 4px;font-weight:600}
+.sub{color:var(--dim);font-size:13px;margin-bottom:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:16px}
+.hd{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line)}
+.hd b{font-size:13px;font-weight:600}
+button{background:var(--acc);color:#fff;border:0;border-radius:7px;padding:6px 14px;font-size:13px;cursor:pointer;font-family:inherit}
+button.ok{background:#1f8a4c}
+pre{margin:0;padding:14px;white-space:pre-wrap;word-break:break-word;font:13px/1.65 ui-monospace,SFMono-Regular,Menlo,monospace;color:#cfd6e4;max-height:56vh;overflow:auto}
+.note{color:var(--dim);font-size:12.5px;padding:0 4px 12px}
+</style></head><body><div class="wrap">
+<h1>给 holistis 的回复 · 第二轮读后</h1>
+<div class="sub">英文正文可直接贴进 Slack；正文 3169 字符</div>
+
+<div class="card"><div class="hd"><b>英文正文</b><button onclick="cp(this)">复制</button></div>
+<pre>Thank you — the run is what I asked for and the report is more useful than the answer I wanted.
+
+On the reading: I take the label exactly as you set it. Same reader, changed text, so it is a regression check and not a second reading, and I will not cite it as one. What it does show is the thing I could not show myself: the four disagreements were closed in the text rather than in the vectors.
+
+The survivor is the one that mattered. A rule about finality that only fires for the reason the vectors happen to use is a rule about the vectors. `reject-pending-final-other-reason` now carries `internal_error`, settlement pending, final true, and expects `finality_pending_is_not_final`; `replay-in-flight-refused` is its accepted near miss, so a constructor that rejects every pending row still fails. The five reasons with no vector are in as well, each with a wrong twin. All three of the mistakes you added after seeing the new text are now caught: `authorization_not_yet_valid` at the default class, `commercial_refusal` with an observed authorization, and `replay_already_settled` with an authorization it never reached.
+
+The set is 61 at `4249b1e`: 21 accepted, 21 wrong twins, 19 rejected. Thirteen of those files are new since the 48 you read — the eleven I added for the gaps you named, plus two that widen `replay_already_settled` and its wrong twin. None of the thirteen has been read by anyone but me and the checker, so I am not counting them as covered.
+
+The three things in the text are fixed.
+
+`duplicate_payment` has its row in 15.4, pinned to `executed` like `replay_already_settled`. The last row of that table now reads &quot;any legal status&quot;: an unknown reason makes no claim a leg observation could contradict, and the row is already rejected by §6.2 for its name alone — refusing the observation as well made the one row that should carry evidence the only one forbidden to carry it. The constructor follows.
+
+The last row of the ceiling table and §6.2 now say out loud that they are consistent: the row is a bound, not a permission, and both readings end in a rejection. That was a real ambiguity, and the sentence that resolves it was not there before.
+
+`conformance/refusal/README.md` says 61 in both places, and the count the judge expects is now
+part of the same edit. That last part is worth admitting: I widened the set by thirteen files and
+left the expected count at 48, so CI failed on the push. It is fixed at `4249b1e`.
+
+On `interop/python` and the eight extra vectors: I want the outside run, and I cannot give it to you. The run you want is one by someone who is not us, and I am us. What I can do is read `vectors/attempt-identity-extra` the way you read ours — from the README and the four rules, without opening your Node implementation — and write down where the text and the files part company. That is a useful artefact and it is not the one you asked for. Say if you want it; I will not call it a verification.
+
+On PR 113: I left a comment on 110 rather than editing the title, because the title said &quot;an independent checker&quot; and that was mine to correct. The correction stands on its own; you do not need to act on it.
+
+— Rachel</pre></div>
+
+<div class="card"><div class="hd"><b>中文对照</b><button onclick="cp(this)">复制</button></div>
+<pre>谢谢你——这次跑正是我要的，而且这份报告比我想要的答案更有用。
+
+关于读法的定位：我完全按你写的收。同一个读者、换过的文本，所以是回归检查，不是第二次阅读，我不会把它当第二次阅读来引用。它证明的恰好是我自己证明不了的事：那四处分歧是在文本里关掉的，不是在向量里关掉的。
+
+活下来的那个最重要。一条只在向量恰好用到的那个 reason 上触发的终局规则，是关於向量的规则，不是关於终局的规则。`reject-pending-final-other-reason` 现在用 `internal_error`、settlement 是 pending、final 为 true，期望 `finality_pending_is_not_final`；`replay-in-flight-refused` 是它的可接受近邻，所以「把所有 pending 行都拒掉」的构造器仍然过不了。五个没有向量的 reason 也补上了，各自带错误孪生。你看到新文本之后加的那三个错误，现在全部被抓住：`authorization_not_yet_valid` 的默认等级、`commercial_refusal` 带一个已观测的授权、`replay_already_settled` 带一个它没走到的授权。
+
+集合现在在 `4249b1e` 是 61 个：21 个接受、21 个错误孪生、19 个拒绝。其中十三个是你读的 48 之后新增的——为你说出的缺口补的十一个，外加拓宽 `replay_already_settled` 和它的错误孪生的两个。这十三个除了我和检查器，还没有人读过，所以我不把它们算作已覆盖。
+
+文本里那三处都改了。
+
+`duplicate_payment` 在 15.4 里有了自己的一行，和 `replay_already_settled` 一样钉在 `executed`。那张表的最后一行现在写「任何合法状态」：未知 reason 不做出任何腿观察能反驳的主张，而这一行已经因为它的名字被 §6.2 拒掉了——再把观察也禁掉，等于让唯一该带证据的行成了唯一不许带证据的行。构造器跟着改了。
+
+天花板表的最后一行和 §6.2 现在明说它们是一致的：那一行是上界，不是许可，两种读法都以拒绝收场。这确实是一处真的歧义，而解开它的那句话以前不在。
+
+`conformance/refusal/README.md` 两处都写 61，judge 期望的文件数并进了同一次改动。这一条值得承认：我把集合扩了十三个文件，期望数还留在 48，所以推上去 CI 直接红了。已在 `4249b1e` 修好。
+
+关于 `interop/python` 和那八个额外向量：我要这个外部跑，但我给不了。你要的那次跑，得由不是我们的人来做，而我就是我们。我能做的是照你读我们的方式去读 `vectors/attempt-identity-extra`——只读 README 和那四条规则，不打开你的 Node 实现——把文本和文件对不上的地方写下来。那是一件有用的东西，但不是你要的那一件。你要的话我就做，但我不会把它叫作验证。
+
+关于 PR 113：我在 110 上留了评论，没有改标题，因为标题里那个「an independent checker」是我写错的，该由我来纠正。这条纠正本身站得住，你不需要为它做什么。
+
+—— Rachel</pre></div>
+
+<div class="note">正文里的 61 / 4249b1e / 十三个新增文件均已与本仓库核对；CI 四个 job 在 4249b1e 上全绿。</div>
+<script>
+function cp(btn){
+  const pre = btn.closest('.card').querySelector('pre');
+  const txt = pre.innerText;
+  const done = ()=>{const o=btn.textContent;btn.textContent='已复制';btn.classList.add('ok');setTimeout(()=>{btn.textContent=o;btn.classList.remove('ok')},1600);};
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(done).catch(()=>fallback(pre,btn,done));
+  } else { fallback(pre,btn,done); }
+}
+function fallback(pre,btn,done){
+  const r=document.createRange();r.selectNodeContents(pre);
+  const s=window.getSelection();s.removeAllRanges();s.addRange(r);
+  try{ document.execCommand('copy'); done(); }
+  catch(e){ alert('请按 Ctrl+C 复制'); }
+}
+</script></div></body></html>
