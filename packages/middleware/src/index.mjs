@@ -57,15 +57,20 @@ function receiptUrl(req, proofHash) {
 /**
  * In-process store. Single-instance only.
  * For multi-instance deployments implement the same interface over Redis.
+ *
+ * `recordSettlement` is how the store carries the one fact a repeat comparison
+ * needs: how the attempt that already happened settled. A store that omits it
+ * still works, and every repeat is then recorded as `could_not_compare` rather
+ * than assumed to be pending.
  */
 export function memoryStore() {
-  /** @type {Map<string, {count: number, resources: Set<string>, firstSeen: string}>} */
+  /** @type {Map<string, {count: number, resources: Set<string>, firstSeen: string, settlement: string|null}>} */
   const map = new Map();
   return {
     async incr(proofHash, resourceId) {
       let rec = map.get(proofHash);
       if (!rec) {
-        rec = { count: 0, resources: new Set(), firstSeen: nowISO() };
+        rec = { count: 0, resources: new Set(), firstSeen: nowISO(), settlement: null };
         map.set(proofHash, rec);
       }
       rec.count += 1;
@@ -75,7 +80,16 @@ export function memoryStore() {
     async get(proofHash) {
       const rec = map.get(proofHash);
       if (!rec) return null;
-      return { count: rec.count, resources: [...rec.resources], firstSeen: rec.firstSeen };
+      return {
+        count: rec.count,
+        resources: [...rec.resources],
+        firstSeen: rec.firstSeen,
+        settlement: rec.settlement,
+      };
+    },
+    async recordSettlement(proofHash, settlement) {
+      const rec = map.get(proofHash);
+      if (rec) rec.settlement = settlement;
     },
   };
 }
@@ -107,11 +121,19 @@ export function redisStore(client, { prefix = 'gates:proof:', ttlDays = 90 } = {
       const key = prefix + proofHash;
       const raw = await client.get(key);
       if (raw === null || raw === undefined) return null;
+      const resources = await client.smembers(`${key}:resources`);
+      const firstSeen = (await client.get(`${key}:first`)) ?? nowISO();
+      const settlement = (await client.get(`${key}:settlement`)) ?? null;
       return {
         count: Number(raw),
-        resources: await client.smembers(`${key}:resources`),
-        firstSeen: (await client.get(`${key}:first`)) ?? nowISO(),
+        resources,
+        firstSeen,
+        settlement,
       };
+    },
+    async recordSettlement(proofHash, settlement) {
+      const key = prefix + proofHash;
+      await client.set(`${key}:settlement`, settlement, 'EX', ttl);
     },
   };
 }
@@ -147,6 +169,23 @@ export function settlementFromHeaders(headers = {}) {
     if (value === 'queued' || value === 'pending' || value === 'in_flight') return 'in_flight';
     if (value === 'false' || value === 'absent' || value === 'none') return 'absent';
   }
+  return undefined;
+}
+
+/**
+ * What a repeat can be compared against, translated from the middleware's
+ * settlement vocabulary into the refusal row's. `undefined` means the store has
+ * nothing comparable — the earlier attempt is not "pending", it is unobserved,
+ * and §5.1 says an absent observation is not a value.
+ *
+ * @param {{settlement?: string|null}|null|undefined} prior
+ * @returns {'settled'|'pending'|'not_submitted'|undefined}
+ */
+function priorSettlementFor(prior) {
+  const recorded = prior?.settlement;
+  if (recorded === 'settled') return 'settled';
+  if (recorded === 'in_flight') return 'pending';
+  if (recorded === 'absent') return 'not_submitted';
   return undefined;
 }
 
@@ -297,6 +336,10 @@ export function createGates(config) {
         }
         if (!verdict.ok) {
           const reason = refusalReasonFor(verdict.reason);
+          // The attempt never reached the rail, and that is a fact about it
+          // worth keeping: a later presentation of this proof is a first
+          // purchase, not a replay of a settled one.
+          await store.recordSettlement?.(proofHash, 'absent');
           const row = recordRefusal({
             req,
             res,
@@ -327,13 +370,15 @@ export function createGates(config) {
       // refusal instead of a silently billed second call.
       if (replayPolicy === 'refuse' && count > 1) {
         const prior = await store.get(proofHash);
-        const priorSettlement = prior
-          ? (settlementFromHeaders(req.headers ?? {}) ?? 'pending')
-          : undefined;
+        // The earlier attempt's settlement is read from what that attempt
+        // recorded. This request's headers describe this request; using them
+        // here filled in an absent observation with `pending`, which is the one
+        // thing §5.1 forbids.
+        const priorSettlement = priorSettlementFor(prior);
         const verdict = classifyRepeat({
           priorCount: count - 1,
           priorSettlement,
-          priorStatusKnown: prior !== null,
+          priorStatusKnown: priorSettlement !== undefined,
         });
         if (verdict.decision === 'refused') {
           const row = recordRefusal({
@@ -366,6 +411,11 @@ export function createGates(config) {
         const onWire = settlementFromHeaders(req.headers ?? {});
         if (onWire) settlementStatus = onWire;
       }
+
+      // What this attempt saw about settlement, kept where the next presentation
+      // of the same proof can read it. Without this the comparison has no input,
+      // and the only way to produce a verdict would be to invent one.
+      await store.recordSettlement?.(proofHash, settlementStatus);
 
       const completeSeenAt = nowISO();
       const fingerprint = requestFingerprint({

@@ -21,6 +21,10 @@ Thumbs.db
 coverage/
 *.tmp
 
+# python bytecode
+__pycache__/
+*.pyc
+
 # npm pack
 *.tgz
 

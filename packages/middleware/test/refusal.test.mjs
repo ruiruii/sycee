@@ -214,6 +214,70 @@ test('under replayPolicy refuse, a repeat is declined with a claim instead of bi
   assert.equal(v.valid, true, v.errors.join('; '));
 });
 
+test('a settled earlier attempt makes the replay a settled replay, and the refusal is final', async () => {
+  const gates = makeGates({
+    replayPolicy: 'refuse',
+    verifyPayment: async () => ({ ok: true, settlement: 'settled' }),
+  });
+  const handler = gates.guard(async () => ({ status: 200, body: { hit: 1 } }));
+
+  await handler(req({ 'payment-signature': 'settled-proof' }), fakeResponse());
+  const second = fakeResponse();
+  await handler(req({ 'payment-signature': 'settled-proof' }), second);
+
+  assert.equal(second.state.statusCode, 402);
+  const [row] = gates.refusals();
+  assert.equal(row.reason, 'replay_already_settled', 'the earlier attempt settled; saying "in flight" would be false');
+  assert.equal(row.settlement, 'settled');
+  assert.equal(row.final, true, 'a settled earlier attempt makes this refusal final');
+
+  const v = verifyClaim(JSON.parse(second.state.body).refusal_receipt, { payTo: PAY_TO });
+  assert.equal(v.valid, true, v.errors.join('; '));
+});
+
+test("the replay comparison reads the earlier attempt, not this request's headers", async () => {
+  const gates = makeGates({ replayPolicy: 'refuse' });
+  const handler = gates.guard(async () => ({ status: 200, body: {} }));
+
+  // The first attempt carried no settlement signal at all, so what is known
+  // about it is "in flight". This request asserting `settled` describes itself.
+  await handler(req({ 'payment-signature': 'header-proof' }), fakeResponse());
+  const second = fakeResponse();
+  await handler(
+    req({ 'payment-signature': 'header-proof', 'x-payment-settled': 'true' }),
+    second,
+  );
+
+  const [row] = gates.refusals();
+  assert.equal(row.reason, 'replay_in_flight');
+  assert.equal(row.settlement, 'pending');
+});
+
+test('a store that cannot say how the earlier attempt settled yields could_not_compare, not pending', async () => {
+  const counts = new Map();
+  const bare = {
+    async incr(proofHash) {
+      const n = (counts.get(proofHash) ?? 0) + 1;
+      counts.set(proofHash, n);
+      return { count: n, resources: [], firstSeen: new Date().toISOString() };
+    },
+    async get(proofHash) {
+      // no `settlement`: the store keeps the count and nothing else
+      return { count: counts.get(proofHash) ?? 0, resources: [], firstSeen: new Date().toISOString() };
+    },
+  };
+  const gates = makeGates({ replayPolicy: 'refuse', store: bare });
+  const handler = gates.guard(async () => ({ status: 200, body: {} }));
+
+  await handler(req({ 'payment-signature': 'bare-proof' }), fakeResponse());
+  const second = fakeResponse();
+  await handler(req({ 'payment-signature': 'bare-proof' }), second);
+
+  const [row] = gates.refusals();
+  assert.equal(row.reason, 'could_not_compare', 'nothing was observed, so nothing may be asserted');
+  assert.equal(row.settlement, 'unknown');
+});
+
 /* ---------------------------------------------------------------- *
  * key hygiene
  * ---------------------------------------------------------------- */
