@@ -23,6 +23,11 @@
     "verify:refusal": "node conformance/refusal/judge.mjs --expect=61",
     "demo:bilateral": "node examples/bilateral-consumption.mjs",
     "verify:py": "PYTHONPATH=python python3 -m sycee_verify conformance/vectors/*.json",
-    "verify:docs": "node conformance/refusal/docs-parity.mjs"
+    "verify:docs": "node conformance/refusal/docs-parity.mjs",
+    "try": "node bin/sycee-verify.mjs --example",
+    "verify:receipt": "node bin/sycee-verify.mjs"
+  },
+  "bin": {
+    "sycee-verify": "./bin/sycee-verify.mjs"
   }
 }

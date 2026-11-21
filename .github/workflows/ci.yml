@@ -53,6 +53,18 @@ jobs:
       - name: Judge the refusal vectors
         run: npm run verify:refusal
 
+      # The entry point a reader meets before the specification: one command,
+      # no reading. If it cannot answer on the vector set, it cannot answer on
+      # anyone's receipt either.
+      - name: Check the vector set through the command-line tool
+        run: node bin/sycee-verify.mjs --dir conformance/refusal/vectors
+
+      # The reader built from the markdown alone. It is the only check here that
+      # was not written by the same hand that wrote the constructor, and it is
+      # the one that found the four rules the other checkers could not.
+      - name: Read the prose as a stranger would
+        run: node conformance/refusal/prose-reader.mjs
+
   # The Python implementation is only worth having if it is checked on every
   # change. Without this job it would drift silently — still present, no longer
   # agreeing — and the claim in the README would rot from fact into folklore.
