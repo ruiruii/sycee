@@ -521,30 +521,73 @@ value that was never written.
 
 | `reason` | `authorization` | `transfer` |
 |---|---|---|
-| `invalid_signature` | `failed`, `unknown` | — |
-| `wrong_amount` | `failed`, `unknown` | — |
-| `wrong_recipient` | `failed`, `unknown` | — |
-| `malformed_payload` | `failed`, `unknown`, `not_reached` | — |
-| `authorization_expired` | `failed`, `unknown` | — |
-| `authorization_not_yet_valid` | `failed`, `unknown` | — |
-| `insufficient_funds` | `failed`, `unknown` | — |
-| `nonce_already_used` | `failed`, `executed` | — |
+| `invalid_signature` | `failed`, `unknown` | [`not_reached`] |
+| `wrong_amount` | `failed`, `unknown` | [`not_reached`] |
+| `wrong_recipient` | `failed`, `unknown` | [`not_reached`] |
+| `malformed_payload` | `failed`, `unknown`, `not_reached` | [`not_reached`] |
+| `authorization_expired` | `failed`, `unknown` | [`not_reached`] |
+| `authorization_not_yet_valid` | `failed`, `unknown` | [`not_reached`] |
+| `insufficient_funds` | `failed`, `unknown` | [`not_reached`] |
+| `nonce_already_used` | `failed`, `executed` | [`not_reached`, `failed`] |
 | `transfer_leg_failed` | `executed` | `failed` |
-| `facilitator_timeout` | `unknown` | — |
-| `internal_error` | `executed`, `unknown` | — |
-| `risk_policy_rejected` | `not_reached`, `unknown` | — |
-| `commercial_refusal` | `not_reached`, `unknown` | — |
-| `replay_already_settled` | `executed` | — |
-| `duplicate_payment` | `executed` | — |
-| `replay_in_flight` | — | — |
-| `could_not_compare` | — | — |
-| anything else | any legal status | any legal status |
+| `facilitator_timeout` | `unknown` | [`not_reached`, `unknown`] |
+| `internal_error` | `executed`, `unknown` | [`not_reached`, `unknown`] |
+| `risk_policy_rejected` | `not_reached`, `unknown` | [`not_reached`] |
+| `commercial_refusal` | `not_reached`, `unknown` | [`not_reached`] |
+| `replay_already_settled` | `executed` | [`not_reached`] |
+| `duplicate_payment` | `executed` | [`not_reached`] |
+| `replay_in_flight` | [`not_reached`, `unknown`] | [`not_reached`, `unknown`] |
+| `could_not_compare` | [`not_reached`, `unknown`] | [`not_reached`, `unknown`] |
+| anything else | [`not_reached`, `executed`, `failed`, `unknown`] | [`not_reached`, `executed`, `failed`, `unknown`] |
 
-— means the leg is neither required nor forbidden: the reason claims nothing about it, so
-recording it or leaving it out both stand, provided the status is legal under the table in
-15.4. A reason on the table's last row makes no claim that any observation could contradict, so
-it records what it saw; the row is already rejected by §6.2 for its reason alone, and there is
-nothing a leg observation could add to that.
+Two marks, and every cell uses one of them. A bare list is **required**: the row must carry that
+leg, with one of those values. A bracketed list is **bounded optional**: the row may leave the leg
+out, and if it records it, the value is one of those. There is no third mark.
+
+An em dash used to sit in most of the `transfer` column, meaning "neither required nor forbidden".
+That mark ran together two different statements — *must not be recorded here* and *may be recorded
+with any value* — and the difference between them is the difference this section exists to keep.
+Every cell in the `transfer` column changes because of it, three in `authorization`, and the fourth
+point below is the reason the column is written out in full.
+
+- **`transfer` never takes `executed`.** A refusal whose transfer leg completed is not a refusal;
+  it is a payment recorded wrongly. The closed set names no such state, so a row that records it is
+  describing an attempt other than the one it refused.
+- **Only `transfer_leg_failed` takes `transfer: failed`.** Its sentence is a conjunction about both
+  legs, so it is the one row where a failed transfer is the named cause rather than a different
+  cause wearing this one's label. The three reasons that report a leg they saw before the transfer
+  was submitted — `invalid_signature`, `wrong_amount`, `wrong_recipient` — admit only
+  `transfer: not_reached`, because a transfer that was submitted at all refutes them.
+- **`facilitator_timeout` and `internal_error` take `not_reached` or `unknown`.** §15.3 puts both
+  at the position where the transfer leg was submitted and answered nothing. `unknown` is exactly
+  that position; `not_reached` is the request never getting that far. Both leave the cause open,
+  which is what those two reasons say about themselves.
+- **A row recording `transfer: failed` under `internal_error` used to be constructible.** The em
+  dash permitted it, and `internal_error` is the reason whose definition is "not claiming a cause".
+  A row that names the transfer leg as failed claims precisely the cause `transfer_leg_failed`
+  names, so the format was letting a row contradict its own reason. The bracketed cell closes it:
+  that input now fails with `leg_contradicts_reason`, whatever the authorization leg says.
+  Narrowing the authorization leg to `unknown` instead — the repair that suggests itself, because
+  `internal_error` admits `unknown` — makes the row legal without making it true. A conformance
+  set built from our own examples cannot see the difference, which is why the table, and not the
+  example, had to change.
+
+**L3.** An unknown leg name, or an unknown status, is a malformed row. It is rejected with
+`unknown_leg` or `unknown_leg_status`, not ignored: a reader cannot tell an ignored field from
+a field that was never written.
+
+**L4.** The legs are ordered, and a row that records the second records what it saw after the
+first. A `transfer` status other than `not_reached` says the transfer leg was submitted, which
+happens only after the authorization leg ran. Such a row cannot record `authorization` as
+`not_reached` or `failed`: both say the first leg did not complete, and a merchant that observed
+either would not have reached the second. A row that does is rejected with
+`leg_contradicts_reason`.
+
+**L5.** An unknown `reason` is not a reason, and it is not a licence either. The last row lists all
+four statuses on both legs because a row with an unreviewed reason has no claim for an observation
+to contradict — it is already rejected by §6.2 for its name alone, and refusing the observation as
+well would make the one row that should carry evidence the only row forbidden to carry it. The row
+records what it saw; the reason is what fails.
 
 Two entries carry the weight of this section. `transfer_leg_failed` is pinned on **both** legs,
 because the sentence is a conjunction: a merchant that did not observe the authorization run
@@ -552,10 +595,6 @@ cannot claim it ran, and one that did not observe the transfer conclude cannot c
 A merchant in that position uses `facilitator_timeout` or `internal_error`, per 15.3.
 `nonce_already_used` admits `executed` because the nonce being spent is a negative read on the
 attempt's own signature — the transfer having run beside it does not weaken the claim (15.2).
-
-**L3.** An unknown leg name, or an unknown status, is a malformed row. It is rejected with
-`unknown_leg` or `unknown_leg_status`, not ignored: a reader cannot tell an ignored field from
-a field that was never written.
 
 ### 15.5 Reproducibility: why `transfer_leg_failed` closes at `issuer_asserted`
 
@@ -594,16 +633,17 @@ precondition for anyone proposing one.
 
 ### 15.7 Conformance
 
-- `packages/core/test/legs.test.mjs` — 13 tests, including four mutants, one per rule: dropping
+- `packages/core/test/legs.test.mjs` — 18 tests, including six mutants, one per rule: dropping
   the leg contract, treating `unknown` as `failed`, trusting the caller-supplied evidence class,
-  and letting an unknown leg pass.
+  letting an unknown leg pass, reading the bracketed cells as unpinned, and dropping the order
+  rule.
 - `packages/core/src/refusal.mjs` — `legSupport`, `reproducibleCeiling`, `REQUIRED_LEG_STATUS`,
   `DEPENDS_ON_EXECUTED`, `THE_UNATTRIBUTED_BALANCE`.
 - The default `evidence_class` for a refused row is the reproducible ceiling, not the reason's
   base ceiling. A row that picks its own default would claim more than anyone can check by
   omission, which is the same failure as over-claiming on purpose.
-- `conformance/refusal/` — 61 known-answer files and a judge, `node conformance/refusal/judge.mjs
-  --expect=61`. Twenty-one accepted vectors, each with a `-wrong` twin; nineteen rejected vectors,
+- `conformance/refusal/` — 67 known-answer files and a judge, `node conformance/refusal/judge.mjs
+  --expect=67`. Twenty-two accepted vectors, each with a `-wrong` twin; twenty-three rejected vectors,
   each with an accepted near miss; two implementations, one in JavaScript against the constructor
   and one in Python from the prose above. The count is part of the check on purpose: adding a
   file in a hurry and then widening the expected number is one command, and a set that shrinks by

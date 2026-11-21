@@ -12,6 +12,7 @@ import {
   POSITIVE_MARKERS,
   REFUSAL_REASONS,
   REQUIRED_LEG_STATUS,
+  BOUNDED_LEG_STATUS,
   ceilingFor,
 } from '../src/index.mjs';
 
@@ -120,6 +121,101 @@ test('a leg that is not a leg is refused rather than ignored', () => {
   );
 });
 
+test('a reason that names no cause cannot record one on the transfer leg', () => {
+  // §15.3 puts internal_error where the transfer leg was submitted and answered
+  // nothing — that is `unknown`, and the row is allowed to say so.
+  const unread = row({
+    reason: 'internal_error',
+    legs: { authorization: 'executed', transfer: 'unknown' },
+    settlement: 'unknown',
+  });
+  assert.equal(unread.legs.transfer, 'unknown');
+  assert.equal(unread.reason, 'internal_error');
+
+  // `failed` is transfer_leg_failed's sentence. A row that writes it under
+  // internal_error contradicts its own definition, which says it names no cause.
+  assert.throws(
+    () => row({
+      reason: 'internal_error',
+      legs: { authorization: 'unknown', transfer: 'failed' },
+      settlement: 'unknown',
+    }),
+    /leg_contradicts_reason/,
+  );
+  // Narrowing the authorization leg to `unknown` used to make that row legal
+  // without making it true. The bracketed cell is what closes it, so the same
+  // input fails whatever the authorization leg records.
+  assert.throws(
+    () => row({
+      reason: 'internal_error',
+      legs: { authorization: 'executed', transfer: 'failed' },
+      settlement: 'unknown',
+    }),
+    /leg_contradicts_reason/,
+  );
+  // the other reason §15.3 names beside it behaves the same way
+  assert.throws(
+    () => row({
+      reason: 'facilitator_timeout',
+      legs: { authorization: 'unknown', transfer: 'failed' },
+      settlement: 'unknown',
+    }),
+    /leg_contradicts_reason/,
+  );
+  // and no reason may record a transfer that executed: that is a payment
+  assert.throws(
+    () => row({
+      reason: 'internal_error',
+      legs: { authorization: 'executed', transfer: 'executed' },
+      settlement: 'unknown',
+    }),
+    /leg_contradicts_reason/,
+  );
+});
+
+test('the legs are ordered: the second is not reached before the first has run', () => {
+  // A transfer that was submitted at all was submitted after the authorization
+  // ran, so `failed` on the first leg and `failed` on the second cannot both be
+  // observations of the same attempt.
+  assert.throws(
+    () => row({
+      reason: 'nonce_already_used',
+      legs: { authorization: 'failed', transfer: 'failed' },
+      settlement: 'not_submitted',
+    }),
+    /leg_contradicts_reason/,
+  );
+  // the same reason with the authorization observed as running admits the
+  // transfer observation, because that order can exist
+  assert.equal(
+    row({
+      reason: 'nonce_already_used',
+      legs: { authorization: 'executed', transfer: 'failed' },
+      settlement: 'not_submitted',
+    }).legs.transfer,
+    'failed',
+  );
+  // and a leg the reason never reached is not an order violation
+  assert.equal(
+    row({
+      reason: 'invalid_signature',
+      legs: { authorization: 'failed', transfer: 'not_reached' },
+      settlement: 'not_submitted',
+    }).legs.transfer,
+    'not_reached',
+  );
+});
+
+test('every reason in the closed set has a leg row, required or bounded', () => {
+  for (const reason of Object.keys(REFUSAL_REASONS)) {
+    if (reason === 'accepted') continue;
+    assert.ok(
+      reason in REQUIRED_LEG_STATUS || reason in BOUNDED_LEG_STATUS,
+      `${reason} is in the closed set but neither leg table names it`,
+    );
+  }
+});
+
 test('a valid signature cannot carry a leg cause — a signature proves who, not what was seen', () => {
   assert.throws(
     () => row({ reason: 'invalid_signature', legs: { authorization: 'executed' } }),
@@ -197,4 +293,39 @@ test('mutant: letting an unknown leg pass instead of rejecting it', () => {
     legSupport({ legs: { authorization: 'executed', settlement: 'failed' }, reason: 'transfer_leg_failed' }).ok,
     false,
   );
+});
+
+test('mutant: dropping the bracketed cells lets internal_error claim a failed transfer', () => {
+  // The table as it stood before the brackets: the transfer cell was an em dash,
+  // which the code read as "not checked". This mutant is that reading.
+  const requiredOnly = (legs, reason) => {
+    for (const [leg, allowed] of Object.entries(REQUIRED_LEG_STATUS[reason] ?? {})) {
+      const observed = legs[leg];
+      if (observed === undefined || !allowed.includes(observed)) return false;
+    }
+    return true;
+  };
+  const observed = { authorization: 'unknown', transfer: 'failed' };
+  assert.equal(requiredOnly(observed, 'internal_error'), true, 'the old reading accepts it');
+  assert.equal(
+    legSupport({ legs: observed, reason: 'internal_error' }).ok,
+    false,
+    'the bracketed cell rejects it, whatever the authorization leg records',
+  );
+});
+
+test('mutant: dropping the order rule accepts a second leg reached before the first', () => {
+  const tablesOnly = (legs, reason) => {
+    for (const [table, required] of [[REQUIRED_LEG_STATUS, true], [BOUNDED_LEG_STATUS, false]]) {
+      for (const [leg, allowed] of Object.entries(table[reason] ?? {})) {
+        const observed = legs[leg];
+        if (required && observed === undefined) return false;
+        if (observed !== undefined && !allowed.includes(observed)) return false;
+      }
+    }
+    return true;
+  };
+  const observed = { authorization: 'failed', transfer: 'failed' };
+  assert.equal(tablesOnly(observed, 'nonce_already_used'), true, 'the two tables alone accept it');
+  assert.equal(legSupport({ legs: observed, reason: 'nonce_already_used' }).ok, false, 'L4 does not');
 });

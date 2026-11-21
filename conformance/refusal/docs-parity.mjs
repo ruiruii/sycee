@@ -20,6 +20,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
   REQUIRED_LEG_STATUS,
+  BOUNDED_LEG_STATUS,
   REASON_CEILING,
   REFUSAL_REASONS,
   ceilingFor,
@@ -96,10 +97,17 @@ else {
 const legRows = tablesAfter(ext, ['reason', 'authorization']).find((t) => t.header[1] === 'reason')?.rows
 if (!legRows) fail('refusal-row.md', 'no table with columns "reason" and "authorization"')
 else {
+  // A bare list is required; a bracketed list is bounded optional; a dash is
+  // neither. The two marks are the whole point of the table — see §15.4.
   const parse = (cell) => {
-    const t = cell.replace(/`/g, '').replace(/—/g, '').trim()
-    if (!t || /not pinned/i.test(t)) return null
-    return t.split(',').map((x) => x.trim()).filter(Boolean).sort()
+    const t = cell.replace(/`/g, '').trim()
+    if (!t || t === '—') return null
+    const optional = /^\[.*\]$/.test(t)
+    const inner = optional ? t.slice(1, -1) : t
+    return {
+      required: !optional,
+      values: inner.split(',').map((x) => x.trim()).filter(Boolean).sort(),
+    }
   }
   const prose = new Map()
   for (const r of legRows) {
@@ -108,29 +116,34 @@ else {
     prose.set(name, { authorization: parse(r[2]), transfer: parse(r[3] ?? '') })
   }
   for (const [name, want] of prose) {
-    const got = REQUIRED_LEG_STATUS[name]
-    if (!got) {
+    const req = REQUIRED_LEG_STATUS[name]
+    const bnd = BOUNDED_LEG_STATUS[name]
+    if (req === undefined && bnd === undefined) {
       // A reason with no entry is unpinned in code. That is only a fault when the
       // prose pins something, which is the case this catches.
       if (want.authorization || want.transfer) {
-        fail('leg contract', `§15.4 pins "${name}" but REQUIRED_LEG_STATUS has no entry`)
+        fail('leg contract', `§15.4 pins "${name}" but neither leg table has an entry`)
       }
       continue
     }
     for (const leg of ['authorization', 'transfer']) {
       const p = want[leg]
-      const c = got[leg] ? [...got[leg]].sort() : null
-      const same = (p === null && c === null) || (p && c && p.join(',') === c.join(','))
-      if (!same) {
-        fail(
-          'leg contract',
-          `${name}.${leg}: §15.4 says ${p ? p.join(' | ') : 'unpinned'}, code says ${c ? c.join(' | ') : 'unpinned'}`,
-        )
+      const cReq = req?.[leg] ? [...req[leg]].sort() : null
+      const cBnd = bnd?.[leg] ? [...bnd[leg]].sort() : null
+      const same = (a, b) => (a === null && b === null) || (a && b && a.join(',') === b.join(','))
+      let ok
+      if (p === null) ok = cReq === null && cBnd === null
+      else if (p.required) ok = same(p.values, cReq) && cBnd === null
+      else ok = same(p.values, cBnd) && cReq === null
+      if (!ok) {
+        const shown = p === null ? 'unpinned' : `${p.required ? 'required' : 'bounded'} ${p.values.join(' | ')}`
+        const codeShown = cReq ? `required ${cReq.join(' | ')}` : cBnd ? `bounded ${cBnd.join(' | ')}` : 'unpinned'
+        fail('leg contract', `${name}.${leg}: §15.4 says ${shown}, code says ${codeShown}`)
       }
     }
   }
-  for (const name of Object.keys(REQUIRED_LEG_STATUS)) {
-    if (!prose.has(name)) fail('leg contract', `REQUIRED_LEG_STATUS pins "${name}" but §15.4 has no row for it`)
+  for (const name of new Set([...Object.keys(REQUIRED_LEG_STATUS), ...Object.keys(BOUNDED_LEG_STATUS)])) {
+    if (!prose.has(name)) fail('leg contract', `a leg table has "${name}" but §15.4 has no row for it`)
   }
 }
 

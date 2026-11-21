@@ -20,7 +20,7 @@
     "demo:refusal": "node examples/refusal-walkthrough.mjs",
     "demo:merchant": "node examples/demo-merchant/src/dev-server.mjs",
     "matrix": "node conformance/vectors/print-matrix.mjs",
-    "verify:refusal": "node conformance/refusal/judge.mjs --expect=61",
+    "verify:refusal": "node conformance/refusal/judge.mjs --expect=67",
     "demo:bilateral": "node examples/bilateral-consumption.mjs",
     "verify:py": "PYTHONPATH=python python3 -m sycee_verify conformance/vectors/*.json",
     "verify:docs": "node conformance/refusal/docs-parity.mjs",

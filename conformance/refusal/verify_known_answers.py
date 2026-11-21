@@ -58,10 +58,10 @@ CEILING.update(OTHER_REASONS)
 
 ORDER = ["issuer_asserted", "client_verifiable", "chain_verifiable", "independently_witnessed"]
 
-# §15.4, L2: a reason that makes a causal claim about a leg must record that leg,
-# and the recorded status must be one the reason permits. A reason that makes no
-# claim about a leg must not carry a contradicting observation either.
-LEG_CONTRACT = {
+# §15.4, L2 and L4. A bare list in the table is a required leg: the row must
+# carry it, with one of those values. A bracketed list is bounded optional: the
+# row may leave the leg out, and if it records it the value is one of those.
+LEG_REQUIRED = {
     "invalid_signature": {"authorization": ("failed", "unknown")},
     "wrong_amount": {"authorization": ("failed", "unknown")},
     "wrong_recipient": {"authorization": ("failed", "unknown")},
@@ -80,6 +80,37 @@ LEG_CONTRACT = {
     "risk_policy_rejected": {"authorization": ("not_reached", "unknown")},
     "commercial_refusal": {"authorization": ("not_reached", "unknown")},
     "replay_already_settled": {"authorization": ("executed",)},
+    "duplicate_payment": {"authorization": ("executed",)},
+    "replay_in_flight": {},
+    "could_not_compare": {},
+}
+
+LEG_BOUNDED = {
+    "invalid_signature": {"transfer": ("not_reached",)},
+    "wrong_amount": {"transfer": ("not_reached",)},
+    "wrong_recipient": {"transfer": ("not_reached",)},
+    "malformed_payload": {"transfer": ("not_reached",)},
+    "authorization_expired": {"transfer": ("not_reached",)},
+    "authorization_not_yet_valid": {"transfer": ("not_reached",)},
+    "insufficient_funds": {"transfer": ("not_reached",)},
+    "nonce_already_used": {"transfer": ("not_reached", "failed")},
+    # §15.3 puts both of these where the transfer leg was submitted and answered
+    # nothing. Neither may record `failed`: that is transfer_leg_failed's
+    # sentence, and these two reasons say they are not naming a cause.
+    "facilitator_timeout": {"transfer": ("not_reached", "unknown")},
+    "internal_error": {"transfer": ("not_reached", "unknown")},
+    "risk_policy_rejected": {"transfer": ("not_reached",)},
+    "commercial_refusal": {"transfer": ("not_reached",)},
+    "replay_already_settled": {"transfer": ("not_reached",)},
+    "duplicate_payment": {"transfer": ("not_reached",)},
+    "replay_in_flight": {
+        "authorization": ("not_reached", "unknown"),
+        "transfer": ("not_reached", "unknown"),
+    },
+    "could_not_compare": {
+        "authorization": ("not_reached", "unknown"),
+        "transfer": ("not_reached", "unknown"),
+    },
 }
 
 LEGS = ("authorization", "transfer")
@@ -121,7 +152,7 @@ def reproducible_ceiling(reason, claimed):
 
 
 def check_legs(legs, reason):
-    """§15.4 L1-L3. Returns the status of the contract check, not the row."""
+    """§15.4 L1-L4. Returns the status of the contract check, not the row."""
     if legs is None:
         # L1: omitting legs asserts nothing about either leg.
         return
@@ -134,14 +165,27 @@ def check_legs(legs, reason):
             raise Refused("unknown_leg")
         if status not in LEG_STATUS:
             raise Refused("unknown_leg_status")
-    contract = LEG_CONTRACT.get(reason)
-    if contract is None:
-        raise Refused("no_leg_contract")
-    for leg, allowed in contract.items():
+    required = LEG_REQUIRED.get(reason)
+    bounded = LEG_BOUNDED.get(reason)
+    if required is None and bounded is None:
+        # The table's last row: an unreviewed reason makes no claim, and §6.2
+        # rejects it for its name alone.
+        return
+    for leg, allowed in (required or {}).items():
         observed = legs.get(leg)
         if observed is None:
             raise Refused("leg_not_observed")
         if observed not in allowed:
+            raise Refused("leg_contradicts_reason")
+    for leg, allowed in (bounded or {}).items():
+        observed = legs.get(leg)
+        if observed is not None and observed not in allowed:
+            raise Refused("leg_contradicts_reason")
+    # L4: anything but `not_reached` on the transfer leg says it was submitted,
+    # which happens only after the authorization leg ran.
+    transfer = legs.get("transfer")
+    if transfer is not None and transfer != "not_reached":
+        if legs.get("authorization") in ("not_reached", "failed"):
             raise Refused("leg_contradicts_reason")
 
 

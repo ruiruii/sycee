@@ -536,6 +536,7 @@ export {
   LEGS,
   LEG_STATUS,
   REQUIRED_LEG_STATUS,
+  BOUNDED_LEG_STATUS,
   POSITIVE_MARKERS,
   legSupport,
   reproducibleCeiling,

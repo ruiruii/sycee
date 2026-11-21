@@ -139,8 +139,8 @@ export const LEG_STATUS = Object.freeze({
  * requires. Fill an absent observation with a default and the row claims more
  * than it saw — which is the defect this whole extension exists to catch.
  *
- * `transfer` is not always required: when the authorization leg never executed,
- * there is no second leg to have an opinion about.
+ * A bare list in §15.4 is this table: the leg MUST be recorded, with one of the
+ * listed values.
  */
 export const REQUIRED_LEG_STATUS = Object.freeze({
   invalid_signature: { authorization: ['failed', 'unknown'] },
@@ -169,10 +169,46 @@ export const REQUIRED_LEG_STATUS = Object.freeze({
   commercial_refusal: { authorization: ['not_reached', 'unknown'] },
   replay_already_settled: { authorization: ['executed'] },
   duplicate_payment: { authorization: ['executed'] },
-  // §15.4 lists these two with `—` on both legs: neither makes a claim a leg
-  // observation could contradict, so any legal status stands and none is required.
+  // No leg is required. The entry exists so that "known reason, nothing required"
+  // is distinguishable from "unreviewed reason" — the two used to look alike.
   replay_in_flight: {},
   could_not_compare: {},
+});
+
+/**
+ * A bracketed list in §15.4 is this table: the leg is optional, and if it is
+ * recorded the value must be one of the listed ones. Leaving it out asserts
+ * nothing (L1); recording it narrows what the row may say.
+ *
+ * This table exists because an em dash conflated two statements. "This reason
+ * says nothing about the leg" is not "any value stands": `transfer: failed` is
+ * the sentence `transfer_leg_failed` exists to say, and no other reason may say
+ * it. Keeping the two apart is the whole point of the change that introduced the
+ * brackets.
+ */
+export const BOUNDED_LEG_STATUS = Object.freeze({
+  invalid_signature: { transfer: ['not_reached'] },
+  wrong_amount: { transfer: ['not_reached'] },
+  wrong_recipient: { transfer: ['not_reached'] },
+  malformed_payload: { transfer: ['not_reached'] },
+  authorization_expired: { transfer: ['not_reached'] },
+  authorization_not_yet_valid: { transfer: ['not_reached'] },
+  insufficient_funds: { transfer: ['not_reached'] },
+  nonce_already_used: { transfer: ['not_reached', 'failed'] },
+  facilitator_timeout: { transfer: ['not_reached', 'unknown'] },
+  internal_error: { transfer: ['not_reached', 'unknown'] },
+  risk_policy_rejected: { transfer: ['not_reached'] },
+  commercial_refusal: { transfer: ['not_reached'] },
+  replay_already_settled: { transfer: ['not_reached'] },
+  duplicate_payment: { transfer: ['not_reached'] },
+  replay_in_flight: {
+    authorization: ['not_reached', 'unknown'],
+    transfer: ['not_reached', 'unknown'],
+  },
+  could_not_compare: {
+    authorization: ['not_reached', 'unknown'],
+    transfer: ['not_reached', 'unknown'],
+  },
 });
 
 /**
@@ -221,7 +257,6 @@ export const DEPENDS_ON_EXECUTED = Object.freeze({
  * @returns {{ok: boolean, ceiling: string, reason?: string}}
  */
 export function reproducibleCeiling(reason, evidenceClass) {
-  const contract = REQUIRED_LEG_STATUS[reason] ?? {};
   // A reason relies on a leg when executing that leg is a state the reason needs
   // in order to be true at all — single-valued `executed`, or `executed` sitting
   // beside a failure state that no third party can tell apart from it.
@@ -283,14 +318,15 @@ export function legSupport({ legs, reason }) {
     }
   }
   const required = REQUIRED_LEG_STATUS[reason];
-  if (required === undefined) {
+  const bounded = BOUNDED_LEG_STATUS[reason];
+  if (required === undefined && bounded === undefined) {
     // §15.4 last row: an unknown `reason` makes no claim any observation could
     // contradict, so it records what it saw. The row is rejected for its reason
     // alone (§6.2); refusing the observation as well would make the one row that
     // should carry evidence the only one forbidden to.
     return { ok: true, code: 'supported' };
   }
-  for (const [leg, allowed] of Object.entries(required)) {
+  for (const [leg, allowed] of Object.entries(required ?? {})) {
     const observed = legs[leg];
     if (observed === undefined) {
       return {
@@ -304,6 +340,32 @@ export function legSupport({ legs, reason }) {
         ok: false,
         code: 'leg_contradicts_reason',
         detail: `${reason} needs ${leg} = ${allowed.join(' | ')}, the row records ${observed}`,
+      };
+    }
+  }
+  // §15.4, the bracketed cells: optional to record, bounded in value when it is.
+  for (const [leg, allowed] of Object.entries(bounded ?? {})) {
+    const observed = legs[leg];
+    if (observed !== undefined && !allowed.includes(observed)) {
+      return {
+        ok: false,
+        code: 'leg_contradicts_reason',
+        detail: `${reason} may record ${leg} = ${allowed.join(' | ')}, or nothing; the row records ${observed}`,
+      };
+    }
+  }
+  // §15.4, L4: the legs are ordered. Anything but `not_reached` on the transfer
+  // leg says it was submitted, which happens only after the authorization leg
+  // ran — so a row claiming the authorization never completed is describing an
+  // order that cannot exist.
+  const transfer = legs.transfer;
+  if (transfer !== undefined && transfer !== 'not_reached') {
+    const authorization = legs.authorization;
+    if (authorization === 'not_reached' || authorization === 'failed') {
+      return {
+        ok: false,
+        code: 'leg_contradicts_reason',
+        detail: `transfer = ${transfer} means the transfer leg was submitted, which requires the authorization leg to have run; the row records authorization = ${authorization}`,
       };
     }
   }

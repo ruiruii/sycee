@@ -64,24 +64,46 @@ const REPEAT = {
 const CLOSED = new Set([...Object.keys(CEILING), ...Object.keys(REPEAT)])
 const ORDER = ['issuer_asserted', 'client_verifiable', 'chain_verifiable', 'independently_witnessed']
 
-// §15.4. `null` is the em dash: the leg is neither required nor forbidden.
-const LEGS = {
-  invalid_signature: { authorization: ['failed', 'unknown'], transfer: null },
-  wrong_amount: { authorization: ['failed', 'unknown'], transfer: null },
-  wrong_recipient: { authorization: ['failed', 'unknown'], transfer: null },
-  malformed_payload: { authorization: ['failed', 'unknown', 'not_reached'], transfer: null },
-  authorization_expired: { authorization: ['failed', 'unknown'], transfer: null },
-  authorization_not_yet_valid: { authorization: ['failed', 'unknown'], transfer: null },
-  insufficient_funds: { authorization: ['failed', 'unknown'], transfer: null },
-  nonce_already_used: { authorization: ['failed', 'executed'], transfer: null },
+// §15.4. A bare list is required — the row must carry the leg; a bracketed list
+// is bounded optional — the row may leave the leg out, and if it records it the
+// value must be one of those.
+const LEGS_REQUIRED = {
+  invalid_signature: { authorization: ['failed', 'unknown'] },
+  wrong_amount: { authorization: ['failed', 'unknown'] },
+  wrong_recipient: { authorization: ['failed', 'unknown'] },
+  malformed_payload: { authorization: ['failed', 'unknown', 'not_reached'] },
+  authorization_expired: { authorization: ['failed', 'unknown'] },
+  authorization_not_yet_valid: { authorization: ['failed', 'unknown'] },
+  insufficient_funds: { authorization: ['failed', 'unknown'] },
+  nonce_already_used: { authorization: ['failed', 'executed'] },
   transfer_leg_failed: { authorization: ['executed'], transfer: ['failed'] },
-  facilitator_timeout: { authorization: ['unknown'], transfer: null },
-  internal_error: { authorization: ['executed', 'unknown'], transfer: null },
-  risk_policy_rejected: { authorization: ['not_reached', 'unknown'], transfer: null },
-  commercial_refusal: { authorization: ['not_reached', 'unknown'], transfer: null },
-  replay_already_settled: { authorization: ['executed'], transfer: null },
-  replay_in_flight: { authorization: null, transfer: null },
-  could_not_compare: { authorization: null, transfer: null },
+  facilitator_timeout: { authorization: ['unknown'] },
+  internal_error: { authorization: ['executed', 'unknown'] },
+  risk_policy_rejected: { authorization: ['not_reached', 'unknown'] },
+  commercial_refusal: { authorization: ['not_reached', 'unknown'] },
+  replay_already_settled: { authorization: ['executed'] },
+  duplicate_payment: { authorization: ['executed'] },
+  replay_in_flight: {},
+  could_not_compare: {},
+}
+
+const LEGS_BOUNDED = {
+  invalid_signature: { transfer: ['not_reached'] },
+  wrong_amount: { transfer: ['not_reached'] },
+  wrong_recipient: { transfer: ['not_reached'] },
+  malformed_payload: { transfer: ['not_reached'] },
+  authorization_expired: { transfer: ['not_reached'] },
+  authorization_not_yet_valid: { transfer: ['not_reached'] },
+  insufficient_funds: { transfer: ['not_reached'] },
+  nonce_already_used: { transfer: ['not_reached', 'failed'] },
+  facilitator_timeout: { transfer: ['not_reached', 'unknown'] },
+  internal_error: { transfer: ['not_reached', 'unknown'] },
+  risk_policy_rejected: { transfer: ['not_reached'] },
+  commercial_refusal: { transfer: ['not_reached'] },
+  replay_already_settled: { transfer: ['not_reached'] },
+  duplicate_payment: { transfer: ['not_reached'] },
+  replay_in_flight: { authorization: ['not_reached', 'unknown'], transfer: ['not_reached', 'unknown'] },
+  could_not_compare: { authorization: ['not_reached', 'unknown'], transfer: ['not_reached', 'unknown'] },
 }
 
 const SETTLEMENT = ['not_submitted', 'pending', 'settled', 'unknown']
@@ -142,23 +164,35 @@ function checkRow(row, where) {
     }
     // §4: reason and reason_detail come together when refused.
     if (!row.reason_detail) add('R-required', where, '§4 requires reason_detail when refused')
-    // §15.4, L2 — and the em dash read as "recorded or left out both stand".
+    // §15.4, L1–L4 — a bare cell is a required leg, a bracket is bounded optional.
     if (row.legs !== undefined) {
-      const contract = LEGS[row.reason]
-      if (!contract) {
+      const required = LEGS_REQUIRED[row.reason]
+      const bounded = LEGS_BOUNDED[row.reason]
+      if (required === undefined && bounded === undefined) {
         add('R-legs', where, `§15.4: ${row.reason} has no row in the leg table`)
       } else {
         for (const leg of Object.keys(row.legs)) {
-          if (!(leg in contract)) add('R-legs', where, `§15.4: ${leg} is not a leg name`)
-          else if (contract[leg] && !contract[leg].includes(row.legs[leg])) {
-            add('R-legs', where, `§15.4: ${row.reason}.${leg} = ${row.legs[leg]}, outside ${contract[leg].join('|')}`)
-          } else if (contract[leg] === null && !STATUSES.includes(row.legs[leg])) {
+          if (leg !== 'authorization' && leg !== 'transfer') {
+            add('R-legs', where, `§15.4: ${leg} is not a leg name`)
+          } else if (!STATUSES.includes(row.legs[leg])) {
             add('R-legs', where, `§15.4: ${row.legs[leg]} is not an observable status`)
           }
         }
-        for (const leg of ['authorization', 'transfer']) {
-          if (contract[leg] && row.legs[leg] === undefined) {
+        for (const [leg, allowed] of Object.entries(required ?? {})) {
+          if (row.legs[leg] === undefined) {
             add('R-legs', where, `§15.4, L2: ${row.reason} is a claim about ${leg}; the row records nothing about it`)
+          } else if (!allowed.includes(row.legs[leg])) {
+            add('R-legs', where, `§15.4: ${row.reason}.${leg} = ${row.legs[leg]}, outside ${allowed.join('|')}`)
+          }
+        }
+        for (const [leg, allowed] of Object.entries(bounded ?? {})) {
+          if (row.legs[leg] !== undefined && !allowed.includes(row.legs[leg])) {
+            add('R-legs', where, `§15.4: ${row.reason}.${leg} = ${row.legs[leg]}, outside ${allowed.join('|')}`)
+          }
+        }
+        if (row.legs.transfer !== undefined && row.legs.transfer !== 'not_reached') {
+          if (row.legs.authorization === 'not_reached' || row.legs.authorization === 'failed') {
+            add('R-legs', where, `§15.4, L4: transfer = ${row.legs.transfer} requires the authorization leg to have run; the row records ${row.legs.authorization}`)
           }
         }
       }
@@ -209,11 +243,23 @@ const cases = [
   },
   {
     label: 'refused replay_in_flight with a leg observation',
-    input: { decision: 'refused', reason: 'replay_in_flight', settlement: 'pending', legs: { authorization: 'executed' } },
+    input: { decision: 'refused', reason: 'replay_in_flight', settlement: 'pending', legs: { authorization: 'unknown' } },
   },
   {
     label: 'refused internal_error recording what it saw on both legs',
+    input: { decision: 'refused', reason: 'internal_error', settlement: 'not_submitted', legs: { authorization: 'executed', transfer: 'unknown' } },
+  },
+  {
+    label: 'refused internal_error naming a failed transfer',
     input: { decision: 'refused', reason: 'internal_error', settlement: 'not_submitted', legs: { authorization: 'unknown', transfer: 'failed' } },
+    expect: 'refuse',
+    code: 'leg_contradicts_reason',
+  },
+  {
+    label: 'refused nonce_already_used with the second leg reached before the first',
+    input: { decision: 'refused', reason: 'nonce_already_used', settlement: 'not_submitted', legs: { authorization: 'failed', transfer: 'failed' } },
+    expect: 'refuse',
+    code: 'leg_contradicts_reason',
   },
   {
     label: 'refused could_not_compare with a leg observation',

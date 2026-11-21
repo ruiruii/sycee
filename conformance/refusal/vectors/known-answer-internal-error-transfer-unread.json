@@ -1,0 +1,23 @@
+{
+ "id": "internal-error-transfer-unread",
+ "note": "The position \u00a715.3 assigns to internal_error: the authorization ran, the transfer was submitted, and nothing conclusive came back. The row says `unknown` for the second leg instead of leaving it out, because it did look.",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "refused",
+  "reason": "internal_error",
+  "legs": {
+   "authorization": "executed",
+   "transfer": "unknown"
+  },
+  "settlement": "unknown"
+ },
+ "observed": {
+  "evidence_class": "issuer_asserted",
+  "settlement": "unknown",
+  "final": true
+ },
+ "expected": {
+  "outcome": "ACCEPT"
+ }
+}
