@@ -27,12 +27,48 @@ string, and SYCEE only ever handles its hash.
 git clone https://github.com/ruiruii/sycee.git
 cd sycee
 npm install
-npm test                              # 203 tests
+npm run try                           # three receipts, one rule each — thirty seconds
+npm test                              # 216 tests
 npm run verify:py                     # the same 12 vectors, verified in Python
 node examples/bilateral-consumption.mjs
 ```
 
-The last command buys the same search twice. One result is used, one is thrown away:
+`npm run try` needs no input. It hands three receipts to the checker and prints what each
+one gets wrong:
+
+```text
+PASS  a repeat presentation that names the settlement it saw
+      refused · duplicate_payment · settled · final · chain_verifiable
+
+FAIL  a failed transfer whose transfer leg was never read
+      leg_contradicts_reason
+      transfer_leg_failed needs transfer = failed, the row records unknown
+      refused · transfer_leg_failed · unknown · not final
+
+FAIL  a pending settlement presented as final
+      finality_pending_is_not_final
+      settlement is pending, so the row cannot be final — the payment may
+      still land
+      refused · internal_error · pending · final
+
+1/3 passed, 2 failed
+```
+
+Nothing was fetched, no key was consulted, no network was touched. The two failures are
+what the format is for: a receipt whose reason and its own fields disagree is a receipt
+saying something untrue, and the checker names the rule that broke rather than scoring it.
+
+To run it on a receipt of your own:
+
+```bash
+node bin/sycee-verify.mjs receipt.json
+node bin/sycee-verify.mjs --dir conformance/refusal/vectors   # 61/61
+```
+
+It takes a built row, a constructor input, or a conformance vector, and answers with the
+same codes the vector set uses. `--json` returns the same verdicts for a pipeline.
+
+The walkthrough buys the same search twice. One result is used, one is thrown away:
 
 ```text
 WHAT THE SELLER RECORDED

@@ -27,12 +27,46 @@ SYCEE 全程只处理它的哈希。
 git clone https://github.com/ruiruii/sycee.git
 cd sycee
 npm install
-npm test                              # 203 个测试
+npm run try                           # 三十秒：三张收据，各查一条规则
+npm test                              # 216 个测试
 npm run verify:py                     # 同一批 12 个向量，用 Python 再验一遍
 node examples/bilateral-consumption.mjs
 ```
 
-最后一条命令把同一个搜索接口买了两次。一次结果被用了，一次被扔了：
+`npm run try` 不用给任何输入。它把三张收据交给检查器，打印每一张错在哪里：
+
+```text
+PASS  a repeat presentation that names the settlement it saw
+      refused · duplicate_payment · settled · final · chain_verifiable
+
+FAIL  a failed transfer whose transfer leg was never read
+      leg_contradicts_reason
+      transfer_leg_failed needs transfer = failed, the row records unknown
+      refused · transfer_leg_failed · unknown · not final
+
+FAIL  a pending settlement presented as final
+      finality_pending_is_not_final
+      settlement is pending, so the row cannot be final — the payment may
+      still land
+      refused · internal_error · pending · final
+
+1/3 passed, 2 failed
+```
+
+没联网、没读密钥、没碰任何服务。那两条失败正是这个格式存在的理由：一张收据如果理由
+和它自己的字段互相矛盾，它就说了不真的话；检查器给出它破了哪条规则，而不是给它打分。
+
+检查自己的收据：
+
+```bash
+node bin/sycee-verify.mjs receipt.json
+node bin/sycee-verify.mjs --dir conformance/refusal/vectors   # 61/61
+```
+
+它吃三种输入：已经构造好的行、构造器的输入、一致性向量文件；输出的错误码和向量集用的
+是同一套。`--json` 给流水线用。
+
+那条走查命令把同一个搜索接口买了两次。一次结果被用了，一次被扔了：
 
 ```text
 WHAT THE SELLER RECORDED
