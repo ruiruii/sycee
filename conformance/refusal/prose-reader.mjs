@@ -139,7 +139,7 @@ function checkRow(row, where) {
   if (row.schema_version !== 'sycee/refusal/v0.1') {
     add('R-version', where, `§4 names sycee/refusal/v0.1; the row says ${row.schema_version}`)
   }
-  // §6.1–6.4
+  // §6.1–6.5
   if (row.decision === 'refused') {
     if (!CLOSED.has(row.reason)) {
       add('R-closed', where, `§6.2: ${row.reason} is not in the closed set`)

@@ -1,0 +1,16 @@
+{
+ "id": "reject-could-not-compare-claimed-settled",
+ "note": "a comparison that did not happen is not a comparison that came out equal. could_not_compare claims `unknown`; recording `settled` tells the buyer its retry was a duplicate when the seller could not tell.",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "refused",
+  "reason": "could_not_compare",
+  "settlement": "settled"
+ },
+ "expected": {
+  "outcome": "REJECT",
+  "code": "settlement_contradicts_reason"
+ },
+ "twin": "could-not-compare-refused"
+}

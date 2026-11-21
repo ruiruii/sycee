@@ -3,7 +3,7 @@
 Vectors for the refusal row defined in [`specs/extensions/refusal-row.md`](../../specs/extensions/refusal-row.md), and a judge that checks two implementations against them.
 
 ```
-node conformance/refusal/judge.mjs --expect=67
+node conformance/refusal/judge.mjs --expect=70
 ```
 
 Exit 0 means no violation. Exit 2 means the judge itself could not run, which is never a pass.
@@ -18,7 +18,7 @@ The fix is the **twin rule**. Every accepted vector has a `-wrong` twin carrying
 
 ## The files
 
-`vectors/known-answer-*.json`, 67 files: 44 accepted (22 right, 22 with a wrong twin) and 23 rejected.
+`vectors/known-answer-*.json`, 70 files: 44 accepted (22 right, 22 with a wrong twin) and 26 rejected.
 
 **Accepted, 22** (`known-answer-<name>.json`) — a legal constructor input, the fields it must produce, and the wrong twin:
 
@@ -51,9 +51,9 @@ The last six exist because a reason's **default** class is a claim about who can
 
 **Wrong twins, 22** (`known-answer-<name>-wrong.json`) — same input, one field answered wrongly. Among them: `issuer_asserted` where a third party can check, `chain_verifiable` where nobody can, `chain_verifiable` where the class is unreachable, an unread leg promoted to a settled one, a pending settlement closed as final, and an evidence class attached to a row that asserts no reason.
 
-**Rejected, 23** (`known-answer-reject-*.json`) — inputs no row should be constructible from, the code the constructor must fail with, and a `twin` naming an accepted file that differs in exactly one place:
+**Rejected, 26** (`known-answer-reject-*.json`) — inputs no row should be constructible from, the code the constructor must fail with, and a `twin` naming an accepted file that differs in exactly one place:
 
-`leg_contradicts_reason` (thirteen files: transfer recorded as executed; wrong amount with an executed authorization; a risk refusal after submission; an expired authorization recorded as executed; a spent nonce recorded as `not_reached`; a commercial refusal whose authorization is unknown; a settled replay whose authorization was never reached; `transfer_leg_failed` with the authorization unread; with the transfer unread; with the transfer never reached; `internal_error` naming a failed transfer; `internal_error` naming a transfer that executed; `facilitator_timeout` naming a failed transfer; and a second leg reached before the first could have run), `leg_not_observed`, `unknown_leg`, `unknown_leg_status`, `not_reproducible`, `finality_pending_is_not_final` (two: a pending row presented as final under `facilitator_timeout` and under another reason), `bad_decision`, `bad_settlement`, `unreviewed_reason` (two: with and without leg observations).
+`leg_contradicts_reason` (thirteen files: transfer recorded as executed; wrong amount with an executed authorization; a risk refusal after submission; an expired authorization recorded as executed; a spent nonce recorded as `not_reached`; a commercial refusal whose authorization is unknown; a settled replay whose authorization was never reached; `transfer_leg_failed` with the authorization unread; with the transfer unread; with the transfer never reached; `internal_error` naming a failed transfer; `internal_error` naming a transfer that executed; `facilitator_timeout` naming a failed transfer; and a second leg reached before the first could have run), `settlement_contradicts_reason` (three: a settled replay whose settlement is recorded as `not_submitted`; an in-flight replay recorded as `settled`; a comparison that could not be made recorded as `settled`), `leg_not_observed`, `unknown_leg`, `unknown_leg_status`, `not_reproducible`, `finality_pending_is_not_final` (two: a pending row presented as final under `facilitator_timeout` and under another reason), `bad_decision`, `bad_settlement`, `unreviewed_reason` (two: with and without leg observations).
 
 The rejected family exists because the accepted family alone cannot catch a constructor that accepts everything. Each rejected file's near-miss twin is accepted, so a constructor that refuses everything fails as well.
 

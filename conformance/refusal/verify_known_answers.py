@@ -117,6 +117,14 @@ LEGS = ("authorization", "transfer")
 LEG_STATUS = ("not_reached", "executed", "failed", "unknown")
 SETTLEMENT_STATES = ("not_submitted", "pending", "settled", "unknown")
 
+# §5, second table: three reasons describe a repeat presentation and each claims
+# a settlement state. A row naming one of them may not record another.
+REASON_SETTLEMENT = {
+    "replay_already_settled": ("settled",),
+    "replay_in_flight": ("pending",),
+    "could_not_compare": ("unknown",),
+}
+
 # §15.5: the legs a reason's truth depends on having *run*. A reason whose causal
 # claim rests on the transfer leg can never exceed issuer_asserted, because a
 # balance movement is per-account and the ledger carries no attempt identity.
@@ -205,6 +213,10 @@ def build(vec_input):
         raise Refused("final_not_boolean")
     if settlement == "pending" and final:
         raise Refused("finality_pending_is_not_final")
+    # §5, second table: a repeat reason claims a settlement state.
+    allowed = REASON_SETTLEMENT.get(vec_input.get("reason"))
+    if allowed is not None and settlement not in allowed:
+        raise Refused("settlement_contradicts_reason")
     # An accepted row asserts no reason, so it has no leg contract to satisfy.
     if decision == "accepted" and vec_input.get("legs") is not None:
         raise Refused("legs_without_reason")

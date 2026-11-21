@@ -112,6 +112,21 @@ export const DECISIONS = Object.freeze(['accepted', 'refused']);
 /** Settlement predicate for a refused attempt. Never claims finality it lacks. */
 export const SETTLEMENT_STATES = Object.freeze(['not_submitted', 'pending', 'settled', 'unknown']);
 
+/**
+ * §5, second table. Three reasons describe a repeat presentation, and each one
+ * claims a settlement state as part of what it says. The claim is not decoration:
+ * a buyer reads it to decide whether retrying is safe.
+ *
+ * The distinction the table keeps apart is that a comparison which did not happen
+ * is not a comparison that came out equal. `could_not_compare` recording `settled`
+ * would tell a buyer its retry was a duplicate when the seller could not tell.
+ */
+export const REASON_SETTLEMENT = Object.freeze({
+  replay_already_settled: ['settled'],
+  replay_in_flight: ['pending'],
+  could_not_compare: ['unknown'],
+});
+
 /* ------------------------------------------------------------------ *
  * 2. Pure rules (each one is a single testable function)
  * ------------------------------------------------------------------ */
@@ -481,6 +496,28 @@ export function finalityCheck({ settlement, final, decision }) {
 }
 
 /**
+ * §5, second table: a repeat reason claims a settlement state, and a row may not
+ * record a different one. Two fields telling different stories about one attempt
+ * is the defect this format exists to make visible, not to permit.
+ *
+ * Only the three repeat reasons appear here. `duplicate_payment` says the proof
+ * was settled earlier but makes no claim about *this* attempt's settlement, so
+ * this table does not constrain it.
+ *
+ * @param {{reason?: string, settlement: string}} row
+ * @returns {{ok: boolean, code?: string, detail?: string}}
+ */
+export function settlementCheck({ reason, settlement }) {
+  const allowed = REASON_SETTLEMENT[reason];
+  if (!allowed || allowed.includes(settlement)) return { ok: true };
+  return {
+    ok: false,
+    code: 'settlement_contradicts_reason',
+    detail: `${reason} claims settlement ${allowed.join(' | ')}, the row records ${settlement}`,
+  };
+}
+
+/**
  * Decide what a record must say about a repeat presentation of a proof.
  *
  * This is the case a payload-only identity cannot express: the same payload
@@ -587,6 +624,12 @@ export function refusalRow(input) {
   }
   const f = finalityCheck({ settlement, final, decision });
   if (!f.ok) throw new TypeError(`refusalRow: ${f.code} — ${f.detail}`);
+
+  // §5, second table: a repeat reason claims a settlement state. The check runs
+  // after finality so a pending row presented as final is reported as that,
+  // whichever reason it carries.
+  const s = settlementCheck({ reason, settlement });
+  if (!s.ok) throw new TypeError(`refusalRow: ${s.code} — ${s.detail}`);
 
   const k = signingKeyCheck({ signingPublicKey: input.signingPublicKey, payTo: input.payTo });
   if (!k.ok) throw new TypeError(`refusalRow: ${k.code} — ${k.detail}`);
@@ -866,8 +909,17 @@ export function verifyClaim(claim, opts = {}) {
     final: refusal.final,
     decision: refusal.decision,
   });
-  if (!f.ok) errors.push(f.error);
+  // finalityCheck returns {ok, code, detail}; pushing `f.error` put `undefined`
+  // into the errors array, so a verifier reported a failure it could not name.
+  if (!f.ok) errors.push(`${f.code}: ${f.detail}`);
   checks.finality = f.ok;
+
+  // §5, second table / §6.5: a repeat reason claims a settlement state. The
+  // constructor enforces it; a verifier that did not would accept a claim its
+  // own reason contradicts.
+  const rs = settlementCheck({ reason: refusal.reason, settlement: refusal.settlement });
+  if (!rs.ok) errors.push(`${rs.code}: ${rs.detail}`);
+  checks.settlementMatchesReason = rs.ok;
 
   // signing key vs payee
   const k = signingKeyCheck({

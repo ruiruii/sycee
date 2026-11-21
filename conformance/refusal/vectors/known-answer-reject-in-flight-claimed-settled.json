@@ -1,0 +1,16 @@
+{
+ "id": "reject-in-flight-claimed-settled",
+ "note": "replay_in_flight says the earlier presentation is unresolved, and \u00a75 pins its settlement at `pending`. Answering `settled` closes a decision the row's own reason says is still open.",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "refused",
+  "reason": "replay_in_flight",
+  "settlement": "settled"
+ },
+ "expected": {
+  "outcome": "REJECT",
+  "code": "settlement_contradicts_reason"
+ },
+ "twin": "replay-in-flight-refused"
+}

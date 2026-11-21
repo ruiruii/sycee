@@ -177,6 +177,13 @@ so that one column bounds every reason.
 | `replay_in_flight` | `pending`, `final = false` | a prior presentation is unresolved |
 | `could_not_compare` | `unknown` | a prior row exists, its settlement state was unreadable |
 
+A row that names one of these reasons and records a different settlement state is rejected at
+construction with `settlement_contradicts_reason`. The column is not decoration: a buyer reads it
+to decide whether retrying is safe, and a row whose reason and settlement disagree leaves that
+question unanswerable. The check applies to these three reasons only. `duplicate_payment` says the
+proof was settled earlier but makes no claim about this attempt's settlement, so the table does
+not constrain it.
+
 **A comparison that did not happen is not a comparison that came out equal.** Collapsing
 `could_not_compare` into `replay_already_settled` tells a buyer its retry was a duplicate
 when the seller in fact could not tell. Collapsing it into `accepted` tells a buyer nothing
@@ -192,9 +199,13 @@ A verifier of a single row, or of a claim carrying one, checks:
 3. `evidence_class` does not exceed the ceiling for its reason.
 4. `settlement` is one of the four values; `final` is `false` whenever `settlement` is
    `pending`.
-5. The signature verifies against a key the verifier resolves itself — never against a key
+5. When `reason` is one of the three repeat reasons, `settlement` is the state §5 says that
+   reason claims. `replay_already_settled` with `not_submitted` is a row nobody can act on: the
+   reason says the earlier attempt landed and the settlement field says this one never reached
+   the rail.
+6. The signature verifies against a key the verifier resolves itself — never against a key
    the row supplies.
-6. `signer.public_key` is not the payee address, where the verifier knows the payee. Where it
+7. `signer.public_key` is not the payee address, where the verifier knows the payee. Where it
    does not, the result is `not_measured`, reported as such.
 
 Two rows about one `attempt_identity` that disagree on `decision` are a contradiction. An
@@ -547,12 +558,14 @@ out, and if it records it, the value is one of those. There is no third mark.
 An em dash used to sit in most of the `transfer` column, meaning "neither required nor forbidden".
 That mark ran together two different statements — *must not be recorded here* and *may be recorded
 with any value* — and the difference between them is the difference this section exists to keep.
-Every cell in the `transfer` column changes because of it, three in `authorization`, and the fourth
-point below is the reason the column is written out in full.
+The whole `transfer` column is rewritten because of it, three cells in `authorization` change with
+it, and the last bullet says why the column is spelled out instead of left as a dash.
 
-- **`transfer` never takes `executed`.** A refusal whose transfer leg completed is not a refusal;
-  it is a payment recorded wrongly. The closed set names no such state, so a row that records it is
-  describing an attempt other than the one it refused.
+- **No reviewed reason takes `transfer: executed`.** A refusal whose transfer leg completed is not
+  a refusal; it is a payment recorded wrongly. The closed set names no such state, so a row that
+  records it is describing an attempt other than the one it refused. The table's last row is the
+  one apparent exception, and it is not an exception in practice: that row is rejected for its
+  reason before a leg is read (L5), so the status it carries cannot rescue it.
 - **Only `transfer_leg_failed` takes `transfer: failed`.** Its sentence is a conjunction about both
   legs, so it is the one row where a failed transfer is the named cause rather than a different
   cause wearing this one's label. The three reasons that report a leg they saw before the transfer
@@ -642,8 +655,8 @@ precondition for anyone proposing one.
 - The default `evidence_class` for a refused row is the reproducible ceiling, not the reason's
   base ceiling. A row that picks its own default would claim more than anyone can check by
   omission, which is the same failure as over-claiming on purpose.
-- `conformance/refusal/` — 67 known-answer files and a judge, `node conformance/refusal/judge.mjs
-  --expect=67`. Twenty-two accepted vectors, each with a `-wrong` twin; twenty-three rejected vectors,
+- `conformance/refusal/` — 70 known-answer files and a judge, `node conformance/refusal/judge.mjs
+  --expect=70`. Twenty-two accepted vectors, each with a `-wrong` twin; twenty-six rejected vectors,
   each with an accepted near miss; two implementations, one in JavaScript against the constructor
   and one in Python from the prose above. The count is part of the check on purpose: adding a
   file in a hurry and then widening the expected number is one command, and a set that shrinks by

@@ -21,6 +21,7 @@ import { fileURLToPath } from 'node:url'
 import {
   REQUIRED_LEG_STATUS,
   BOUNDED_LEG_STATUS,
+  REASON_SETTLEMENT,
   REASON_CEILING,
   REFUSAL_REASONS,
   ceilingFor,
@@ -144,6 +145,41 @@ else {
   }
   for (const name of new Set([...Object.keys(REQUIRED_LEG_STATUS), ...Object.keys(BOUNDED_LEG_STATUS)])) {
     if (!prose.has(name)) fail('leg contract', `a leg table has "${name}" but §15.4 has no row for it`)
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * 2b. The repeat settlement table: prose §5 vs REASON_SETTLEMENT
+ * ------------------------------------------------------------------ */
+
+const settleRows = tablesAfter(ext, ['reason'])
+  .find((t) => t.header.some((c) => c.includes('settlement claimed')))?.rows
+if (!settleRows) fail('refusal-row.md', 'no table with a "Settlement claimed" column')
+else {
+  const prose = new Map()
+  for (const r of settleRows) {
+    const name = r[1].replace(/`/g, '').trim()
+    if (!/^[a-z_]+$/.test(name)) continue
+    const states = (r[2].match(/`(not_submitted|pending|settled|unknown)`/g) ?? [])
+      .map((m) => m.replace(/`/g, ''))
+      .sort()
+    prose.set(name, states.length ? states : null)
+  }
+  for (const [name, want] of prose) {
+    const got = REASON_SETTLEMENT[name] ? [...REASON_SETTLEMENT[name]].sort() : null
+    if (!want) {
+      if (got) fail('repeat settlement', `§5 has no claim for "${name}" but REASON_SETTLEMENT constrains it`)
+      continue
+    }
+    if (!got || want.join(',') !== got.join(',')) {
+      fail(
+        'repeat settlement',
+        `${name}: §5 says ${want.join(' | ')}, code says ${got ? got.join(' | ') : 'unconstrained'}`,
+      )
+    }
+  }
+  for (const name of Object.keys(REASON_SETTLEMENT)) {
+    if (!prose.has(name)) fail('repeat settlement', `REASON_SETTLEMENT constrains "${name}" but §5 has no row for it`)
   }
 }
 

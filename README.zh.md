@@ -28,7 +28,7 @@ git clone https://github.com/ruiruii/sycee.git
 cd sycee
 npm install
 npm run try                           # 三十秒：三张收据，各查一条规则
-npm test                              # 221 个测试
+npm test                              # 223 个测试
 npm run verify:py                     # 同一批 12 个向量，用 Python 再验一遍
 node examples/bilateral-consumption.mjs
 ```

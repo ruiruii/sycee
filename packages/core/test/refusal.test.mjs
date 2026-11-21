@@ -10,6 +10,7 @@ import {
   mergeRow,
   refusalLedger,
   refusalRow,
+  settlementCheck,
   signRefusal,
   signingKeyCheck,
   verifyClaim,
@@ -115,6 +116,48 @@ test('an accepted attempt that never reached the rail is a legal row', () => {
 
 test('a settlement state outside the closed set is rejected', () => {
   assert.equal(finalityCheck({ settlement: 'maybe', final: true, decision: 'refused' }).ok, false);
+});
+
+/* ---------------------------------------------------------------- *
+ * the repeat reasons claim a settlement state
+ * ---------------------------------------------------------------- */
+
+test('a repeat reason and a settlement that disagree about the same attempt are refused', () => {
+  // §5, second table. The claim is the part a buyer acts on: "settled" means do
+  // not retry, "pending" means wait, "unknown" means ask.
+  for (const [reason, wrong] of [
+    ['replay_already_settled', 'not_submitted'],
+    ['replay_already_settled', 'pending'],
+    ['replay_in_flight', 'settled'],
+    ['could_not_compare', 'settled'],
+    ['could_not_compare', 'not_submitted'],
+  ]) {
+    const r = settlementCheck({ reason, settlement: wrong });
+    assert.equal(r.ok, false, `${reason} + ${wrong} should be refused`);
+    assert.equal(r.code, 'settlement_contradicts_reason');
+  }
+
+  // the states §5 does assign
+  assert.equal(settlementCheck({ reason: 'replay_already_settled', settlement: 'settled' }).ok, true);
+  assert.equal(settlementCheck({ reason: 'replay_in_flight', settlement: 'pending' }).ok, true);
+  assert.equal(settlementCheck({ reason: 'could_not_compare', settlement: 'unknown' }).ok, true);
+
+  // duplicate_payment names an earlier settlement but says nothing about this
+  // attempt's, so the table does not constrain it
+  assert.equal(settlementCheck({ reason: 'duplicate_payment', settlement: 'unknown' }).ok, true);
+
+  // and the constructor runs the check, not just the helper
+  assert.throws(
+    () => refusalRow({
+      decision: 'refused',
+      reason: 'replay_already_settled',
+      attemptIdentity: ATTEMPT,
+      signingPublicKey: KEYS.publicKey,
+      settlement: 'not_submitted',
+      legs: { authorization: 'executed' },
+    }),
+    /settlement_contradicts_reason/,
+  );
 });
 
 /* ---------------------------------------------------------------- *
@@ -324,7 +367,25 @@ test('a claim that overclaims an evidence class fails verification', () => {
 test('a pending refusal presented as final fails verification', () => {
   const env = signRefusal(row({ reason: 'replay_in_flight', settlement: 'pending' }), KEYS.privateKey);
   const upgraded = { ...env, refusal: { ...env.refusal, final: true } };
-  assert.equal(verifyClaim(exportClaim(upgraded)).valid, false);
+  const v = verifyClaim(exportClaim(upgraded));
+  assert.equal(v.valid, false);
+  // The error used to read "undefined": verifyClaim pushed `f.error`, and
+  // finalityCheck returns `detail`. A verifier reported a failure it could not name.
+  assert.match(v.errors.join('; '), /finality_pending_is_not_final/);
+});
+
+test('a claim whose reason and settlement disagree fails verification, not only construction', () => {
+  // The constructor refuses this pair. A verifier holding a claim written
+  // somewhere else has to refuse it too, or the rule only binds the side that
+  // already chose to obey it.
+  const env = signRefusal(
+    row({ reason: 'replay_already_settled', settlement: 'settled', legs: { authorization: 'executed' } }),
+    KEYS.privateKey,
+  );
+  const rewritten = { ...env, refusal: { ...env.refusal, settlement: 'not_submitted' } };
+  const v = verifyClaim(exportClaim(rewritten));
+  assert.equal(v.valid, false);
+  assert.match(v.errors.join('; '), /settlement_contradicts_reason/);
 });
 
 test('a verifier that pins the signing key catches a swapped signer', () => {
