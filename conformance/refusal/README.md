@@ -3,7 +3,7 @@
 Vectors for the refusal row defined in [`specs/extensions/refusal-row.md`](../../specs/extensions/refusal-row.md), and a judge that checks two implementations against them.
 
 ```
-node conformance/refusal/judge.mjs --expect=70
+node conformance/refusal/judge.mjs --expect=76
 ```
 
 Exit 0 means no violation. Exit 2 means the judge itself could not run, which is never a pass.
@@ -18,9 +18,9 @@ The fix is the **twin rule**. Every accepted vector has a `-wrong` twin carrying
 
 ## The files
 
-`vectors/known-answer-*.json`, 70 files: 44 accepted (22 right, 22 with a wrong twin) and 26 rejected.
+`vectors/known-answer-*.json`, 76 files: 46 accepted (23 right, 23 with a wrong twin) and 30 rejected.
 
-**Accepted, 22** (`known-answer-<name>.json`) — a legal constructor input, the fields it must produce, and the wrong twin:
+**Accepted, 23** (`known-answer-<name>.json`) — a legal constructor input, the fields it must produce, and the wrong twin:
 
 | file | what it pins down |
 |---|---|
@@ -29,6 +29,7 @@ The fix is the **twin rule**. Every accepted vector has a `-wrong` twin carrying
 | `facilitator-timeout-auth-unread` | no claim is made about the transfer leg, so none is recorded |
 | `internal-error-no-legs` | omitting `legs` asserts nothing about either leg |
 | `internal-error-transfer-unread` | the row §15.3 assigns to `internal_error`: authorization executed, transfer submitted and unread — recorded as `unknown`, which the bracketed cell allows |
+| `internal-error-permit-ok-transfer-never-sent` | the state §15.4 L6 exists to admit: the permit landed, the process died before `transferFrom`, nothing settled — constructible now because a rule says it is, not because none looked |
 | `risk-policy-not-reached` | `not_reached` is the observation that makes a pre-submission refusal honest |
 | `accepted-settled` | an accepted row asserts no reason and therefore no evidence class |
 | `accepted-never-submitted` | `decision` and `settlement` are independent: an accepted attempt may never have reached the rail (§13) |
@@ -49,11 +50,11 @@ The fix is the **twin rule**. Every accepted vector has a `-wrong` twin carrying
 
 The last six exist because a reason's **default** class is a claim about who can check it. An implementation that gets the default wrong is wrong on every row it ever writes, and before this set was widened five of these reasons had no vector at all.
 
-**Wrong twins, 22** (`known-answer-<name>-wrong.json`) — same input, one field answered wrongly. Among them: `issuer_asserted` where a third party can check, `chain_verifiable` where nobody can, `chain_verifiable` where the class is unreachable, an unread leg promoted to a settled one, a pending settlement closed as final, and an evidence class attached to a row that asserts no reason.
+**Wrong twins, 23** (`known-answer-<name>-wrong.json`) — same input, one field answered wrongly. Among them: `issuer_asserted` where a third party can check, `chain_verifiable` where nobody can, `chain_verifiable` where the class is unreachable, an unread leg promoted to a settled one, a pending settlement closed as final, and an evidence class attached to a row that asserts no reason.
 
-**Rejected, 26** (`known-answer-reject-*.json`) — inputs no row should be constructible from, the code the constructor must fail with, and a `twin` naming an accepted file that differs in exactly one place:
+**Rejected, 30** (`known-answer-reject-*.json`) — inputs no row should be constructible from, the code the constructor must fail with, and a `twin` naming an accepted file that differs in exactly one place:
 
-`leg_contradicts_reason` (thirteen files: transfer recorded as executed; wrong amount with an executed authorization; a risk refusal after submission; an expired authorization recorded as executed; a spent nonce recorded as `not_reached`; a commercial refusal whose authorization is unknown; a settled replay whose authorization was never reached; `transfer_leg_failed` with the authorization unread; with the transfer unread; with the transfer never reached; `internal_error` naming a failed transfer; `internal_error` naming a transfer that executed; `facilitator_timeout` naming a failed transfer; and a second leg reached before the first could have run), `settlement_contradicts_reason` (three: a settled replay whose settlement is recorded as `not_submitted`; an in-flight replay recorded as `settled`; a comparison that could not be made recorded as `settled`), `leg_not_observed`, `unknown_leg`, `unknown_leg_status`, `not_reproducible`, `finality_pending_is_not_final` (two: a pending row presented as final under `facilitator_timeout` and under another reason), `bad_decision`, `bad_settlement`, `unreviewed_reason` (two: with and without leg observations).
+`leg_contradicts_reason` (thirteen files: transfer recorded as executed; wrong amount with an executed authorization; a risk refusal after submission; an expired authorization recorded as executed; a spent nonce recorded as `not_reached`; a commercial refusal whose authorization is unknown; a settled replay whose authorization was never reached; `transfer_leg_failed` with the authorization unread; with the transfer unread; with the transfer never reached; `internal_error` naming a failed transfer; `internal_error` naming a transfer that executed; `facilitator_timeout` naming a failed transfer; and a second leg reached before the first could have run), `settlement_contradicts_leg` (four: a settled rail beside a transfer never sent; a pending rail beside a transfer never sent; a settled rail beside a transfer still unread; and a risk refusal whose settlement landed while its authorization never ran), `settlement_contradicts_reason` (three: a settled replay whose settlement is recorded as `not_submitted`; an in-flight replay recorded as `settled`; a comparison that could not be made recorded as `settled`), `leg_not_observed`, `unknown_leg`, `unknown_leg_status`, `not_reproducible`, `finality_pending_is_not_final` (two: a pending row presented as final under `facilitator_timeout` and under another reason), `bad_decision`, `bad_settlement`, `unreviewed_reason` (two: with and without leg observations).
 
 The rejected family exists because the accepted family alone cannot catch a constructor that accepts everything. Each rejected file's near-miss twin is accepted, so a constructor that refuses everything fails as well.
 

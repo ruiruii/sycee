@@ -198,7 +198,7 @@ A verifier of a single row, or of a claim carrying one, checks:
    produced by a conforming implementation; the row is not silently reinterpreted.
 3. `evidence_class` does not exceed the ceiling for its reason.
 4. `settlement` is one of the four values; `final` is `false` whenever `settlement` is
-   `pending`.
+   `pending`; and every recorded leg is one §15.4 L6 pairs with that settlement.
 5. When `reason` is one of the three repeat reasons, `settlement` is the state §5 says that
    reason claims. `replay_already_settled` with `not_submitted` is a row nobody can act on: the
    reason says the earlier attempt landed and the settlement field says this one never reached
@@ -609,6 +609,44 @@ A merchant in that position uses `facilitator_timeout` or `internal_error`, per 
 `nonce_already_used` admits `executed` because the nonce being spent is a negative read on the
 attempt's own signature — the transfer having run beside it does not weaken the claim (15.2).
 
+**L6.** `settlement` and a recorded leg describe one event from several sides. A transfer that
+executed is money that moved; a settlement that happened is a transfer that executed. The name
+`not_submitted` is about the attempt, not about the chain: a `permit` that landed followed by a
+`transferFrom` that was never sent did not settle, and a `transferFrom` that reverted did not
+settle either. Both record `not_submitted`.
+
+| `leg` | `status` | `settlement` may be |
+|---|---|---|
+| `authorization` | `executed` | `not_submitted`, `pending`, `settled`, `unknown` |
+| `authorization` | `failed` | `not_submitted`, `unknown` |
+| `authorization` | `not_reached` | `not_submitted`, `unknown` |
+| `authorization` | `unknown` | `not_submitted`, `pending`, `unknown` |
+| `transfer` | `executed` | `settled`, `pending` |
+| `transfer` | `failed` | `not_submitted`, `unknown` |
+| `transfer` | `not_reached` | `not_submitted`, `unknown` |
+| `transfer` | `unknown` | `not_submitted`, `pending`, `unknown` |
+
+A row that records a leg and a settlement the row for that leg and status does not list is
+rejected with `settlement_contradicts_leg`. `settled` appears only beside `executed`, on either
+leg: a settlement that landed is a conclusion, and a leg recorded as `failed`, `not_reached` or
+`unknown` says the merchant did not reach one.
+
+**Why `authorization` is in the table.** An earlier draft of this section argued it should not be.
+The argument was real: an allowance approved once lets a facilitator call `transferFrom` without
+re-running `permit`, so an attempt can settle with the authorization leg never reached. But that
+is an *accepted* attempt, and an accepted row records no legs at all (L2) — so the exception
+protected a row the format cannot produce. What it left standing was four rows it could:
+`risk_policy_rejected`, `commercial_refusal`, `malformed_payload` and `authorization_expired`, each
+admitting `authorization: not_reached` or `unknown` in its own cell, each free to record `settled`
+beside an authorization the row says was stopped before it ran. The asymmetry was not a fact about
+the rail; it was one leg checked and the other not.
+
+The combination this table exists to admit is `internal_error` with `authorization: executed`,
+`transfer: not_reached` and `settlement: not_submitted` — the permit landed, the process died
+before the transfer was sent, and the seller does not know why. Until this rule it was
+constructible only because nothing checked it, and "nothing checked it" is not the same statement
+as "the format permits it".
+
 ### 15.5 Reproducibility: why `transfer_leg_failed` closes at `issuer_asserted`
 
 The claim "the transfer leg of this attempt executed and then failed" rests on a positive
@@ -646,17 +684,17 @@ precondition for anyone proposing one.
 
 ### 15.7 Conformance
 
-- `packages/core/test/legs.test.mjs` — 18 tests, including six mutants, one per rule: dropping
+- `packages/core/test/legs.test.mjs` — 23 tests, including seven mutants, one per rule: dropping
   the leg contract, treating `unknown` as `failed`, trusting the caller-supplied evidence class,
-  letting an unknown leg pass, reading the bracketed cells as unpinned, and dropping the order
-  rule.
+  letting an unknown leg pass, reading the bracketed cells as unpinned, dropping the order rule,
+  and checking the reason tables without checking the settlement.
 - `packages/core/src/refusal.mjs` — `legSupport`, `reproducibleCeiling`, `REQUIRED_LEG_STATUS`,
   `DEPENDS_ON_EXECUTED`, `THE_UNATTRIBUTED_BALANCE`.
 - The default `evidence_class` for a refused row is the reproducible ceiling, not the reason's
   base ceiling. A row that picks its own default would claim more than anyone can check by
   omission, which is the same failure as over-claiming on purpose.
-- `conformance/refusal/` — 70 known-answer files and a judge, `node conformance/refusal/judge.mjs
-  --expect=70`. Twenty-two accepted vectors, each with a `-wrong` twin; twenty-six rejected vectors,
+- `conformance/refusal/` — 76 known-answer files and a judge, `node conformance/refusal/judge.mjs
+  --expect=76`. Twenty-three accepted vectors, each with a `-wrong` twin; thirty rejected vectors,
   each with an accepted near miss; two implementations, one in JavaScript against the constructor
   and one in Python from the prose above. The count is part of the check on purpose: adding a
   file in a hurry and then widening the expected number is one command, and a set that shrinks by

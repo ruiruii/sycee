@@ -125,6 +125,30 @@ REASON_SETTLEMENT = {
     "could_not_compare": ("unknown",),
 }
 
+# §15.4, L6: a recorded leg and the settlement state describe one event from
+# several sides. A transfer that executed is money that moved; a settlement that
+# happened is a transfer that executed.
+#
+# Both legs carry a row. Leaving `authorization` out would protect an accepted
+# attempt (allowance approved earlier, `transferFrom` called directly), and an
+# accepted row records no legs at all — while leaving four constructible rows in
+# which a risk refusal, a commercial refusal, a malformed payload or an expired
+# authorization records `settled` beside an authorization that never ran.
+LEG_SETTLEMENT = {
+    "authorization": {
+        "executed": ("not_submitted", "pending", "settled", "unknown"),
+        "failed": ("not_submitted", "unknown"),
+        "not_reached": ("not_submitted", "unknown"),
+        "unknown": ("not_submitted", "pending", "unknown"),
+    },
+    "transfer": {
+        "executed": ("settled", "pending"),
+        "failed": ("not_submitted", "unknown"),
+        "not_reached": ("not_submitted", "unknown"),
+        "unknown": ("not_submitted", "pending", "unknown"),
+    },
+}
+
 # §15.5: the legs a reason's truth depends on having *run*. A reason whose causal
 # claim rests on the transfer leg can never exceed issuer_asserted, because a
 # balance movement is per-account and the ledger carries no attempt identity.
@@ -197,6 +221,22 @@ def check_legs(legs, reason):
             raise Refused("leg_contradicts_reason")
 
 
+def check_leg_settlement(legs, settlement):
+    """§15.4 L6. A recorded leg and the settlement must describe one event."""
+    if not isinstance(legs, dict):
+        return
+    for leg in LEGS:
+        status = legs.get(leg)
+        if status is None:
+            # L1: an unrecorded leg asserts nothing, so there is nothing to contradict.
+            continue
+        allowed = LEG_SETTLEMENT.get(leg, {}).get(status)
+        if allowed is None:
+            raise Refused("unknown_leg_status")
+        if settlement not in allowed:
+            raise Refused("settlement_contradicts_leg")
+
+
 def build(vec_input):
     """The constructor, written from §15. Returns the three fields the vectors name."""
     decision = vec_input["decision"]
@@ -231,6 +271,7 @@ def build(vec_input):
         if reason not in CEILING:
             raise Refused("unreviewed_reason")
         check_legs(vec_input.get("legs"), reason)
+        check_leg_settlement(vec_input.get("legs"), settlement)
         claim = vec_input.get("evidence_class")
         if claim is None:
             # §15.7: the default is the reproducible ceiling, not the reason's

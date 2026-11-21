@@ -1,0 +1,20 @@
+{
+ "id": "reject-settled-transfer-unknown",
+ "note": "\u00a715.4 L6. `unknown` on the transfer leg says the merchant submitted it and learned nothing conclusive. `settled` says it learned the outcome: the money landed. The second answer supersedes the first, and a row carrying both records a conclusion beside a statement that it was never reached.",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "refused",
+  "reason": "internal_error",
+  "legs": {
+   "authorization": "executed",
+   "transfer": "unknown"
+  },
+  "settlement": "settled"
+ },
+ "expected": {
+  "outcome": "REJECT",
+  "code": "settlement_contradicts_leg"
+ },
+ "twin": "internal-error-transfer-unread"
+}

@@ -21,6 +21,7 @@ import { fileURLToPath } from 'node:url'
 import {
   REQUIRED_LEG_STATUS,
   BOUNDED_LEG_STATUS,
+  LEG_SETTLEMENT,
   REASON_SETTLEMENT,
   REASON_CEILING,
   REFUSAL_REASONS,
@@ -180,6 +181,46 @@ else {
   }
   for (const name of Object.keys(REASON_SETTLEMENT)) {
     if (!prose.has(name)) fail('repeat settlement', `REASON_SETTLEMENT constrains "${name}" but §5 has no row for it`)
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * 2c. The leg/settlement table: prose §15.4 L6 vs LEG_SETTLEMENT
+ * ------------------------------------------------------------------ */
+
+// §15.4 keeps two tables. Their second columns tell them apart: the leg
+// contract's is `authorization`, the leg/settlement table's is `leg`.
+const legSettleRows = tablesAfter(ext, ['leg', 'settlement'])
+  .find((t) => t.header[1] === 'leg')?.rows
+if (!legSettleRows) fail('refusal-row.md', 'no table whose second column is "leg" and which names settlement')
+else {
+  const prose = new Map()
+  for (const r of legSettleRows) {
+    const leg = r[1].replace(/`/g, '').trim()
+    const status = r[2].replace(/`/g, '').trim()
+    if (!['authorization', 'transfer'].includes(leg)) continue
+    if (!['not_reached', 'executed', 'failed', 'unknown'].includes(status)) continue
+    const states = (r[3].match(/`(not_submitted|pending|settled|unknown)`/g) ?? [])
+      .map((m) => m.replace(/`/g, ''))
+      .sort()
+    if (!states.length) fail('leg settlement', `§15.4 L6 row ${leg}.${status} names no settlement state`)
+    else prose.set(`${leg}.${status}`, states)
+  }
+  for (const leg of Object.keys(LEG_SETTLEMENT)) {
+    for (const status of Object.keys(LEG_SETTLEMENT[leg])) {
+      const key = `${leg}.${status}`
+      const want = prose.get(key)
+      const got = [...LEG_SETTLEMENT[leg][status]].sort()
+      if (!want) {
+        fail('leg settlement', `LEG_SETTLEMENT has ${key} but §15.4 L6 has no row for it`)
+      } else if (want.join(',') !== got.join(',')) {
+        fail('leg settlement', `${key}: §15.4 says ${want.join(' | ')}, code says ${got.join(' | ')}`)
+      }
+    }
+  }
+  for (const key of prose.keys()) {
+    const [leg, status] = key.split('.')
+    if (!LEG_SETTLEMENT[leg]?.[status]) fail('leg settlement', `§15.4 L6 has ${key} but LEG_SETTLEMENT does not`)
   }
 }
 

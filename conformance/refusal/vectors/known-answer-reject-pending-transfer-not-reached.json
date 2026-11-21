@@ -1,0 +1,20 @@
+{
+ "id": "reject-pending-transfer-not-reached",
+ "note": "\u00a715.4 L6. `pending` says the transfer was submitted and has not concluded. Recording the transfer leg as `not_reached` says it was never submitted, so there is nothing that could be pending. A merchant waiting on a submission it also says it never made has written down one of the two wrongly.",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "refused",
+  "reason": "internal_error",
+  "legs": {
+   "authorization": "executed",
+   "transfer": "not_reached"
+  },
+  "settlement": "pending"
+ },
+ "expected": {
+  "outcome": "REJECT",
+  "code": "settlement_contradicts_leg"
+ },
+ "twin": "internal-error-permit-ok-transfer-never-sent"
+}

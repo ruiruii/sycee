@@ -13,6 +13,8 @@ import {
   REFUSAL_REASONS,
   REQUIRED_LEG_STATUS,
   BOUNDED_LEG_STATUS,
+  LEG_SETTLEMENT,
+  legSettlementCheck,
   ceilingFor,
 } from '../src/index.mjs';
 
@@ -328,4 +330,86 @@ test('mutant: dropping the order rule accepts a second leg reached before the fi
   const observed = { authorization: 'failed', transfer: 'failed' };
   assert.equal(tablesOnly(observed, 'nonce_already_used'), true, 'the two tables alone accept it');
   assert.equal(legSupport({ legs: observed, reason: 'nonce_already_used' }).ok, false, 'L4 does not');
+});
+
+/* ---------------------------------------------------------------- *
+ * L6: the transfer leg and the settlement describe one event
+ * ---------------------------------------------------------------- */
+
+test('a permit that landed with the transfer never sent is constructible', () => {
+  // §15.4 L6 admits this combination on purpose. Permit2 is two calls, and a
+  // process that dies between them leaves exactly this row. If the rule rejected
+  // it, the format could not describe a state the rail produces.
+  const r = row({
+    reason: 'internal_error',
+    settlement: 'not_submitted',
+    legs: { authorization: 'executed', transfer: 'not_reached' },
+  });
+  assert.equal(r.decision, 'refused');
+  assert.equal(r.settlement, 'not_submitted');
+  assert.equal(r.legs.transfer, 'not_reached');
+});
+
+test('a settlement that landed cannot sit beside a transfer that never concluded', () => {
+  // `failed` is excluded from this loop on purpose: `internal_error` does not
+  // admit it at all, so that row is refused one check earlier as a leg that
+  // contradicts its reason.
+  for (const transfer of ['not_reached', 'unknown']) {
+    assert.throws(
+      () => row({ reason: 'internal_error', settlement: 'settled', legs: { authorization: 'executed', transfer } }),
+      /settlement_contradicts_leg/,
+      `settled + transfer: ${transfer} must be refused`,
+    );
+  }
+});
+
+test('a transfer that never ran cannot sit beside a settlement in flight', () => {
+  assert.throws(
+    () => row({ reason: 'internal_error', settlement: 'pending', legs: { authorization: 'executed', transfer: 'not_reached' } }),
+    /settlement_contradicts_leg/,
+  );
+});
+
+test('an authorization that was stopped cannot sit beside a settlement that landed', () => {
+  // The state this closes: a risk refusal, a commercial refusal, a malformed
+  // payload or an expired authorization, each free to record `settled` beside an
+  // authorization the row says never ran. The allowance that can predate an
+  // attempt belongs to an accepted row, and an accepted row records no legs.
+  for (const [reason, authorization] of [
+    ['risk_policy_rejected', 'not_reached'],
+    ['commercial_refusal', 'not_reached'],
+    ['malformed_payload', 'not_reached'],
+    ['authorization_expired', 'unknown'],
+  ]) {
+    assert.throws(
+      () => row({ reason, settlement: 'settled', legs: { authorization } }),
+      /settlement_contradicts_leg/,
+      `${reason} with authorization: ${authorization} must not record settled`,
+    );
+  }
+});
+
+test('mutant: checking the reason tables but not the settlement accepts a row about two different attempts', () => {
+  const tablesOnly = (legs, reason) => {
+    for (const [table, required] of [[REQUIRED_LEG_STATUS, true], [BOUNDED_LEG_STATUS, false]]) {
+      for (const [leg, allowed] of Object.entries(table[reason] ?? {})) {
+        const observed = legs[leg];
+        if (required && observed === undefined) return false;
+        if (observed !== undefined && !allowed.includes(observed)) return false;
+      }
+    }
+    return true;
+  };
+  const observed = { authorization: 'executed', transfer: 'not_reached' };
+  assert.equal(tablesOnly(observed, 'internal_error'), true, 'the reason tables alone accept it');
+  assert.equal(
+    legSettlementCheck({ legs: observed, settlement: 'settled' }).ok,
+    false,
+    'L6 does not',
+  );
+  assert.deepEqual(
+    [...LEG_SETTLEMENT.transfer.executed],
+    ['settled', 'pending'],
+    'and `executed` is the only transfer state `settled` pairs with',
+  );
 });

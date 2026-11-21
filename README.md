@@ -28,7 +28,7 @@ git clone https://github.com/ruiruii/sycee.git
 cd sycee
 npm install
 npm run try                           # three receipts, one rule each — thirty seconds
-npm test                              # 223 tests
+npm test                              # 228 tests
 npm run verify:py                     # the same 12 vectors, verified in Python
 node examples/bilateral-consumption.mjs
 ```

@@ -109,6 +109,25 @@ const LEGS_BOUNDED = {
 const SETTLEMENT = ['not_submitted', 'pending', 'settled', 'unknown']
 const STATUSES = ['not_reached', 'executed', 'failed', 'unknown']
 
+// §15.4, L6. What a recorded leg permits `settlement` to say. Both legs carry a
+// row: an authorization that never ran cannot sit beside a settlement that
+// landed, and the accepted attempt where that pairing is real — allowance
+// approved earlier, `transferFrom` called directly — records no legs at all.
+const LEG_SETTLEMENT = {
+  authorization: {
+    executed: ['not_submitted', 'pending', 'settled', 'unknown'],
+    failed: ['not_submitted', 'unknown'],
+    not_reached: ['not_submitted', 'unknown'],
+    unknown: ['not_submitted', 'pending', 'unknown'],
+  },
+  transfer: {
+    executed: ['settled', 'pending'],
+    failed: ['not_submitted', 'unknown'],
+    not_reached: ['not_submitted', 'unknown'],
+    unknown: ['not_submitted', 'pending', 'unknown'],
+  },
+}
+
 /* ------------------------------------------------------------------ *
  * The checks, each one a sentence from the prose
  * ------------------------------------------------------------------ */
@@ -195,6 +214,16 @@ function checkRow(row, where) {
             add('R-legs', where, `§15.4, L4: transfer = ${row.legs.transfer} requires the authorization leg to have run; the row records ${row.legs.authorization}`)
           }
         }
+        // §15.4, L6: a recorded leg and the settlement describe one event, so a
+        // row recording both cannot have them tell different stories.
+        for (const leg of ['authorization', 'transfer']) {
+          const status = row.legs[leg]
+          if (status === undefined) continue
+          const allowed = LEG_SETTLEMENT[leg]?.[status]
+          if (allowed && !allowed.includes(row.settlement)) {
+            add('R-legs', where, `§15.4, L6: ${leg} = ${status} and settlement = ${row.settlement} describe different events; ${status} permits ${allowed.join('|')}`)
+          }
+        }
       }
     }
   }
@@ -264,6 +293,28 @@ const cases = [
   {
     label: 'refused could_not_compare with a leg observation',
     input: { decision: 'refused', reason: 'could_not_compare', settlement: 'unknown', legs: { authorization: 'unknown' } },
+  },
+  {
+    label: 'refused internal_error: permit landed, transfer never sent',
+    input: { decision: 'refused', reason: 'internal_error', settlement: 'not_submitted', legs: { authorization: 'executed', transfer: 'not_reached' } },
+  },
+  {
+    label: 'refused internal_error with a settled rail beside a transfer never sent',
+    input: { decision: 'refused', reason: 'internal_error', settlement: 'settled', legs: { authorization: 'executed', transfer: 'not_reached' } },
+    expect: 'refuse',
+    code: 'settlement_contradicts_leg',
+  },
+  {
+    label: 'refused risk_policy_rejected with a settlement that landed',
+    input: { decision: 'refused', reason: 'risk_policy_rejected', settlement: 'settled', legs: { authorization: 'not_reached' } },
+    expect: 'refuse',
+    code: 'settlement_contradicts_leg',
+  },
+  {
+    label: 'refused facilitator_timeout with a transfer never sent beside a pending rail',
+    input: { decision: 'refused', reason: 'facilitator_timeout', settlement: 'pending', legs: { authorization: 'unknown', transfer: 'not_reached' } },
+    expect: 'refuse',
+    code: 'settlement_contradicts_leg',
   },
   {
     label: 'accepted with a failed leg recorded',

@@ -227,6 +227,44 @@ export const BOUNDED_LEG_STATUS = Object.freeze({
 });
 
 /**
+ * §15.4, L6: what a recorded leg permits `settlement` to say.
+ *
+ * The fields describe one event from several sides. A transfer that executed is
+ * money that moved; a settlement that happened is a transfer that executed. A
+ * row recording both cannot have them disagree, and this table is the whole of
+ * that statement — no inference, only the four states the format defines.
+ *
+ * Both legs carry a row. An earlier reading left `authorization` out, on the
+ * argument that an allowance approved once lets a facilitator call
+ * `transferFrom` without re-running `permit`. That state is real, but it is an
+ * accepted attempt, and an accepted row records no legs at all — so the argument
+ * protected a row that cannot exist while leaving four constructible ones: a
+ * risk refusal, a commercial refusal, a malformed payload and an expired
+ * authorization, each recording `settled` beside an authorization that never
+ * ran. Every one of those says money moved for an attempt the row itself says
+ * was stopped before it could.
+ */
+export const LEG_SETTLEMENT = Object.freeze({
+  // `executed` is the only status any settlement can follow; the other three
+  // say the leg did not complete, so nothing can have settled.
+  authorization: Object.freeze({
+    executed: ['not_submitted', 'pending', 'settled', 'unknown'],
+    failed: ['not_submitted', 'unknown'],
+    not_reached: ['not_submitted', 'unknown'],
+    unknown: ['not_submitted', 'pending', 'unknown'],
+  }),
+  // `settled` pairs with `executed` and nothing else: once the settlement is
+  // known to have landed, the transfer leg is no longer unknown to the merchant
+  // that recorded it.
+  transfer: Object.freeze({
+    executed: ['settled', 'pending'],
+    failed: ['not_submitted', 'unknown'],
+    not_reached: ['not_submitted', 'unknown'],
+    unknown: ['not_submitted', 'pending', 'unknown'],
+  }),
+});
+
+/**
  * The evidence ceiling is a claim about third parties, not about the scheme.
  *
  * Three facts sit close together and are easy to conflate. A nonce read against
@@ -385,6 +423,39 @@ export function legSupport({ legs, reason }) {
     }
   }
   return { ok: true, code: 'supported' };
+}
+
+/**
+ * §15.4, L6: a recorded leg and the settlement state must describe the same
+ * event. Omitting a leg asserts nothing (L1), so only recorded legs are checked.
+ *
+ * @param {{legs?: object, settlement: string}} input
+ * @returns {{ok: boolean, code?: string, detail?: string}}
+ */
+export function legSettlementCheck({ legs, settlement }) {
+  if (!legs || typeof legs !== 'object') return { ok: true };
+  for (const leg of LEGS) {
+    const observed = legs[leg];
+    if (observed === undefined) continue;
+    const allowed = LEG_SETTLEMENT[leg]?.[observed];
+    if (!allowed) {
+      // legSupport rejects an unknown status first; this is the backstop for a
+      // caller that reaches the check without it.
+      return {
+        ok: false,
+        code: 'unknown_leg_status',
+        detail: `${leg}: ${observed} is not an observable state`,
+      };
+    }
+    if (!allowed.includes(settlement)) {
+      return {
+        ok: false,
+        code: 'settlement_contradicts_leg',
+        detail: `${leg} = ${observed} and settlement = ${settlement} describe different events; ${observed} permits ${allowed.join(' | ')}`,
+      };
+    }
+  }
+  return { ok: true };
 }
 
 /**
@@ -663,6 +734,12 @@ export function refusalRow(input) {
     if (!support.ok) {
       throw new TypeError(`refusalRow: ${support.code} — ${support.detail}`);
     }
+    // §15.4, L6. Runs after legSupport so a malformed leg is reported as that,
+    // not as a settlement disagreement it would also cause.
+    const ls = legSettlementCheck({ legs: input.legs, settlement });
+    if (!ls.ok) {
+      throw new TypeError(`refusalRow: ${ls.code} — ${ls.detail}`);
+    }
     const reproducible = reproducibleCeiling(reason, claimed);
     if (!reproducible.ok) {
       throw new TypeError(`refusalRow: not_reproducible — ${reproducible.reason}`);
@@ -920,6 +997,13 @@ export function verifyClaim(claim, opts = {}) {
   const rs = settlementCheck({ reason: refusal.reason, settlement: refusal.settlement });
   if (!rs.ok) errors.push(`${rs.code}: ${rs.detail}`);
   checks.settlementMatchesReason = rs.ok;
+
+  // §15.4, L6: a recorded transfer leg and the settlement state describe one
+  // event from two sides. A verifier that only re-ran the constructor's reason
+  // checks would pass a row whose two fields disagree.
+  const ls = legSettlementCheck({ legs: refusal.legs, settlement: refusal.settlement });
+  if (!ls.ok) errors.push(`${ls.code}: ${ls.detail}`);
+  checks.settlementMatchesLeg = ls.ok;
 
   // signing key vs payee
   const k = signingKeyCheck({
