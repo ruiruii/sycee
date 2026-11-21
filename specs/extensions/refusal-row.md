@@ -602,10 +602,12 @@ precondition for anyone proposing one.
 - The default `evidence_class` for a refused row is the reproducible ceiling, not the reason's
   base ceiling. A row that picks its own default would claim more than anyone can check by
   omission, which is the same failure as over-claiming on purpose.
-- `conformance/refusal/` — 48 known-answer files and a judge, `node conformance/refusal/judge.mjs
-  --expect=48`. Sixteen accepted vectors, each with a `-wrong` twin; sixteen rejected vectors, each
-  with an accepted near miss; two implementations, one in JavaScript against the constructor and
-  one in Python from the prose above.
+- `conformance/refusal/` — 61 known-answer files and a judge, `node conformance/refusal/judge.mjs
+  --expect=61`. Twenty-one accepted vectors, each with a `-wrong` twin; nineteen rejected vectors,
+  each with an accepted near miss; two implementations, one in JavaScript against the constructor
+  and one in Python from the prose above. The count is part of the check on purpose: adding a
+  file in a hurry and then widening the expected number is one command, and a set that shrinks by
+  accident is caught by nothing else.
 
   The word "independently" used to sit in that sentence. It does not belong there: one person
   wrote both implementations and the prose, so the two agreeing says the author is consistent
