@@ -43,8 +43,14 @@ CEILING = {
 
 # Reasons that are refused but are not in the ceiling table's closed set above
 # still need a name; §5 keeps one list, so these live in it as well.
+#
+# §5 gives none of the three a ceiling. Rather than leave the default to whichever
+# implementation reads the row, they are pinned here at the weakest class that can
+# still carry the claim: the row says an earlier attempt settled and carries no
+# reference to the settlement, so no third party can check this row's claim — only
+# a similar one, later. The JS reference constructor pins the same three values.
 OTHER_REASONS = {
-    "replay_already_settled": "chain_verifiable",
+    "replay_already_settled": "issuer_asserted",
     "replay_in_flight": "issuer_asserted",
     "could_not_compare": "issuer_asserted",
 }
