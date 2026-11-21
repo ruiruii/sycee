@@ -1,0 +1,19 @@
+{
+ "id": "could-not-compare-refused",
+ "note": "a prior presentation exists and how it settled could not be read. A comparison that did not happen is not a comparison that came out equal.",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "refused",
+  "reason": "could_not_compare",
+  "settlement": "unknown"
+ },
+ "observed": {
+  "evidence_class": "issuer_asserted",
+  "settlement": "unknown",
+  "final": true
+ },
+ "expected": {
+  "outcome": "ACCEPT"
+ }
+}

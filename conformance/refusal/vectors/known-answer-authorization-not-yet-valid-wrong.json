@@ -1,0 +1,22 @@
+{
+ "id": "authorization-not-yet-valid-wrong",
+ "note": "same input, one field answered wrongly: the default class falls back to the weakest one, which understates a claim the ledger can check.",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "refused",
+  "reason": "authorization_not_yet_valid",
+  "legs": {
+   "authorization": "failed"
+  },
+  "settlement": "not_submitted"
+ },
+ "observed": {
+  "evidence_class": "issuer_asserted",
+  "settlement": "not_submitted",
+  "final": true
+ },
+ "expected": {
+  "outcome": "ACCEPT"
+ }
+}

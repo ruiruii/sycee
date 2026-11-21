@@ -5,7 +5,10 @@ CREATE TABLE IF NOT EXISTS redemptions (
   proof_hash TEXT PRIMARY KEY,
   count INTEGER NOT NULL,
   resources TEXT NOT NULL,
-  first_seen TEXT NOT NULL
+  first_seen TEXT NOT NULL,
+  -- How the redemption settled, so a repeat can be compared with it rather than
+  -- assumed still in flight. NULL means "not known", which is not "not settled".
+  settlement TEXT
 );
 
 CREATE TABLE IF NOT EXISTS attempts (

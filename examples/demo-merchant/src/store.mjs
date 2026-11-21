@@ -50,10 +50,19 @@ export function memoryStore() {
     async get(proofHash) {
       const rec = redemptions.get(proofHash);
       if (!rec) return null;
-      return { count: rec.count, resources: [...rec.resources], firstSeen: rec.firstSeen };
+      return {
+        count: rec.count,
+        resources: [...rec.resources],
+        firstSeen: rec.firstSeen,
+        settlement: rec.settlement ?? null,
+      };
     },
     async addAttempt(row) {
       attempts.push({ id: attempts.length + 1, ...row });
+    },
+    async recordSettlement(proofHash, settlement) {
+      const rec = redemptions.get(proofHash);
+      if (rec) rec.settlement = settlement;
     },
     async merchantReceipt(proofHash) {
       for (let i = attempts.length - 1; i >= 0; i--) {
@@ -136,12 +145,28 @@ export function d1Store(db) {
       try {
         const row = await first(db, 'SELECT count, resources, first_seen FROM redemptions WHERE proof_hash = ?1', proofHash);
         if (!row) return null;
+        // The settlement column arrives with migration 0002. On a database that
+        // predates it the read still answers, with nothing known about settlement.
+        const recorded = await first(
+          db,
+          'SELECT settlement FROM redemptions WHERE proof_hash = ?1',
+          proofHash,
+        ).catch(() => null);
         return {
           count: Number(row.count),
           resources: row.resources ? String(row.resources).split(',').filter(Boolean) : [],
           firstSeen: row.first_seen,
+          settlement: recorded?.settlement ?? null,
         };
       } catch (err) {
+        throw annotateDb(err);
+      }
+    },
+    async recordSettlement(proofHash, settlement) {
+      try {
+        await run(db, 'UPDATE redemptions SET settlement = ?1 WHERE proof_hash = ?2', settlement, proofHash);
+      } catch (err) {
+        if (/no such column/i.test(String(err && err.message))) return;
         throw annotateDb(err);
       }
     },

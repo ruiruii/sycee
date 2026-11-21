@@ -3,7 +3,7 @@
 Vectors for the refusal row defined in [`specs/extensions/refusal-row.md`](../../specs/extensions/refusal-row.md), and a judge that checks two implementations against them.
 
 ```
-node conformance/refusal/judge.mjs --expect=48
+node conformance/refusal/judge.mjs --expect=61
 ```
 
 Exit 0 means no violation. Exit 2 means the judge itself could not run, which is never a pass.
@@ -18,9 +18,9 @@ The fix is the **twin rule**. Every accepted vector has a `-wrong` twin carrying
 
 ## The files
 
-`vectors/known-answer-*.json`, 48 files, sixteen of each kind.
+`vectors/known-answer-*.json`, 61 files: 42 accepted (21 right, 21 with a wrong twin) and 19 rejected.
 
-**Accepted, 16** (`known-answer-<name>.json`) — a legal constructor input, the fields it must produce, and the wrong twin:
+**Accepted, 21** (`known-answer-<name>.json`) — a legal constructor input, the fields it must produce, and the wrong twin:
 
 | file | what it pins down |
 |---|---|
@@ -40,14 +40,19 @@ The fix is the **twin rule**. Every accepted vector has a `-wrong` twin carrying
 | `authorization-expired-refused` | an expired window with the authorization unread: the reason permits it |
 | `nonce-spent-refused` | a spent nonce is a negative read on this attempt's own signature, so `chain_verifiable` survives |
 | `duplicate-payment-refused` | the earlier settlement is public ledger state |
+| `authorization-not-yet-valid` | a window that has not opened is the same public fact as one that has closed |
+| `commercial-refusal-auth-executed` | a business refusal still records the leg it observed |
+| `replay-settled-refused` | a repeat whose earlier attempt settled; the row names the settlement and carries no reference to it, so the class is the issuer's word |
+| `replay-in-flight-refused` | a repeat while the first attempt is unresolved: pending, and not final |
+| `could-not-compare-refused` | a prior row exists and its settlement could not be read; the row says so instead of guessing |
 
 The last six exist because a reason's **default** class is a claim about who can check it. An implementation that gets the default wrong is wrong on every row it ever writes, and before this set was widened five of these reasons had no vector at all.
 
-**Wrong twins, 16** (`known-answer-<name>-wrong.json`) — same input, one field answered wrongly. Among them: `issuer_asserted` where a third party can check, `chain_verifiable` where nobody can, `chain_verifiable` where the class is unreachable, an unread leg promoted to a settled one, and an evidence class attached to a row that asserts no reason.
+**Wrong twins, 21** (`known-answer-<name>-wrong.json`) — same input, one field answered wrongly. Among them: `issuer_asserted` where a third party can check, `chain_verifiable` where nobody can, `chain_verifiable` where the class is unreachable, an unread leg promoted to a settled one, a pending settlement closed as final, and an evidence class attached to a row that asserts no reason.
 
-**Rejected, 16** (`known-answer-reject-*.json`) — inputs no row should be constructible from, the code the constructor must fail with, and a `twin` naming an accepted file that differs in exactly one place:
+**Rejected, 19** (`known-answer-reject-*.json`) — inputs no row should be constructible from, the code the constructor must fail with, and a `twin` naming an accepted file that differs in exactly one place:
 
-`leg_contradicts_reason` (eight files: transfer recorded as executed; wrong amount with an executed authorization; a risk refusal after submission; an expired authorization recorded as executed; a spent nonce recorded as `not_reached`; `transfer_leg_failed` with the authorization unread; with the transfer unread; with the transfer never reached), `leg_not_observed`, `unknown_leg`, `unknown_leg_status`, `not_reproducible`, `finality_pending_is_not_final`, `bad_decision`, `bad_settlement`, `unreviewed_reason`.
+`leg_contradicts_reason` (ten files: transfer recorded as executed; wrong amount with an executed authorization; a risk refusal after submission; an expired authorization recorded as executed; a spent nonce recorded as `not_reached`; a commercial refusal whose authorization is unknown; a settled replay whose authorization was never reached; `transfer_leg_failed` with the authorization unread; with the transfer unread; with the transfer never reached), `leg_not_observed`, `unknown_leg`, `unknown_leg_status`, `not_reproducible`, `finality_pending_is_not_final` (two: a pending row presented as final under `facilitator_timeout` and under another reason), `bad_decision`, `bad_settlement`, `unreviewed_reason` (two: with and without leg observations).
 
 The rejected family exists because the accepted family alone cannot catch a constructor that accepts everything. Each rejected file's near-miss twin is accepted, so a constructor that refuses everything fails as well.
 
@@ -133,9 +138,15 @@ agreed with every file, 15 passed the set as it stood. That number — not the 2
 one that measured this directory, because it asks what a wrong implementation can get away with
 rather than what a careful one got right.
 
-The set is now 40 files: eight new rejected vectors for the mistakes that were passing, and four
+The set then went to 48: eight new rejected vectors for the mistakes that were passing, and four
 new accepted vectors with their wrong twins, because three of those mistakes were only reachable
 through a row the set had no example of. The one worth naming: `transfer_leg_failed` with
 `transfer: unknown` passed before, and §15.7 claimed a mutant covered it — the only vector that
 could have covered it recorded the transfer as `failed` instead, so the rule was asserted and
 never tested.
+
+It is now 61, after the third reader's second run. Of the fifteen mistakes that had passed the
+48, fourteen were caught by it; one was not — a constructor that rejects a pending row presented
+as final only when the reason is `facilitator_timeout`, because all three pending vectors used
+that reason. The reader also named three rules with no vector at all, and the reasons that had
+none. The eleven new files cover those.

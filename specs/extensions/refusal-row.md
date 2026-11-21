@@ -145,7 +145,18 @@ an evidence class, and drifts into marketing.
 | `risk_policy_rejected` | `issuer_asserted` | declined by an undisclosed policy |
 | `commercial_refusal` | `issuer_asserted` | declined on business grounds, no technical cause |
 | `internal_error` | `issuer_asserted` | the seller failed and is not claiming a cause |
+| `replay_already_settled` | `issuer_asserted` | a prior presentation of this proof settled (§5.2) |
+| `replay_in_flight` | `issuer_asserted` | a prior presentation is unresolved (§5.2) |
+| `could_not_compare` | `issuer_asserted` | a prior row exists, its settlement state was unreadable (§5.2) |
 | anything else | `issuer_asserted` | fail closed: an unreviewed reason never sounds rigorous |
+
+The last row is a bound, not a permission. An unknown reason is not a reason: §6.2 rejects the
+row, and the only thing a verifier does with its ceiling is refuse to believe a class above it.
+Neither reading produces a row that is accepted, which is why the two can stand in one document.
+
+The class rows record a ceiling, not a default. A row that omits `evidence_class` gets the
+reproducible ceiling of §15.7, which for a reason that depends on an unattributable leg is
+lower than the row here.
 
 `insufficient_funds` is the one reason whose check is not monotonic. A
 nonce, once consumed, is consumed; a settlement, once landed, is landed. A balance is a
@@ -156,7 +167,9 @@ reach if a row carried a block reference, because a ceiling column that names an
 class is a column a reader will follow into a rejection. If a later version adds a block
 reference, this row moves back up.
 
-Three reasons also exist to describe a repeat presentation, and they are not the same fact:
+Three reasons also exist to describe a repeat presentation, and they are not the same fact. They
+are part of the closed set; they appear in the table above rather than in a second ceiling table,
+so that one column bounds every reason.
 
 | `reason` | Settlement claimed | Meaning |
 |---|---|---|
@@ -502,7 +515,9 @@ absence of a claim.
 The permitted statuses are part of the format, not of one implementation, so they are listed
 here. A row whose recorded status is outside its reason's row is rejected with
 `leg_contradicts_reason`; a row that omits a leg the reason requires is rejected with
-`leg_not_observed`.
+`leg_not_observed`. A status outside the four in the table above is rejected with
+`unknown_leg_status`, whatever the reason: a reader cannot tell a value it does not know from a
+value that was never written.
 
 | `reason` | `authorization` | `transfer` |
 |---|---|---|
@@ -520,13 +535,16 @@ here. A row whose recorded status is outside its reason's row is rejected with
 | `risk_policy_rejected` | `not_reached`, `unknown` | — |
 | `commercial_refusal` | `not_reached`, `unknown` | — |
 | `replay_already_settled` | `executed` | — |
+| `duplicate_payment` | `executed` | — |
 | `replay_in_flight` | — | — |
 | `could_not_compare` | — | — |
-| anything else | not pinned; the reason is unknown and the row already fails closed | — |
+| anything else | any legal status | any legal status |
 
 — means the leg is neither required nor forbidden: the reason claims nothing about it, so
 recording it or leaving it out both stand, provided the status is legal under the table in
-15.4.
+15.4. A reason on the table's last row makes no claim that any observation could contradict, so
+it records what it saw; the row is already rejected by §6.2 for its reason alone, and there is
+nothing a leg observation could add to that.
 
 Two entries carry the weight of this section. `transfer_leg_failed` is pinned on **both** legs,
 because the sentence is a conjunction: a merchant that did not observe the authorization run

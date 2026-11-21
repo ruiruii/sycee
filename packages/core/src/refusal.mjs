@@ -85,7 +85,7 @@ export const REFUSAL_REASONS = Object.freeze({
   /** accepted, served */
   accepted: null,
   /** the same proof was already settled; this presentation is a repeat */
-  replay_already_settled: 'the proof being presented was settled on an earlier attempt',
+  replay_already_settled: 'an earlier presentation of this proof settled; this one is a repeat',
   /** the same proof is being presented concurrently and the first one is not final yet */
   replay_in_flight: 'another presentation of the same proof is not yet resolved',
   /** the prior attempt was recorded, but its settlement state could not be read */
@@ -168,6 +168,11 @@ export const REQUIRED_LEG_STATUS = Object.freeze({
   risk_policy_rejected: { authorization: ['not_reached', 'unknown'] },
   commercial_refusal: { authorization: ['not_reached', 'unknown'] },
   replay_already_settled: { authorization: ['executed'] },
+  duplicate_payment: { authorization: ['executed'] },
+  // §15.4 lists these two with `—` on both legs: neither makes a claim a leg
+  // observation could contradict, so any legal status stands and none is required.
+  replay_in_flight: {},
+  could_not_compare: {},
 });
 
 /**
@@ -278,8 +283,12 @@ export function legSupport({ legs, reason }) {
     }
   }
   const required = REQUIRED_LEG_STATUS[reason];
-  if (!required) {
-    return { ok: false, code: 'no_leg_contract', detail: `${reason} has no leg contract; it cannot carry leg observations` };
+  if (required === undefined) {
+    // §15.4 last row: an unknown `reason` makes no claim any observation could
+    // contradict, so it records what it saw. The row is rejected for its reason
+    // alone (§6.2); refusing the observation as well would make the one row that
+    // should carry evidence the only one forbidden to.
+    return { ok: true, code: 'supported' };
   }
   for (const [leg, allowed] of Object.entries(required)) {
     const observed = legs[leg];

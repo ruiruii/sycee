@@ -1,0 +1,22 @@
+{
+ "id": "commercial-refusal-auth-executed-wrong",
+ "note": "same input, one field answered wrongly: a policy refusal cannot make the settlement checkable, so the class closes at the issuer's word.",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "refused",
+  "reason": "commercial_refusal",
+  "legs": {
+   "authorization": "not_reached"
+  },
+  "settlement": "not_submitted"
+ },
+ "observed": {
+  "evidence_class": "client_verifiable",
+  "settlement": "not_submitted",
+  "final": true
+ },
+ "expected": {
+  "outcome": "ACCEPT"
+ }
+}

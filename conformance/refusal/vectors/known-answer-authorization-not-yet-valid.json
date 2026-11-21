@@ -1,0 +1,22 @@
+{
+ "id": "authorization-not-yet-valid",
+ "note": "the authorization window has not opened. The window is public ledger state, so the claim survives without the seller, and a reader that defaults the class lower than the table allows is telling a checkable claim it is uncorroborated.",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "refused",
+  "reason": "authorization_not_yet_valid",
+  "legs": {
+   "authorization": "failed"
+  },
+  "settlement": "not_submitted"
+ },
+ "observed": {
+  "evidence_class": "chain_verifiable",
+  "settlement": "not_submitted",
+  "final": true
+ },
+ "expected": {
+  "outcome": "ACCEPT"
+ }
+}

@@ -1,0 +1,19 @@
+{
+ "id": "replay-in-flight-refused-wrong",
+ "note": "same input, one field answered wrongly: a refusal about an unresolved attempt is closed as final, telling the reader to stop looking at the moment looking matters most.",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "refused",
+  "reason": "replay_in_flight",
+  "settlement": "pending"
+ },
+ "observed": {
+  "evidence_class": "issuer_asserted",
+  "settlement": "pending",
+  "final": true
+ },
+ "expected": {
+  "outcome": "ACCEPT"
+ }
+}
