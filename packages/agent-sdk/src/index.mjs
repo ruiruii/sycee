@@ -8,7 +8,72 @@
  * The seller cannot observe either. This SDK instruments them and co-signs.
  */
 
-import { buildVSR, sha256, signVSR, toSpanAttributes, verifyVSR, nowISO, SCHEMA_VERSION } from '@sycee/core';
+import { buildVSR, sha256, signVSR, toSpanAttributes, verifyVSR, nowISO, SCHEMA_VERSION, attemptIdentity } from '@sycee/core';
+
+/** The members of the attempt identity that live in the 402 challenge. */
+const CHALLENGE_MEMBERS = ['scheme', 'network', 'payTo', 'asset', 'amount'];
+
+/**
+ * Compose the attempt identity from the request the agent made and the payment
+ * requirements the seller handed back.
+ *
+ * Computed locally on purpose: copying the seller's value would make every
+ * reconciliation pass by construction. The point of computing it separately is
+ * that a disagreement becomes visible as two different keys, instead of two
+ * parties quoting one number at each other.
+ *
+ * @returns {{ id: string|null, unavailable: string|null }}
+ */
+function identityFrom({ url, method, accept }) {
+  if (!accept || typeof accept !== 'object') return { id: null, unavailable: 'challenge_has_no_accepts' };
+  const missing = CHALLENGE_MEMBERS.filter((m) => typeof accept[m] !== 'string' || accept[m] === '');
+  if (missing.length) return { id: null, unavailable: `challenge_missing_${missing.join('_')}` };
+
+  let parsed;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return { id: null, unavailable: 'unparseable_url' };
+  }
+
+  try {
+    return {
+      id: attemptIdentity({
+        method,
+        origin: parsed.origin,
+        path: parsed.pathname,
+        query: parsed.search.replace(/^\?/, ''),
+        payTo: accept.payTo,
+        asset: accept.asset,
+        network: accept.network,
+        amount: accept.amount,
+        scheme: accept.scheme,
+      }),
+      unavailable: null,
+    };
+  } catch (err) {
+    // A members value this runtime cannot normalise is not an identity. Saying
+    // so is better than substituting one.
+    return { id: null, unavailable: `identity_error_${err && err.message ? err.message : 'unknown'}` };
+  }
+}
+
+/**
+ * Pull the seller's signed refusal out of a 402 body, if there is one.
+ *
+ * The first 402 is the challenge: an offer, not an answer, so it has none. A 402
+ * that comes back after payment was sent is the seller declining an attempt the
+ * buyer already made, and it is the one the buyer's ledger has to keep.
+ */
+async function refusalFrom(res) {
+  if (res.status !== 402) return null;
+  const body = await res.clone().json().catch(() => null);
+  if (!body || typeof body !== 'object') return null;
+  const receipt = body.refusal_receipt ?? null;
+  const reason = body.refusal_reason ?? body.reason ?? null;
+  if (!receipt && !reason) return null;
+  return { reason, receipt };
+}
 
 /**
  * @param {{
@@ -38,6 +103,9 @@ export function createSpend(config) {
     if (res.status !== 402) return res;
 
     const challenge = await res.clone().json().catch(() => ({}));
+    const accept = challenge?.accepts?.[0] ?? null;
+    const identity = identityFrom({ url, method, accept });
+
     const proof = await config.pay(challenge, init, url);
     const headers = new Headers(init.headers ?? {});
     if (typeof proof === 'string') {
@@ -59,13 +127,26 @@ export function createSpend(config) {
       }
     }
 
+    // A refusal is the seller's answer to a payment that was already sent. It
+    // comes back as a signed receipt in the 402 body, and until now this SDK
+    // dropped it — so the buyer's own ledger was missing exactly the case where
+    // the two sides most often disagree.
+    const refusal = await refusalFrom(res);
+
     const entry = {
       url,
       method,
+      attemptIdentity: identity.id,
+      identityUnavailable: identity.unavailable,
+      // What the buyer actually saw, in the buyer's own words. The seller's row
+      // says what the seller decided; this says what arrived.
+      observedHttp: res.status,
+      decision: res.ok ? 'accepted' : refusal ? 'refused' : 'unknown',
       proofHash,
       deliveredAt: nowISO(),
       deliveryStatus: res.ok ? 'delivered' : 'failed',
       status: res.status,
+      refusal,
       merchantReceipt,
       consumed: 'unknown',
       consumedBy: [],
@@ -233,3 +314,118 @@ export function linkReceipts(merchantEnvelope, agentEnvelope) {
 }
 
 export { SCHEMA_VERSION };
+
+/* ------------------------------------------------------------------ *
+ * Reconciliation: the buyer's ledger beside the seller's rows
+ * ------------------------------------------------------------------ */
+
+function briefBuyer(entry) {
+  if (!entry) return null;
+  return {
+    observedHttp: entry.observedHttp,
+    decision: entry.decision,
+    refusalReason: entry.refusal?.reason ?? null,
+    proofHash: entry.proofHash,
+    at: entry.deliveredAt,
+  };
+}
+
+function briefSeller(row) {
+  if (!row) return null;
+  return {
+    decision: row.decision,
+    reason: row.reason ?? null,
+    settlement: row.settlement ?? null,
+    proofHash: row.proof_hash ?? row.proofHash ?? null,
+    presentation: row.presentation ?? null,
+  };
+}
+
+function verdictFor(buyer, seller) {
+  if (buyer && seller) {
+    // The only thing both sides can see is whether the attempt ended in a
+    // served response or a 402. Anything finer than that is one side's claim.
+    const buyerAccepted = buyer.observedHttp < 400;
+    const sellerAccepted = seller.decision === 'accepted';
+    return buyerAccepted === sellerAccepted ? 'match' : 'status_disagrees';
+  }
+  return buyer ? 'only_buyer' : 'only_seller';
+}
+
+/**
+ * Put the buyer's ledger beside the seller's rows, one attempt at a time.
+ *
+ * What this answers: do the two accounts describe the same set of attempts.
+ * What it does not answer: which account is right. The buyer cannot see
+ * settlement, the seller cannot see what arrived at the buyer, and a verdict
+ * from either side would be a claim neither can support.
+ *
+ * `status_disagrees` means "look here", not "the seller lied" — and
+ * `only_seller` can equally mean the buyer never turned logging on.
+ *
+ * @param {{ agentEntries?: any[], merchantRows?: any[] }} input
+ */
+export function reconcile({ agentEntries = [], merchantRows = [] } = {}) {
+  const buyers = new Map();
+  const sellers = new Map();
+  const unidentified = [];
+
+  for (const entry of agentEntries) {
+    if (!entry.attemptIdentity) {
+      unidentified.push({
+        side: 'buyer',
+        reason: entry.identityUnavailable ?? 'no_identity',
+        url: entry.url,
+        observedHttp: entry.observedHttp,
+      });
+      continue;
+    }
+    if (!buyers.has(entry.attemptIdentity)) buyers.set(entry.attemptIdentity, []);
+    buyers.get(entry.attemptIdentity).push(entry);
+  }
+
+  for (const row of merchantRows) {
+    const key = row.attempt_identity ?? row.attemptIdentity;
+    if (!key) {
+      unidentified.push({ side: 'seller', reason: 'row_without_identity', reason_code: row.reason ?? null });
+      continue;
+    }
+    if (!sellers.has(key)) sellers.set(key, []);
+    sellers.get(key).push(row);
+  }
+
+  const pairs = [];
+  for (const key of new Set([...buyers.keys(), ...sellers.keys()])) {
+    // Within one identity, the nth presentation is the nth time either side saw
+    // this attempt. The buyer has no `presentation` field and does not need one.
+    const buyerSide = [...(buyers.get(key) ?? [])].sort((a, b) =>
+      String(a.deliveredAt).localeCompare(String(b.deliveredAt)));
+    const sellerSide = [...(sellers.get(key) ?? [])].sort((a, b) =>
+      (a.presentation ?? 1) - (b.presentation ?? 1));
+
+    const n = Math.max(buyerSide.length, sellerSide.length);
+    for (let i = 0; i < n; i++) {
+      const buyer = buyerSide[i] ?? null;
+      const seller = sellerSide[i] ?? null;
+      pairs.push({
+        attemptIdentity: key,
+        presentation: i + 1,
+        buyer: briefBuyer(buyer),
+        seller: briefSeller(seller),
+        verdict: verdictFor(buyer, seller),
+      });
+    }
+  }
+
+  const summary = {
+    pairs: pairs.length,
+    match: 0,
+    status_disagrees: 0,
+    only_buyer: 0,
+    only_seller: 0,
+    unidentified: unidentified.length,
+  };
+  for (const pair of pairs) summary[pair.verdict] += 1;
+
+  return { pairs, summary, unidentified };
+}
