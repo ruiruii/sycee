@@ -155,8 +155,8 @@ function checkRow(row, where) {
     add('R-final', where, '§4: final MUST be false when settlement is pending')
   }
   // §4: schema_version is the literal.
-  if (row.schema_version !== 'sycee/refusal/v0.1') {
-    add('R-version', where, `§4 names sycee/refusal/v0.1; the row says ${row.schema_version}`)
+  if (row.schema_version !== 'sycee/refusal/v0.2') {
+    add('R-version', where, `§4 names sycee/refusal/v0.2; the row says ${row.schema_version}`)
   }
   // §6.1–6.5
   if (row.decision === 'refused') {

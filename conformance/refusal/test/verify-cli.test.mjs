@@ -62,7 +62,7 @@ test('a receipt that contradicts its own reason fails, with the code the vectors
 
 test('a row that cannot be reconstructed from what it states is reported, not accepted', () => {
   const row = {
-    schema_version: 'sycee/refusal/v0.1',
+    schema_version: 'sycee/refusal/v0.2',
     decision: 'refused',
     reason: 'wrong_amount',
     attempt_identity: AID,

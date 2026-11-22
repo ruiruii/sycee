@@ -1,6 +1,6 @@
-# SYCEE v0.1 — Agent Spend Semantics
+# SYCEE v0.2 — Agent Spend Semantics
 
-> **Status:** Draft 0.1 · **License:** Apache-2.0 · **Date:** 2026-10-09
+> **Status:** Draft 0.2 · **License:** Apache-2.0 · **Date:** 2026-11-23
 > **One-line:** We record. Others score.
 
 ---
@@ -735,7 +735,7 @@ contribution, not a competing standard.
 
 Requested registrations under a future `agent.spend` namespace:
 
-- `SYCEE` schema version registry (`v0.1`, …).
+- `SYCEE` schema version registry (`v0.1`, `v0.2`, …).
 - `agent.spend.protocol` enumerated value registry.
 - `agent.spend.delivery.status` enumerated value registry.
 - `agent.spend.result.consumed` enumerated value registry (`yes` / `no` / `unknown`).

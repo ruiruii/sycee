@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+### The version is now v0.2, in the title and in the refusal rows
+
+The identity change was announced as "breaking, v0.1 → v0.2" while the title and the code still
+said v0.1. A verifier reading the spec could not tell which identity recipe a `sycee/refusal/v0.1`
+row used, which is exactly the failure the version exists to prevent.
+
+- SPEC title and status are now v0.2, and the registry lists v0.2.
+- `REFUSAL_SCHEMA_VERSION` is `sycee/refusal/v0.2`; the prose reader and its tests follow.
+- refusal-row §4 names `sycee/refusal/v0.2`; §11 no longer describes the pre-§3.1 recipe
+  (payload + requirements + a presentation suffix) and instead documents the separator
+  collision the current recipe avoids.
+- The VSR envelope schema stays `sycee/v0.1`: its field set did not change, and its
+  `request_fingerprint` has always been an opaque digest the verifier does not recompute.
+
 ### The examples carry the payment terms the identity needs
 
 The identity change made `payTo` a required member, and `createGates` fails loudly on a paid

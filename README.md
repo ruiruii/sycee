@@ -194,7 +194,7 @@ we have from outside.
 ## What is in this repo
 
 ```
-SPEC.md                       normative specification v0.1
+SPEC.md                       normative specification v0.2
 schema/vsr-v0.1.schema.json   JSON Schema for Verifiable Spend Receipts
 conformance/vectors/          signed conformance vectors + matrix
 packages/

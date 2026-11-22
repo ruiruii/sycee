@@ -34,7 +34,7 @@ import {
   verifyVSR,
 } from './index.mjs';
 
-export const REFUSAL_SCHEMA_VERSION = 'sycee/refusal/v0.1';
+export const REFUSAL_SCHEMA_VERSION = 'sycee/refusal/v0.2';
 
 /* ------------------------------------------------------------------ *
  * 1. Closed vocabularies

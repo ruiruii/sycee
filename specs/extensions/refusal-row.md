@@ -85,7 +85,7 @@ Two gaps worth naming, both real:
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `schema_version` | string | Yes | `sycee/refusal/v0.1` |
+| `schema_version` | string | Yes | `sycee/refusal/v0.2` |
 | `decision` | string | Yes | `accepted` or `refused` |
 | `reason` | string | When refused | One of the closed set in §5 |
 | `reason_detail` | string | When refused | The fixed sentence for that reason |
@@ -309,23 +309,25 @@ contradiction cases.
 
 ## 11. Reference: the collision the identity recipe has to avoid
 
-`attempt_identity` is a digest of the payment payload, the requirements, and the presentation
-ordinal (§4). The ordinal has to enter a canonical object, not be appended to a string before
-hashing. That is not a style preference:
+`attempt_identity` joins nine members with `|` (§4). A separator has the same failure mode an
+ordinal once had: if a member value may contain the separator, two different requests compose
+to the same string:
 
 ```js
-sha256(payload + String(n))                        // wrong: ('A:1', 2) and ('A:', 12) collide
-sha256(canonicalJSON({ spec: 'sycee/refusal/v0.1',
-                       payload: sha256(payload),
-                       requirements: sha256(req),
-                       presentation: String(n) })) // right: the fields cannot be spliced
+"a" + "|" + "b|c"   // (a, b|c)
+"a|b" + "|" + "c"   // (a|b, c) — one string, two requests
 ```
 
-The first line is not hypothetical. `packages/core/test/refusal.test.mjs` pins the collision
-and the fix side by side, because the easy way to add an ordinal is the one that breaks the
-property the ordinal was added for. An earlier draft of this document carried the digest under
-the name `attempt_binding` and described the ordinal as something a later revision might add;
-both were superseded by §4, and the name is not used anywhere in the format.
+The recipe therefore refuses a member that contains `|` rather than escaping it. Escaping
+reintroduces the splice: an escaped `|` and a literal one would be two ways to write one
+value, and a reader could not recompute the digest without knowing which convention was used.
+Rejection keeps the composition a pure order of the values as presented, which is what lets a
+caller who holds the request recompute the identity from this page alone.
+
+An earlier draft put the identity over the payment payload and requirements and folded
+`presentation` into the hash as a string suffix, which collided the same way (`('A:1', 2)` and
+`('A:', 12)`). §4 superseded that: the identity is over the request, and `presentation` moved
+onto the row, so the ordinal no longer enters the hash at all.
 
 ## 12. Why the surviving hole is not fixed here
 
