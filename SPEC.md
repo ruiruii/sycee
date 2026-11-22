@@ -254,7 +254,8 @@ records only accepted attempts MUST NOT claim conformance to this section.
 | `agent.spend.refusal.evidence_class` | enum | `issuer_asserted` \| `client_verifiable` \| `chain_verifiable` \| `independently_witnessed` | **MUST** when refused |
 | `agent.spend.refusal.settlement` | enum | `not_submitted` \| `pending` \| `settled` \| `unknown` | **MUST** |
 | `agent.spend.refusal.final` | bool | `false` whenever `settlement = pending` | **MUST** |
-| `agent.spend.refusal.attempt_identity` | string | `sha256:<hex>` over the attempt, not over the payload alone (§5.5.4) | **MUST** |
+| `agent.spend.refusal.attempt_identity` | string | `sha256:<hex>` over the request as sent, per §3.1 — never over the payload alone (§5.5.4) | **MUST** |
+| `agent.spend.refusal.presentation` | integer | 1-based ordinal of which presentation of that request the row is about | **MUST** |
 
 #### 5.5.2 Evidence class is a ceiling, not a field
 
@@ -309,22 +310,37 @@ Collapsing these into one reason erases the only information a buyer needs in or
 "my retry was legitimate and the seller's deduplication was wrong" from "my retry was a
 duplicate and the seller was right".
 
-#### 5.5.4 One payload is not one attempt
+#### 5.5.4 One request, one identity; one presentation, one row
 
-`attempt_identity` MUST be derived from a frozen ingress snapshot **and** from which
-presentation this is. A settled attempt and its refused replay carry the same payload and
-the same requirements, so any identifier derived from the payload alone resolves both to one
-value — and the receipt for the refusal then cannot be tied to the replay rather than to the
-original.
+`attempt_identity` MUST be derived once, at ingress, from the request as the client sent it,
+by the composition in §3.1. It MUST NOT be derived from the payment payload, and no step after
+ingress may re-derive it.
 
-A verifier that holds the payload can recompute the identity and confirm the binding.
+```
+attempt_identity = sha256( "sycee/attempt/v1" | method | origin | path | query
+                           | payTo | asset | network | amount | scheme )
+```
+
+A member containing `|` is refused rather than escaped. An empty query and an absent query are
+the same attempt. A verifier holding the request can recompute the identity and confirm the
+binding.
+
+Which presentation of the request a row is about is a field on the row, not part of the
+identity: `agent.spend.refusal.presentation`, the 1-based ordinal. A settled attempt and its
+refused replay therefore share one `attempt_identity` and differ in `presentation`. They are
+one attempt presented twice, and §5.5.3's repeat reasons describe exactly that pair.
+
+The identity is over the request rather than over the payload because a caller holding an
+x402 ledger (§5.5, x402) must be able to match a row to a settlement. An identity that only
+someone with our serialisation can recompute cannot be matched by anyone, which is the one
+thing a refusal record is for.
 
 #### 5.5.5 Mutual contradiction
 
-Two rows about the same `attempt_identity` MUST NOT disagree on `decision`. An
-implementation that receives a second, contradictory decision MUST report the contradiction
-and MUST NOT overwrite the first row. A replay refusal is not a contradiction: it concerns a
-different `attempt_identity` (§5.5.4).
+Two rows about the same `attempt_identity` and the same `presentation` MUST NOT disagree on
+`decision`. An implementation that receives a second, contradictory decision MUST report the
+contradiction and MUST NOT overwrite the first row. A replay refusal is not a contradiction:
+it is the same `attempt_identity` at a later `presentation` (§5.5.4).
 
 #### 5.5.6 The signing key is never the payee
 

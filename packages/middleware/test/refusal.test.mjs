@@ -178,7 +178,10 @@ test('a replay is a second attempt, not the same attempt twice', async () => {
 
   const rows = gates.ledger();
   assert.equal(rows.length, 2);
-  assert.notEqual(rows[0].attempt_identity, rows[1].attempt_identity, 'two presentations, two attempts');
+  // §4: the identity is over the request, so a replay is the same attempt
+  // presented again — one identity, two presentations, two rows.
+  assert.equal(rows[0].attempt_identity, rows[1].attempt_identity, 'one request, one identity');
+  assert.deepEqual(rows.map((r) => r.presentation), [1, 2], 'two presentations, two rows');
   assert.equal(rows[0].decision, 'accepted');
   assert.equal(rows[1].decision, 'accepted', 'count mode records the reuse without refusing it');
   assert.equal(second.state.headers['x-gates-redeem-count'], '2');
@@ -321,7 +324,11 @@ test('two servers record one attempt under their own key, so neither can speak f
 
 test('the ledger refuses to record a second, contradictory verdict on one attempt', () => {
   const led = refusalLedger({ signingPublicKey: KEYS.publicKey, privateKey: KEYS.privateKey });
-  const id = attemptIdentity({ payload: 'x', requirements: 'y', presentation: 1 });
+  const id = attemptIdentity({
+    method: 'POST', origin: 'https://seller.example', path: '/x', query: '',
+    payTo: '0x00000000000000000000000000000000000000aa', asset: 'USDC',
+    network: 'eip155:8453', amount: '0.02', scheme: 'exact',
+  });
   assert.equal(led.record({ decision: 'accepted', attemptIdentity: id, settlement: 'settled' }).recorded, true);
   const second = led.record({
     decision: 'refused',

@@ -21,6 +21,8 @@ import { fileURLToPath } from 'node:url'
 import {
   REQUIRED_LEG_STATUS,
   BOUNDED_LEG_STATUS,
+  ATTEMPT_IDENTITY_SPEC,
+  IDENTITY_MEMBERS,
   LEG_SETTLEMENT,
   REASON_SETTLEMENT,
   REASON_CEILING,
@@ -221,6 +223,55 @@ else {
   for (const key of prose.keys()) {
     const [leg, status] = key.split('.')
     if (!LEG_SETTLEMENT[leg]?.[status]) fail('leg settlement', `§15.4 L6 has ${key} but LEG_SETTLEMENT does not`)
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * 2d. The identity recipe: SPEC §3.1 = refusal-row §4 = ATTEMPT_IDENTITY_SPEC
+ * ------------------------------------------------------------------ */
+
+{
+  // Three copies of one composition drift silently, and a drifted identity makes
+  // two ledgers unmatchable while every test still passes. This compares the
+  // members, their order, and the domain tag across the two documents and the
+  // constant the implementation hashes with.
+  const recipeOf = (text, label) => {
+    const m = text.match(/attempt_identity = sha256\(\s*"([^"]+)"([\s\S]{0,400}?)\)/);
+    if (!m) {
+      fail('identity recipe', `${label} has no attempt_identity recipe`);
+      return null;
+    }
+    const members = m[2].split('|').map((x) => x.trim()).filter(Boolean);
+    return { spec: m[1], members };
+  };
+
+  const extText = ext;
+  const specText = spec;
+  const docs = [
+    ['refusal-row.md §4', recipeOf(extText, 'refusal-row.md')],
+    ['SPEC.md §5.5.4', recipeOf(specText, 'SPEC.md')],
+  ];
+
+  for (const [label, got] of docs) {
+    if (!got) continue;
+    if (got.spec !== ATTEMPT_IDENTITY_SPEC) {
+      fail('identity recipe', `${label} tags the hash "${got.spec}", the code uses "${ATTEMPT_IDENTITY_SPEC}"`);
+    }
+    if (got.members.join(',') !== IDENTITY_MEMBERS.join(',')) {
+      fail(
+        'identity recipe',
+        `${label} composes ${got.members.join(' | ')}, the code composes ${IDENTITY_MEMBERS.join(' | ')}`,
+      );
+    }
+  }
+
+  // `presentation` must not creep back into either recipe.
+  for (const [label] of docs) {
+    const text = label.startsWith('SPEC') ? specText : extText;
+    const m = text.match(/attempt_identity = sha256\(([\s\S]{0,400}?)\)/);
+    if (m && /presentation/.test(m[1])) {
+      fail('identity recipe', `${label} puts presentation back inside the hash`);
+    }
   }
 }
 

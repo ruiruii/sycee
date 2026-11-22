@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+### The identity is now x402's identity (breaking, v0.1 → v0.2)
+
+`attempt_identity` was `sha256(JCS({spec, payload: sha256(payload), requirements: sha256(requirements), presentation}))`. Nobody outside this repository could recompute that value, so no row could ever be matched to an x402 settlement — which is the one thing the row exists for. Nirium's 2026-11-17 update is the same failure from the other side: 37 on-chain payments against 39 logged receipts, totals that do not agree, and their own note that one-to-one matching needs the settlement hash on the paid path.
+
+- `attempt_identity` is now the composition in SPEC §3.1, which is x402 §5.5's ingress identity under a fixed member order: `sha256("sycee/attempt/v1" | method | origin | path | query | payTo | asset | network | amount | scheme)`. Written as an order, not a sorted-key object, so a reader can recompute it from the page.
+- `presentation` moved out of the hash and onto the row as `agent.spend.refusal.presentation` (1-based). A settled attempt and its refused replay now share one identity and differ in that field, which is what §5's repeat reasons describe.
+- SPEC §3.1, SPEC §5.5.4 and refusal-row §4 held three different definitions of "the identity". They now hold one, and `docs-parity` compares the member list and the domain tag across both documents and the code on every run.
+- `mergeRow` no longer reports a refusal as a contradiction of an earlier acceptance when the two rows are different presentations. Before this change a replay refusal was written, signed, sent to the buyer, and then dropped from the ledger as a conflict while the buyer held a 402.
+- A member containing `|` is refused rather than escaped; an empty query and an absent query are one attempt; a paid route with no `payTo` has no identity and now fails loudly instead of composing one from an empty string.
+- The vectors are unaffected: they carry `attempt_identity` as a literal, not a computed value. Tests 231.
+
 - §15.4: the leg table no longer uses an em dash. A bare cell is a required leg; a bracketed cell is optional to record and bounded in value. Every `transfer` cell was rewritten, and `internal_error` / `facilitator_timeout` now admit only `not_reached` or `unknown` — the two positions §15.3 assigns them. Recording `transfer: failed` under `internal_error` is rejected with `leg_contradicts_reason`; that row used to be constructible, and the earlier repair narrowed the authorization leg instead of fixing the cell, which made the row legal without making it true.
 - §15.4 L4: the legs are ordered. A transfer status other than `not_reached` says the transfer was submitted, which requires the authorization leg to have run, so such a row may not record the authorization as `not_reached` or `failed`.
 - `@sycee/core`: `BOUNDED_LEG_STATUS` alongside `REQUIRED_LEG_STATUS`; `legSupport` checks both and then the order rule.

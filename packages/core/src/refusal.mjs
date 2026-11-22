@@ -622,25 +622,71 @@ export function classifyRepeat({ priorCount, priorSettlement, priorStatusKnown =
  * ------------------------------------------------------------------ */
 
 /**
- * The refusal-side identity: derived once from the attempt, never from the
- * payload alone. `presentation` distinguishes two presentations of one payload.
+ * The attempt identity, composed over the request as the client sent it.
  *
- * @param {{payload: string, requirements: string, presentation?: string|number}} input
+ * This is SPEC §3.1's composition, which is x402 §5.5's ingress identity under a
+ * fixed member order. It is deliberately not a hash of the payment payload: a
+ * payload-only identity resolves every attempt that carries that payload to one
+ * value, and a caller holding an x402 ledger cannot match a row to a settlement
+ * by it. The order below is the specification's, not a sorted-key hash, because a
+ * reader must be able to recompute this from the document without guessing at a
+ * serialisation.
+ *
+ * `presentation` is not part of the identity. It records which presentation of one
+ * request this row is about, and lives on the row: two presentations of one
+ * request are one attempt that happened twice, and §5 says so by binding the
+ * repeat reasons to a shared identity.
+ *
+ * @param {{method: string, origin: string, path: string, query?: string,
+ *          payTo: string, asset: string, network: string, amount: string,
+ *          scheme: string}} input  `query` excludes the leading `?`; absent and
+ *          empty are the same case (x402 §5.5)
  * @returns {string} `sha256:<hex>`
  */
-export function attemptIdentity({ payload, requirements, presentation = 1 }) {
-  if (typeof payload !== 'string' || !payload) throw new TypeError('attemptIdentity: payload required');
-  if (typeof requirements !== 'string' || !requirements) {
-    throw new TypeError('attemptIdentity: requirements required');
+export const ATTEMPT_IDENTITY_SPEC = 'sycee/attempt/v1';
+
+export const IDENTITY_MEMBERS = ['method', 'origin', 'path', 'query', 'payTo', 'asset', 'network', 'amount', 'scheme'];
+
+export function attemptIdentity(input) {
+  if (input === null || typeof input !== 'object') {
+    throw new TypeError('attemptIdentity: an object of request fields is required');
   }
-  return sha256(
-    canonicalJSON({
-      spec: REFUSAL_SCHEMA_VERSION,
-      payload: sha256(payload),
-      requirements: sha256(requirements),
-      presentation: String(presentation),
-    }),
-  );
+  const parts = [];
+  for (const member of IDENTITY_MEMBERS) {
+    const value = member === 'query' ? (input.query ?? '') : input[member];
+    if (typeof value !== 'string') {
+      throw new TypeError(
+        `attemptIdentity: ${member}_required — expected a string, got ${JSON.stringify(value)}`,
+      );
+    }
+    if (value === '' && member !== 'query') {
+      throw new TypeError(`attemptIdentity: ${member}_required — must not be empty`);
+    }
+    if (value.includes('|')) {
+      // The separator cannot appear in a member, or two different requests could
+      // compose to the same string.
+      throw new TypeError(`attemptIdentity: ${member}_contains_separator — '|' is reserved`);
+    }
+    parts.push(value);
+  }
+  return sha256([ATTEMPT_IDENTITY_SPEC, ...parts].join('|'));
+}
+
+/**
+ * The presentation ordinal, as a row field. Two presentations of one request share
+ * an identity (§5); this is what tells them apart without entering the hash.
+ *
+ * @param {string|number} presentation 1-based
+ * @returns {number}
+ */
+export function presentationOrdinal(presentation = 1) {
+  const n = Number(presentation);
+  if (!Number.isInteger(n) || n < 1) {
+    throw new TypeError(
+      `presentationOrdinal: bad_presentation — a 1-based integer is required, got ${JSON.stringify(presentation)}`,
+    );
+  }
+  return n;
 }
 
 /**
@@ -767,6 +813,9 @@ export function refusalRow(input) {
     row.evidence_class = claimed;
   }
   if (input.proofHash) row.proof_hash = input.proofHash;
+  // §4: the identity is over the request, so two presentations of one request
+  // share it. The ordinal is what tells the rows apart, and it is on the row.
+  row.presentation = presentationOrdinal(input.presentation);
   // Recorded as observed, not as inferred. Absent means nothing was observed,
   // which is a different statement from "both legs failed".
   if (input.legs) row.legs = input.legs;
@@ -796,7 +845,9 @@ const BINDING_RULES = Object.freeze({
   // a repeat decision about one attempt must not change these
   same: ['decision'],
   // identifiers must agree even when the decision differs (for example a
-  // pending record that later resolves)
+  // pending record that later resolves). `presentation` is not here: two rows
+  // about one request are allowed to be about different presentations of it,
+  // and that field is the only thing telling them apart.
   stable: ['attempt_identity', 'signer.public_key', 'resource_id'],
 });
 
@@ -827,6 +878,12 @@ export function mergeRow(rows, incoming) {
     }
   }
   for (const r of same) {
+    // Only rows about the *same presentation* can contradict each other on the
+    // decision. Since §4 puts the identity over the request, a settled attempt and
+    // its refused replay share one identity and differ only in `presentation`;
+    // treating those as a contradiction dropped the refusal on the floor while the
+    // buyer was told 402. The pair is exactly what §5 exists to record.
+    if ((r.presentation ?? 1) !== (incoming.presentation ?? 1)) continue;
     if (r.decision === 'accepted' && incoming.decision === 'refused' && incoming.reason !== 'replay_already_settled' && incoming.reason !== 'replay_in_flight') {
       return {
         rows,

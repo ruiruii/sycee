@@ -146,7 +146,11 @@ try {
     refusalRow({
       decision: 'refused',
       reason: 'replay_in_flight',
-      attemptIdentity: attemptIdentity({ payload: 'proof-in-flight', requirements: 'req', presentation: 2 }),
+      attemptIdentity: attemptIdentity({
+        method: 'POST', origin: 'https://seller.example', path: '/proof-in-flight', query: '',
+        payTo: '0x00000000000000000000000000000000000000aa', asset: 'USDC',
+        network: 'eip155:8453', amount: '0.02', scheme: 'exact',
+      }),
       signingPublicKey: merchantKeys.publicKey,
       payTo: PAY_TO,
       settlement: 'pending',

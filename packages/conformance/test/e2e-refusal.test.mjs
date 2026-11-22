@@ -20,6 +20,11 @@ async function withServer(fn) {
     resourceId: 'paid.echo.v1',
     protocol: 'x402',
     price: { value: '0.001000', currency: 'USDC' },
+    // SPEC §3.1: the attempt identity is composed over the request, and a paid
+    // route without a payee has none. Fixed here so the e2e path is exercised.
+    payTo: '0x00000000000000000000000000000000000000aa',
+    network: 'eip155:8453',
+    scheme: 'exact',
     publicKey: MERCHANT.publicKey,
     privateKey: MERCHANT.privateKey,
     agentId: 'e2e:merchant',

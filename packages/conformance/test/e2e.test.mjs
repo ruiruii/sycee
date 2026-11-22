@@ -47,6 +47,10 @@ function makeMerchant() {
     resourceId: 'search.v1',
     protocol: 'x402',
     price: { value: '0.010000', currency: 'USDC' },
+    // SPEC §3.1: the identity is composed over the request; a paid route needs a payee.
+    payTo: '0x00000000000000000000000000000000000000aa',
+    network: 'eip155:8453',
+    scheme: 'exact',
     publicKey: merchantKeys.publicKey,
     privateKey: merchantKeys.privateKey,
     agentId: 'erc8004:8453:0xMERCHANT',
@@ -160,6 +164,12 @@ test('settlement status flows from verifyPayment into the signed receipt', async
   const gates = createGates({
     resourceId: 'search.v1',
     protocol: 'x402',
+    // SPEC §3.1: the identity is composed over the request, so a paid route
+    // names a payee. These cases are about settlement reporting, not pricing.
+    payTo: '0x00000000000000000000000000000000000000aa',
+    network: 'eip155:8453',
+    scheme: 'exact',
+    price: { value: '0.001000', currency: 'USDC' },
     publicKey: merchantKeys.publicKey,
     privateKey: merchantKeys.privateKey,
     store,
@@ -180,6 +190,12 @@ test('a transport wire header is mapped onto the spec enum (queued -> in_flight)
   const gates = createGates({
     resourceId: 'search.v1',
     protocol: 'x402',
+    // SPEC §3.1: the identity is composed over the request, so a paid route
+    // names a payee. These cases are about settlement reporting, not pricing.
+    payTo: '0x00000000000000000000000000000000000000aa',
+    network: 'eip155:8453',
+    scheme: 'exact',
+    price: { value: '0.001000', currency: 'USDC' },
     publicKey: merchantKeys.publicKey,
     privateKey: merchantKeys.privateKey,
     store,
@@ -198,6 +214,12 @@ test('no settlement signal at all stays in_flight — never absent', async () =>
   const gates = createGates({
     resourceId: 'search.v1',
     protocol: 'x402',
+    // SPEC §3.1: the identity is composed over the request, so a paid route
+    // names a payee. These cases are about settlement reporting, not pricing.
+    payTo: '0x00000000000000000000000000000000000000aa',
+    network: 'eip155:8453',
+    scheme: 'exact',
+    price: { value: '0.001000', currency: 'USDC' },
     publicKey: merchantKeys.publicKey,
     privateKey: merchantKeys.privateKey,
     store,
@@ -238,6 +260,12 @@ test('receipt URL follows the request host when the transport supplies one', asy
   const gates = createGates({
     resourceId: 'search.v1',
     protocol: 'x402',
+    // SPEC §3.1: the identity is composed over the request, so a paid route
+    // names a payee. These cases are about settlement reporting, not pricing.
+    payTo: '0x00000000000000000000000000000000000000aa',
+    network: 'eip155:8453',
+    scheme: 'exact',
+    price: { value: '0.001000', currency: 'USDC' },
     publicKey: merchantKeys.publicKey,
     privateKey: merchantKeys.privateKey,
     store: memoryStore(),

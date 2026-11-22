@@ -249,7 +249,11 @@ function checkRow(row, where) {
  * ------------------------------------------------------------------ */
 
 const keys = generateKeyPair()
-const identity = (n) => attemptIdentity({ payload: 'probe-payload', requirements: 'probe-req', presentation: n })
+const identity = () => attemptIdentity({
+  method: 'POST', origin: 'https://seller.example', path: '/probe', query: '',
+  payTo: '0x00000000000000000000000000000000000000aa', asset: 'USDC',
+  network: 'eip155:8453', amount: '0.02', scheme: 'exact',
+})
 
 const cases = [
   { label: 'accepted, not submitted', input: { decision: 'accepted', settlement: 'not_submitted' } },
@@ -339,7 +343,7 @@ let rejectedByProse = 0
 for (const c of cases) {
   const build = () => refusalRow({
     ...c.input,
-    attemptIdentity: identity(1),
+    attemptIdentity: identity(),
     signingPublicKey: keys.publicKey,
     resourceId: 'probe',
     protocol: 'x402',
@@ -382,7 +386,7 @@ const envelope = signRefusal(
     decision: 'refused',
     reason: 'wrong_amount',
     settlement: 'not_submitted',
-    attemptIdentity: identity(1),
+    attemptIdentity: identity(),
     signingPublicKey: keys.publicKey,
     resourceId: 'probe',
     protocol: 'x402',

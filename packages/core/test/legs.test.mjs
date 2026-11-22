@@ -19,7 +19,11 @@ import {
 } from '../src/index.mjs';
 
 const KEYS = generateKeyPair();
-const ATTEMPT = attemptIdentity({ payload: 'permit-payload', requirements: 'evm:8453', presentation: 1 });
+const ATTEMPT = attemptIdentity({
+  method: 'POST', origin: 'https://seller.example', path: '/run', query: '',
+  payTo: '0x00000000000000000000000000000000000000aa', asset: 'USDC',
+  network: 'eip155:8453', amount: '0.02', scheme: 'exact',
+});
 
 function row(over = {}) {
   return refusalRow({

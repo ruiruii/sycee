@@ -105,24 +105,32 @@ Two gaps worth naming, both real:
 `key_check` records what the implementation was able to check about its own signing key,
 rather than implying it checked. A verifier that knows the payee re-checks it independently.
 
-`attempt_identity` is derived once, from what the attempt presented, never from the payload
-alone. The recipe:
+`attempt_identity` is the attempt's identity under x402 §5.5: derived once, at ingress, from
+the request as the client sent it — never from the payment payload, and never re-derived after
+ingress. The recipe, which is SPEC §3.1's and is written as a member order rather than as a
+sorted-key object so that a reader can recompute it from this page:
 
 ```
-attempt_identity = sha256( canonicalJSON({
-    spec:          "sycee/refusal/v0.1",
-    payload:       sha256(payload),
-    requirements:  sha256(requirements),
-    presentation:  String(n)
-}) )
+attempt_identity = sha256( "sycee/attempt/v1" | method | origin | path | query
+                           | payTo | asset | network | amount | scheme )
 ```
 
-`sha256` is SHA-256 returned as `sha256:<64 hex>`; `canonicalJSON` is RFC 8785 (JCS)
-serialisation; `payload` and `requirements` are the bytes as presented — not decoded, not
-re-serialised — each hashed first, the digest entering the object; and `n` is the 1-based
-ordinal of this presentation of the payload. Two presentations of one payload differ only
-in `presentation`, so a settled attempt and its refused replay resolve to two identities
-(§3).
+The members are joined with `|`, in that order, each used as presented: `method` uppercase,
+`origin` as scheme and authority, `path` without a query, `query` without the leading `?` and
+empty when absent, and `payTo`, `asset`, `network`, `amount`, `scheme` from the payment terms.
+A member containing `|` is refused rather than escaped, so two requests cannot compose to the
+same string. `sha256` is SHA-256 returned as `sha256:<64 hex>`.
+
+**`presentation` is not in the hash.** It is a field on the row: the 1-based ordinal of which
+presentation of this request the row is about. Two presentations of one request share one
+identity and differ in `presentation`, because they are one attempt that happened twice — that
+is what makes §5's repeat reasons describable at all.
+
+The reason the identity is over the request and not over the payload: a caller holding an x402
+ledger must be able to match a row to a settlement. An identity computed from
+`sha256(payload)` and `sha256(requirements)` cannot be recomputed by anyone who has the
+request but not our serialisation of it, so the two ledgers could never be reconciled — which
+is the one thing a refusal row is for.
 
 ## 5. The closed reason set
 
@@ -208,8 +216,10 @@ A verifier of a single row, or of a claim carrying one, checks:
 7. `signer.public_key` is not the payee address, where the verifier knows the payee. Where it
    does not, the result is `not_measured`, reported as such.
 
-Two rows about one `attempt_identity` that disagree on `decision` are a contradiction. An
-implementation reports it and keeps both; it does not overwrite.
+Two rows about one `attempt_identity` **and the same `presentation`** that disagree on
+`decision` are a contradiction. An implementation reports it and keeps both; it does not
+overwrite. Two rows about one `attempt_identity` with different `presentation` values are not a
+contradiction: a settled attempt and its refused replay are exactly that pair (§3).
 
 ## 7. The portable claim
 

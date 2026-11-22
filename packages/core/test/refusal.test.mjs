@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 import {
   attemptIdentity,
+  presentationOrdinal,
   ceilingFor,
   classifyRepeat,
   exportClaim,
@@ -23,7 +24,19 @@ import {
 
 const KEYS = generateKeyPair();
 const OTHER = generateKeyPair();
-const ATTEMPT = attemptIdentity({ payload: 'payload-a', requirements: 'req-a', presentation: 1 });
+const REQUEST = (over = {}) => ({
+  method: 'POST',
+  origin: 'https://seller.example',
+  path: '/gift-cards',
+  query: '',
+  payTo: '0x00000000000000000000000000000000000000aa',
+  asset: 'USDC',
+  network: 'eip155:8453',
+  amount: '0.02',
+  scheme: 'exact',
+  ...over,
+});
+const ATTEMPT = attemptIdentity(REQUEST());
 
 function row(over = {}) {
   return refusalRow({
@@ -204,37 +217,66 @@ test('a verifier that knows the payee can catch a key/payee collision', () => {
  * attempt identity: payload is not attempt
  * ---------------------------------------------------------------- */
 
-test('one payload presented twice is one payload and two attempts', () => {
-  const first = attemptIdentity({ payload: 'same', requirements: 'r', presentation: 1 });
-  const second = attemptIdentity({ payload: 'same', requirements: 'r', presentation: 2 });
-  assert.notEqual(first, second, 'the replay must not collapse into the settled attempt');
-  const again = attemptIdentity({ payload: 'same', requirements: 'r', presentation: 1 });
-  assert.equal(first, again, 'and the same presentation must derive the same value');
+test('one request presented twice is one identity and two rows', () => {
+  // §4 as amended: the identity is over the request, so a replay resolves to the
+  // same identity as the attempt it repeats. `presentation` tells the rows apart.
+  const first = attemptIdentity(REQUEST());
+  const second = attemptIdentity(REQUEST());
+  assert.equal(first, second, 'a replay of one request is one attempt, not two');
+  assert.notEqual(presentationOrdinal(1), presentationOrdinal(2), 'the ordinal is what differs');
+
+  const led = refusalLedger({ signingPublicKey: KEYS.publicKey, privateKey: KEYS.privateKey });
+  led.record({ decision: 'accepted', attemptIdentity: first, settlement: 'settled', presentation: 1 });
+  const out = led.record({ decision: 'refused', reason: 'replay_already_settled', attemptIdentity: second, settlement: 'settled', presentation: 2 });
+  assert.equal(out.recorded, true, 'the repeat is recorded beside the settled row');
+  assert.equal(led.rows().length, 2);
+  assert.equal(led.rows()[0].attempt_identity, led.rows()[1].attempt_identity);
+  assert.deepEqual(led.rows().map((r) => r.presentation), [1, 2]);
 });
 
-test('different requirements are a different attempt', () => {
-  const a = attemptIdentity({ payload: 'p', requirements: 'r1', presentation: 1 });
-  const b = attemptIdentity({ payload: 'p', requirements: 'r2', presentation: 1 });
+test('a change in the terms is a different attempt', () => {
+  const a = attemptIdentity(REQUEST({ amount: '0.02' }));
+  const b = attemptIdentity(REQUEST({ amount: '0.03' }));
   assert.notEqual(a, b);
+  assert.notEqual(attemptIdentity(REQUEST({ payTo: '0x00000000000000000000000000000000000000bb' })), a);
+  assert.notEqual(attemptIdentity(REQUEST({ network: 'solana:mainnet' })), a);
 });
 
-test('attemptIdentity is sha256:<64 hex> and refuses empty input', () => {
+test('attemptIdentity is sha256:<64 hex> and refuses missing or empty members', () => {
   assert.match(ATTEMPT, /^sha256:[0-9a-f]{64}$/);
-  assert.throws(() => attemptIdentity({ payload: '', requirements: 'r' }), /payload required/);
-  assert.throws(() => attemptIdentity({ payload: 'p' }), /requirements required/);
+  assert.throws(() => attemptIdentity(REQUEST({ method: '' })), /method_required/);
+  assert.throws(() => attemptIdentity({ ...REQUEST(), payTo: undefined }), /payTo_required/);
+  assert.throws(() => attemptIdentity(null), /object of request fields/);
 });
 
-test('the payload and the presentation ordinal cannot be spliced into one value', () => {
-  // The obvious way to add the ordinal is to append it to the string before
-  // hashing. That collides: ("A:1", 2) and ("A:", 12) become the same bytes,
-  // so two different attempts derive one identity and the invariant is gone.
-  // This test pins the fix, not the bug.
-  const spliced = (payload, n) => sha256(payload + String(n));
-  assert.equal(spliced('A:1', 2), spliced('A:', 12), 'the flattening really does collide');
+test('an empty query and an absent query are the same attempt', () => {
+  // x402 §5.5 settles this: no query and an empty query are one case, and the
+  // member is omitted rather than written as an empty pair.
+  assert.equal(attemptIdentity(REQUEST({ query: '' })), attemptIdentity(REQUEST({ query: undefined })));
+  assert.notEqual(attemptIdentity(REQUEST({ query: 'q=a' })), attemptIdentity(REQUEST({ query: '' })));
+});
 
-  const a = attemptIdentity({ payload: 'A:1', requirements: 'r', presentation: 2 });
-  const b = attemptIdentity({ payload: 'A:', requirements: 'r', presentation: 12 });
-  assert.notEqual(a, b, 'the derivation must keep the two fields apart');
+test('the request members are joined in a fixed order, so the hash is reproducible from the text', () => {
+  // A sorted-key JSON form would also be reproducible, but only for someone who
+  // knows to sort. The specification writes the order out, and this pins it:
+  // recomputing by hand must give the same digest as the function.
+  const r = REQUEST();
+  const manual = sha256(
+    ['sycee/attempt/v1', r.method, r.origin, r.path, r.query, r.payTo, r.asset, r.network, r.amount, r.scheme].join('|'),
+  );
+  assert.equal(attemptIdentity(r), manual);
+});
+
+test('a separator inside a member is refused, because it would let two requests compose alike', () => {
+  assert.throws(() => attemptIdentity(REQUEST({ path: '/a|b' })), /path_contains_separator/);
+  assert.throws(() => attemptIdentity(REQUEST({ query: 'q=a|b' })), /query_contains_separator/);
+});
+
+test('the presentation ordinal is a 1-based integer, and is not hidden in the hash', () => {
+  assert.equal(presentationOrdinal(1), 1);
+  assert.equal(presentationOrdinal('3'), 3);
+  assert.throws(() => presentationOrdinal(0), /bad_presentation/);
+  assert.throws(() => presentationOrdinal(2.5), /bad_presentation/);
 });
 
 /* ---------------------------------------------------------------- *
@@ -276,8 +318,8 @@ test('a concurrent presentation is refused without claiming the money moved', ()
 
 test('the ledger records accepted and refused rows together and the tally adds up', () => {
   const led = refusalLedger({ signingPublicKey: KEYS.publicKey, privateKey: KEYS.privateKey });
-  const a1 = attemptIdentity({ payload: 'p1', requirements: 'r', presentation: 1 });
-  const a2 = attemptIdentity({ payload: 'p1', requirements: 'r', presentation: 2 });
+  const a1 = attemptIdentity(REQUEST({ path: '/p1' }));
+  const a2 = attemptIdentity(REQUEST({ path: '/p2' }));
 
   led.record({ decision: 'accepted', attemptIdentity: a1, settlement: 'settled' });
   led.record({ decision: 'refused', reason: 'replay_already_settled', attemptIdentity: a2, settlement: 'settled' });
@@ -290,7 +332,7 @@ test('the ledger records accepted and refused rows together and the tally adds u
 
 test('a refusal that contradicts an earlier acceptance of the same attempt is reported, not overwritten', () => {
   const led = refusalLedger({ signingPublicKey: KEYS.publicKey, privateKey: KEYS.privateKey });
-  const a = attemptIdentity({ payload: 'p', requirements: 'r', presentation: 1 });
+  const a = attemptIdentity(REQUEST());
   led.record({ decision: 'accepted', attemptIdentity: a, settlement: 'settled' });
   const out = led.record({ decision: 'refused', reason: 'insufficient_funds', attemptIdentity: a, settlement: 'not_submitted' });
 
@@ -302,8 +344,8 @@ test('a refusal that contradicts an earlier acceptance of the same attempt is re
 
 test('a replay refusal legitimately follows an acceptance of the same payload', () => {
   const led = refusalLedger({ signingPublicKey: KEYS.publicKey, privateKey: KEYS.privateKey });
-  const a1 = attemptIdentity({ payload: 'p', requirements: 'r', presentation: 1 });
-  const a2 = attemptIdentity({ payload: 'p', requirements: 'r', presentation: 2 });
+  const a1 = attemptIdentity(REQUEST());
+  const a2 = a1;
   assert.equal(led.record({ decision: 'accepted', attemptIdentity: a1, settlement: 'settled' }).recorded, true);
   assert.equal(led.record({ decision: 'refused', reason: 'replay_already_settled', attemptIdentity: a2, settlement: 'settled' }).recorded, true);
   assert.equal(led.rows().length, 2);
@@ -320,8 +362,8 @@ test('the same row recorded twice is stored once', () => {
 
 test('the ledger separates refusals a buyer cannot check from the rest', () => {
   const led = refusalLedger({ signingPublicKey: KEYS.publicKey, privateKey: KEYS.privateKey });
-  led.record({ decision: 'refused', reason: 'invalid_signature', attemptIdentity: attemptIdentity({ payload: 'a', requirements: 'r' }), settlement: 'not_submitted' });
-  led.record({ decision: 'refused', reason: 'commercial_refusal', attemptIdentity: attemptIdentity({ payload: 'b', requirements: 'r' }), settlement: 'not_submitted' });
+  led.record({ decision: 'refused', reason: 'invalid_signature', attemptIdentity: attemptIdentity(REQUEST({ path: '/a' })), settlement: 'not_submitted' });
+  led.record({ decision: 'refused', reason: 'commercial_refusal', attemptIdentity: attemptIdentity(REQUEST({ path: '/b' })), settlement: 'not_submitted' });
   const weak = led.unverifiable();
   assert.equal(weak.length, 1);
   assert.equal(weak[0].reason, 'commercial_refusal');

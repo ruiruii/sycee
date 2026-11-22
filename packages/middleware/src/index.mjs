@@ -230,31 +230,39 @@ export function createGates(config) {
   }) : null;
 
   /**
-   * Derive the attempt identity for one presentation.
+   * Derive the attempt identity from the request as the client sent it (SPEC §3.1,
+   * x402 §5.5). The presentation ordinal is not part of it: two presentations of
+   * one request are one attempt that happened twice, and `presentation` on the row
+   * is what tells the two rows apart.
    *
-   * Deliberately not called `proof_hash`: two presentations of one payload are
-   * one payload and two attempts, so the identity must also carry which
-   * presentation this is.
+   * A request whose members cannot be read gets no identity, and the caller
+   * records the attempt under a refusal instead of inventing one. Guessing the
+   * members would produce an identity nobody else can reproduce.
    */
-  function identityFor(req, proof, presentation) {
+  function identityFor(req) {
+    const url = new URL(req.url ?? '/', req.headers?.host ? `https://${req.headers.host}` : 'https://unknown.invalid');
+    const price = config.price ?? { value: '0.010000', currency: 'USDC' };
     return deriveAttemptIdentity({
-      payload: proof,
-      requirements: canonicalJSON({
-        resource: config.resourceFor?.(req) ?? config.resourceId,
-        protocol,
-        price: config.price ?? { value: '0.010000', currency: 'USDC' },
-      }),
-      presentation,
+      method: req.method ?? 'GET',
+      origin: url.origin,
+      path: url.pathname,
+      query: url.search.replace(/^\?/, ''),
+      payTo: String(config.payTo ?? ''),
+      asset: String(price.currency ?? ''),
+      network: String(config.network ?? 'eip155:8453'),
+      amount: String(price.value ?? price.amount ?? ''),
+      scheme: String(config.scheme ?? 'exact'),
     });
   }
 
   /** Record a refusal, and hand the caller the row so it can be surfaced. */
-  function recordRefusal({ req, res, proofHash, attemptId, reason, settlement, evidenceClass, payTo }) {
+  function recordRefusal({ req, res, proofHash, attemptId, presentation, reason, settlement, evidenceClass, payTo }) {
     if (!ledger) return null;
     const built = ledger.record({
       decision: 'refused',
       reason,
       attemptIdentity: attemptId,
+      presentation,
       resourceId: config.resourceFor?.(req) ?? config.resourceId,
       proofHash,
       settlement,
@@ -321,9 +329,9 @@ export function createGates(config) {
       // "not settled", and the predicate stays fail-closed.
       let settlementStatus = 'in_flight';
 
-      // One identity per presentation: a settled attempt and its refused replay
-      // share one payload but are two attempts, so they must not share one id.
-      const attemptId = identityFor(req, proof, count);
+      // One identity per request: a settled attempt and its refused replay share
+      // it, and `presentation: count` is what tells the two rows apart.
+      const attemptId = identityFor(req);
 
       if (config.verifyPayment) {
         let verdict;
@@ -342,6 +350,7 @@ export function createGates(config) {
           await store.recordSettlement?.(proofHash, 'absent');
           const row = recordRefusal({
             req,
+            presentation: count,
             res,
             proofHash,
             attemptId,
@@ -383,6 +392,7 @@ export function createGates(config) {
         if (verdict.decision === 'refused') {
           const row = recordRefusal({
             req,
+            presentation: count,
             res,
             proofHash,
             attemptId,
@@ -491,6 +501,7 @@ export function createGates(config) {
         ledger.record({
           decision: 'accepted',
           attemptIdentity: attemptId,
+          presentation: count,
           resourceId,
           proofHash,
           settlement: settlementStatus === 'settled' ? 'settled' : settlementStatus === 'absent' ? 'unknown' : 'pending',

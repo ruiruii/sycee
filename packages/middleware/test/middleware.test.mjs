@@ -14,6 +14,12 @@ function makeGates(overrides = {}) {
     resourceId: 'test.resource.v1',
     protocol: 'x402',
     price: { value: '0.001000', currency: 'USDC' },
+    // The attempt identity is composed over the request (SPEC §3.1), and a paid
+    // route without a payee has no identity to compose. These tests are about
+    // the receipt path, so the payee is a fixed address.
+    payTo: '0x00000000000000000000000000000000000000aa',
+    network: 'eip155:8453',
+    scheme: 'exact',
     publicKey: KEYS.publicKey,
     privateKey: KEYS.privateKey,
     agentId: 'test:merchant',
