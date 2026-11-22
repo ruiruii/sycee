@@ -47,7 +47,7 @@ const server = http.createServer(async (req, res) => {
     return;
   }
   res.writeHead(200, { 'content-type': 'application/json' });
-  res.end(JSON.stringify({ ok: true, gates_spec: 'v0.1' }));
+  res.end(JSON.stringify({ ok: true }));
 });
 
 server.listen(PORT, () => {

@@ -20,7 +20,6 @@ import {
   canonicalJSON,
   normalizeSettlement,
   nowISO,
-  requestFingerprint,
   settlementConsistency,
   sha256,
   signVSR,
@@ -543,11 +542,12 @@ export function createGates(config) {
       await store.recordSettlement?.(proofHash, settlementStatus);
 
       const completeSeenAt = nowISO();
-      const fingerprint = requestFingerprint({
-        method: req.method ?? 'GET',
-        url: req.url ?? '/',
-        params: req.query ?? {},
-      });
+
+      // The VSR's request_fingerprint is the same snapshot as the refusal row's
+      // attempt_identity — SPEC §3.1 says the probe-step identifier and the
+      // settlement-critical identity are one and the same. Computing a second,
+      // narrower digest here would give the two records two keys that a verifier
+      // cannot line up, which is the one thing the pair exists to let happen.
 
       // capture the handler's output without changing its behaviour
       let captured = null;
@@ -599,7 +599,7 @@ export function createGates(config) {
         consumed,
         consumedBy,
         consumedAt: consumed === 'yes' ? deliveredAt : undefined,
-        requestFingerprint: fingerprint,
+        requestFingerprint: attemptId,
         proofSeenAt: firstSeen ?? proofSeenAt,
         completeSeenAt,
         amount: config.price,

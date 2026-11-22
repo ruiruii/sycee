@@ -91,6 +91,7 @@ Two gaps worth naming, both real:
 | `reason_detail` | string | When refused | The fixed sentence for that reason |
 | `evidence_class` | string | When refused | `issuer_asserted`, `client_verifiable`, `chain_verifiable`, `independently_witnessed` |
 | `attempt_identity` | string | Yes | `sha256:<64 hex>`, derived per the recipe below |
+| `presentation` | integer | Yes | 1-based ordinal of which presentation of this request the row is about |
 | `settlement` | string | Yes | `not_submitted`, `pending`, `settled`, `unknown` |
 | `final` | boolean | Yes | MUST be `false` when `settlement` is `pending` |
 | `proof_hash` | string | No | Hash of the presented proof. The proof itself is never stored |
@@ -100,6 +101,7 @@ Two gaps worth naming, both real:
 | `observed_at` | string | Yes | ISO 8601 |
 | `signer.public_key` | string | Yes | `ed25519:<base64url>` |
 | `signer.role` | string | Yes | `merchant` or `agent` |
+| `signer.agent_id` | string | No | `erc8004:...` when the signer is an agent |
 | `key_check` | string | Yes | `distinct`, or `not_measured` when the payee is unknown |
 
 `key_check` records what the implementation was able to check about its own signing key,

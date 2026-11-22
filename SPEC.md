@@ -178,7 +178,7 @@ Attributes are emitted as OpenTelemetry span attributes on a span named
 |-----------|------|------|------------|
 | `agent.spend.protocol` | string | — | `x402` \| `mpp` \| `ap2` \| `alipay-a2m` \| `apop` \| `a2p2` \| `card-a2a` \| `other` |
 | `agent.spend.resource.id` | string | probe | Stable resource identifier assigned by the seller |
-| `agent.spend.request.fingerprint` | string | probe | `H(method + " " + url + " " + canonical_query)` |
+| `agent.spend.request.fingerprint` | string | probe | The §3.1 attempt identity over the request as sent |
 | `agent.spend.payment.proof_hash` | string | pay | `H(payment proof)`; **never the proof itself** |
 | `agent.spend.payment.proof_seen_at` | timestamp | pay | Seller first observed the proof |
 | `agent.spend.payment.complete_seen_at` | timestamp | complete | Seller accepted the proof |

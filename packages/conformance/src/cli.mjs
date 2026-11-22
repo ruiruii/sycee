@@ -150,7 +150,9 @@ function genVectors() {
         consumed: 'yes',
         consumedBy: ['task_4829'],
         consumedAt: '2026-10-09T12:00:05.100Z',
-        requestFingerprint: sha256('GET /search {"q":"agent payments"}'),
+        requestFingerprint: sha256(
+          'sycee/attempt/v1|GET|https://api.example.test|/search|q=agent%20payments|0x9a1f0000000000000000000000000000000000|USDC|eip155:8453|0.010000|exact',
+        ),
         proofSeenAt: '2026-10-09T12:00:00.000Z',
         completeSeenAt: '2026-10-09T12:00:01.200Z',
         amount: { value: '0.010000', currency: 'USDC' },

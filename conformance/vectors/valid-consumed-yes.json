@@ -21,7 +21,7 @@
       "settlement_status": "settled"
     },
     "protocol": "x402",
-    "request_fingerprint": "sha256:d63ad8db9c2ac0a522631d25fb67b641f0b7cfa8a331243d6f8edb57972c71d8",
+    "request_fingerprint": "sha256:686b982c2ea2d8f6651f61fe01d96a8dd5a3eef4838e7a9328878930da97a2de",
     "resource_id": "search.v1",
     "result": {
       "consumed": "yes",
@@ -39,5 +39,5 @@
       "role": "merchant"
     }
   },
-  "signature": "aZ6p8oLOo3X498zYvMoaWaXf15jqQBjVjNEwN7Gcede2klnpGqhD_b59fpVxKvo-9O48Rs1Nn2ogw_k4qxKxAQ"
+  "signature": "0DhYPlTY-eUUouhhDrskCfQ5AMEkh9a_GfJ5ISdmsyOjYABrM8GiyS8039zF1iuHBgVQimso5v7H2OcGwkI4CQ"
 }

@@ -79,14 +79,6 @@ export function sha256(input) {
   return `sha256:${createHash('sha256').update(input, 'utf8').digest('hex')}`;
 }
 
-/**
- * Request fingerprint: H(method + " " + url + " " + canonical params).
- * @param {{method: string, url: string, params?: Record<string, unknown>}} req
- */
-export function requestFingerprint({ method, url, params = {} }) {
-  return sha256(`${String(method).toUpperCase()} ${url} ${canonicalJSON(params)}`);
-}
-
 /* ------------------------------------------------------------------ *
  * 3. Keys
  * ------------------------------------------------------------------ */
