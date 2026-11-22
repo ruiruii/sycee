@@ -74,6 +74,21 @@ test('a request with no payment proof gets a 402 challenge and no receipt', asyn
   assert.equal(body.error, 'payment_required');
 });
 
+test('the challenge carries the payment members the buyer needs to compose the identity', async () => {
+  // SPEC §3.1.1: an identity only one side can compute is not an identity. The
+  // buyer has the request; these five members are the part it cannot infer.
+  const res = fakeResponse();
+  await makeGates().guard(handler)(fakeRequest(), res);
+  const [accept] = JSON.parse(res.state.body).accepts;
+
+  assert.equal(accept.scheme, 'exact');
+  assert.equal(accept.network, 'eip155:8453');
+  assert.equal(accept.payTo, '0x00000000000000000000000000000000000000aa');
+  assert.equal(accept.asset, 'USDC', 'the asset written is the member that gets hashed');
+  assert.equal(accept.amount, '0.001000');
+  assert.equal(accept.identity_spec, 'sycee/attempt/v1', 'the recipe travels with the values');
+});
+
 test('the same proof presented twice increments redeem_count', async () => {
   const gates = makeGates();
   const r1 = fakeResponse();

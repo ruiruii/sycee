@@ -26,6 +26,8 @@ import {
   signVSR,
   toSpanAttributes,
   attemptIdentity as deriveAttemptIdentity,
+  ATTEMPT_IDENTITY_SPEC,
+  IDENTITY_MEMBERS,
   classifyRepeat,
   exportClaim,
   refusalLedger,
@@ -239,19 +241,60 @@ export function createGates(config) {
    * records the attempt under a refusal instead of inventing one. Guessing the
    * members would produce an identity nobody else can reproduce.
    */
-  function identityFor(req) {
-    const url = new URL(req.url ?? '/', req.headers?.host ? `https://${req.headers.host}` : 'https://unknown.invalid');
+  /**
+   * The payment requirements this server hands out, defined once.
+   *
+   * Five of these members are also inputs to the attempt identity. If the
+   * challenge and the identity read them from different places, the buyer cannot
+   * compute the identity we recorded, and there is no way for either side to
+   * notice: both have a well-formed identity, and they simply never meet.
+   */
+  function paymentRequirements() {
     const price = config.price ?? { value: '0.010000', currency: 'USDC' };
+    return {
+      scheme: String(config.scheme ?? 'exact'),
+      network: String(config.network ?? 'eip155:8453'),
+      payTo: String(config.payTo ?? ''),
+      asset: String(price.currency ?? ''),
+      amount: String(price.value ?? price.amount ?? ''),
+    };
+  }
+
+  /**
+   * The origin as the buyer addressed it.
+   *
+   * A buyer computes `https://api.example.com`; this process behind a proxy sees
+   * whatever the proxy forwarded. Hardcoding `https` here made local and proxied
+   * deployments compute a different identity from every buyer that reached them,
+   * which is a disagreement the protocol cannot report because neither side knows
+   * the other's value. Forwarded headers are the way to agree; guessing is not.
+   */
+  function originFor(req) {
+    const forwardedHost = req.headers?.['x-forwarded-host'];
+    const host = forwardedHost ?? req.headers?.host;
+    if (!host) return 'https://unknown.invalid';
+    const forwardedProto = req.headers?.['x-forwarded-proto'];
+    const proto = forwardedProto
+      ? String(forwardedProto).split(',')[0].trim()
+      : req.socket?.encrypted === true
+        ? 'https'
+        : 'http';
+    return `${proto}://${String(host).split(',')[0].trim()}`;
+  }
+
+  function identityFor(req) {
+    const url = new URL(req.url ?? '/', originFor(req));
+    const reqs = paymentRequirements();
     return deriveAttemptIdentity({
       method: req.method ?? 'GET',
       origin: url.origin,
       path: url.pathname,
       query: url.search.replace(/^\?/, ''),
-      payTo: String(config.payTo ?? ''),
-      asset: String(price.currency ?? ''),
-      network: String(config.network ?? 'eip155:8453'),
-      amount: String(price.value ?? price.amount ?? ''),
-      scheme: String(config.scheme ?? 'exact'),
+      payTo: reqs.payTo,
+      asset: reqs.asset,
+      network: reqs.network,
+      amount: reqs.amount,
+      scheme: reqs.scheme,
     });
   }
 
@@ -289,6 +332,7 @@ export function createGates(config) {
   }
 
   function challenge(req, res) {
+    const reqs = paymentRequirements();
     const body = {
       error: 'payment_required',
       gates_spec: 'v0.1',
@@ -296,7 +340,17 @@ export function createGates(config) {
       accepts: [
         {
           protocol,
+          scheme: reqs.scheme,
+          network: reqs.network,
+          payTo: reqs.payTo,
+          asset: reqs.asset,
+          amount: reqs.amount,
           price: config.price ?? { value: '0.010000', currency: 'USDC' },
+          // The buyer composes the same attempt identity from these members and
+          // the request it just made. Without them it can only copy back the
+          // identity we state, which says nothing about whether we agree.
+          identity_spec: ATTEMPT_IDENTITY_SPEC,
+          identity_members: IDENTITY_MEMBERS,
           note: 'Include a payment proof. SYCEE only records its hash.',
         },
       ],
@@ -330,8 +384,24 @@ export function createGates(config) {
       let settlementStatus = 'in_flight';
 
       // One identity per request: a settled attempt and its refused replay share
-      // it, and `presentation: count` is what tells the two rows apart.
+      // it, and `presentation` is what tells the two rows apart.
       const attemptId = identityFor(req);
+
+      /**
+       * Which presentation of this attempt this is.
+       *
+       * Counted per identity, not per proof. `redeem_count` asks how many times
+       * one proof was redeemed and answers 1 for two different proofs against
+       * one URL; `presentation` asks how many times one attempt was presented,
+       * and those two proofs are the 1st and 3rd presentation. Reusing the proof
+       * count here gave two accepted rows `presentation: 1` — the same key with
+       * the same ordinal, which the ledger can only read as a contradiction.
+       */
+      function nextPresentation() {
+        if (!ledger) return count;
+        const seen = ledger.rows().filter((row) => row.attempt_identity === attemptId).length;
+        return seen + 1;
+      }
 
       if (config.verifyPayment) {
         let verdict;
@@ -350,7 +420,7 @@ export function createGates(config) {
           await store.recordSettlement?.(proofHash, 'absent');
           const row = recordRefusal({
             req,
-            presentation: count,
+            presentation: nextPresentation(),
             res,
             proofHash,
             attemptId,
@@ -392,7 +462,7 @@ export function createGates(config) {
         if (verdict.decision === 'refused') {
           const row = recordRefusal({
             req,
-            presentation: count,
+            presentation: nextPresentation(),
             res,
             proofHash,
             attemptId,
@@ -501,7 +571,7 @@ export function createGates(config) {
         ledger.record({
           decision: 'accepted',
           attemptIdentity: attemptId,
-          presentation: count,
+          presentation: nextPresentation(),
           resourceId,
           proofHash,
           settlement: settlementStatus === 'settled' ? 'settled' : settlementStatus === 'absent' ? 'unknown' : 'pending',
