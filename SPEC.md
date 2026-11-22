@@ -125,6 +125,29 @@ This invariant was converged with the operator of a production x402 v2 paid serv
 (§10.1). It generalizes the `request_fingerprint` defined in §5.1: the probe-step identifier
 and the settlement-critical identity are one and the same snapshot.
 
+#### 3.1.1 The same identity on the buyer side (normative)
+
+An identity only one party can compute is a private key, not a shared one. For the buyer to
+arrive at the same value, the seller MUST make the five payment members available:
+
+- A 402 challenge MUST carry `scheme`, `network`, `payTo`, `asset` and `amount` in each
+  element of `accepts[]`. These are the members the buyer cannot infer.
+- The buyer runtime MUST compose the identity locally, from **the request it sent** and the
+  `accepts[]` element it received. It MUST NOT adopt an identity the seller states, and a
+  seller SHOULD NOT state one: a copied value makes every comparison pass by construction,
+  which is the opposite of what the comparison is for.
+- `origin` is the scheme and authority **the buyer addressed**. A seller behind a proxy MUST
+  forward the original `:scheme` and `:authority` (`X-Forwarded-Proto` / `X-Forwarded-Host`
+  or equivalent). Hard-coding `https`, or reading only the proxied `Host`, makes the seller
+  compute a different identity for every request that reaches it. That failure is visible —
+  the attempt appears on one side only in reconciliation (§10) — and it is not detectable
+  from either side alone, which is why the requirement sits here rather than in an
+  implementation note.
+
+The buyer's obligation is deliberately narrow. It computes a key and reports what arrived;
+it does not assert settlement, a refusal reason, or a redemption count, none of which it can
+observe (§5.5, §10).
+
 ---
 
 ## 4. The six-step event chain
@@ -604,6 +627,33 @@ A conforming implementation MUST:
 Refusal rows (§5.5) sit beside the levels above rather than inside them. A row is signed or
 it is telemetry; there is no separate level. What §5.5 adds to a conforming implementation
 is a MUST to record refusals at all, which no level previously required.
+
+### Reconciliation
+
+Two ledgers that share an identity can be compared. Comparison answers one question — do the
+two accounts describe the same set of attempts — and it MUST NOT answer a second one.
+
+A comparison is made per `attempt_identity`, presentation by presentation. Each attempt is
+reported as exactly one of:
+
+| Verdict | Both sides present | What it supports |
+|---------|--------------------|------------------|
+| `match` | 200 on one side, `accepted` on the other; or 402 and `refused` | the two accounts agree on the outcome |
+| `status_disagrees` | 200 against `refused`, or 402 against `accepted` | the accounts disagree about one attempt |
+| `only_buyer` | buyer recorded it, no seller row | a payment the seller has no record of |
+| `only_seller` | seller row, no buyer entry | a decision the buyer never saw |
+
+A verdict MUST be expressed only in terms both sides can observe: whether the attempt ended
+in a served response or a 402. A comparison MUST NOT assert settlement from the buyer side —
+the buyer cannot see the rail — nor delivery from the seller side — the seller cannot see
+what arrived. `only_seller` in particular is **not** evidence of misconduct: it is equally
+what a buyer with logging turned off produces. An implementation that reports either
+asymmetry as a finding has stopped reconciling and started adjudicating, and a verifier
+holding only one ledger cannot detect that it did.
+
+Attempts whose identity could not be composed — a challenge missing a payment member, a
+proxied `origin` mismatch — MUST be reported as unidentified rather than paired by
+`proof_hash` alone. A near-match is not a match.
 
 ### 10.1 Real-world vectors
 

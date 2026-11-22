@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+### The buyer's half is computed, not copied
+
+The identity change made the two sides able to name the same attempt. Nothing used that: the 402 challenge did not carry the payment members the buyer needs, the buyer composed nothing, and the agent SDK dropped the seller's signed refusal on the floor. The result was a ledger with one side filled in, which is the state the whole record exists to leave behind.
+
+- SPEC §3.1.1: a 402 challenge MUST carry `scheme`, `network`, `payTo`, `asset` and `amount` in each `accepts[]` element, and the buyer MUST compose the identity locally rather than adopt one the seller states. A stated identity makes every comparison pass by construction.
+- `@sycee/middleware`: `paymentRequirements()` is the single source for those five members. The challenge and `identityFor()` read it, so the value the buyer is told and the value the seller records cannot drift apart. Before this they came from `config`, and the challenge published none of them.
+- `origin` is no longer hard-coded to `https`. It reads `X-Forwarded-Proto` / `X-Forwarded-Host`, then `req.socket.encrypted`, then `http`. A buyer on `http://localhost` and a seller behind an unconfigured proxy previously computed different identities for the same request, and neither could tell. The mismatch is now visible as `only_buyer` / `only_seller` in reconciliation instead of silent.
+- `@sycee/agent-sdk`: `spendFetch` keeps the 402 body's `refusal_receipt` (the seller's signed claim) and records `attemptIdentity`, `observedHttp` and `decision` per entry. `identityFrom()` reports `challenge_missing_*` rather than composing a key from absent members.
+- `@sycee/agent-sdk`: `reconcile({ agentEntries, merchantRows })` pairs the two ledgers per identity and presentation, and returns `match`, `status_disagrees`, `only_buyer`, `only_seller`, plus `unidentified` for attempts that had no key. It does not decide which side is right: the buyer cannot see settlement and the seller cannot see what arrived.
+- `@sycee/middleware`: `presentation` is counted per attempt identity, not per proof. Reusing `redeem_count` for it gave two purchases of one URL — different proofs, same request — `presentation: 1` on both rows, which is one key with one ordinal and therefore a contradiction the ledger cannot keep. A refusal under a second proof was dropped on the way in. `redeem_count` still counts per proof; the two questions are different and now have different counters.
+- Tests 231 → 240, including an end-to-end pair where a buyer and a middleware that never share state arrive at the same identity, and a settled call plus its refused replay reconcile to 2/2. `examples/buyer-reconcile.mjs` prints the four-attempt run: 4/4 match, both refusals present on both sides.
+
 ### The identity is now x402's identity (breaking, v0.1 → v0.2)
 
 `attempt_identity` was `sha256(JCS({spec, payload: sha256(payload), requirements: sha256(requirements), presentation}))`. Nobody outside this repository could recompute that value, so no row could ever be matched to an x402 settlement — which is the one thing the row exists for. Nirium's 2026-11-17 update is the same failure from the other side: 37 on-chain payments against 39 logged receipts, totals that do not agree, and their own note that one-to-one matching needs the settlement hash on the paid path.
