@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8">
+<title>给 holistis 的回复 · identity 改成 x402 的</title>
+<style>
+:root{--bg:#0f1115;--card:#171a21;--line:#262b36;--tx:#e6e9ef;--dim:#9aa4b2;--acc:#4c8dff;}
+*{box-sizing:border-box}
+body{margin:0;padding:24px;background:var(--bg);color:var(--tx);font:15px/1.7 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+.wrap{max-width:880px;margin:0 auto}
+h1{font-size:17px;margin:0 0 4px;font-weight:600}
+.sub{color:var(--dim);font-size:13px;margin-bottom:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:16px}
+.hd{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line)}
+.hd b{font-size:13px;font-weight:600}
+button{background:var(--acc);color:#fff;border:0;border-radius:7px;padding:6px 14px;font-size:13px;cursor:pointer;font-family:inherit}
+button.ok{background:#1f8a4c}
+pre{margin:0;padding:14px;white-space:pre-wrap;word-break:break-word;font:13px/1.65 ui-monospace,SFMono-Regular,Menlo,monospace;color:#cfd6e4;max-height:58vh;overflow:auto}
+.note{color:var(--dim);font-size:12.5px;padding:0 4px 12px}
+</style></head><body><div class="wrap">
+<h1>给 holistis 的回复 · identity 改成 x402 的</h1>
+<div class="sub">英文正文可直接贴入对话；正文 5216 字符</div>
+
+<div class="card"><div class="hd"><b>英文正文</b><button onclick="cp(this)">复制</button></div>
+<pre>Agreed on the label, and I have taken it: a same-author reading, not a verification. Before you file it, one correction in my own favour is due. I read your README first, and the README states the four rules. Without it, three of the four come from RFC 9110 and RFC 6839 and the fourth from nobody. So the text I read is your text plus your explanation of it, which puts my reach well short of "§5.5 is sufficient".
+
+The values hold. A stdlib-only Python implementation written from the four rules reproduces 4 of 4 right values and 4 of 4 wrong ones, each wrong value exactly what its named mistake produces, on byte-identical inputs. All eight match SHA256SUMS. Written up in `upstream/reading-attempt-identity-extra.md` in our repo.
+
+Three things about the files, freely ignored:
+
+1. `provenance` cites §5.5 alone. The rules are RFC 9110's and RFC 6839's, and §5.5 contains none of them. Your README says so; `provenance` is what a consumer reads without the README.
+2. `SHA256SUMS` covers the eight JSON and not the README, which is the only place the rules are written. Change the rules, and `sha256sum -c` still passes. The 22 have an anchor outside the folder; these eight have a README and a tag.
+3. The charset pair moves two variables: `\x80A` with a lower-case name against `caf\xe9 \x80` with capitals. A failure cannot be attributed to case alone. For case alone: same body, `charset=iso-8859-1`, `27d073d0`.
+
+Then the correction you invited. That pair is not RFC 2978's. RFC 2978 settles the name; the mapping is a separate question with two published answers. WHATWG Encoding lists `iso-8859-1` as a label of windows-1252 and says software following it decodes 0x80 as the euro sign. ICU, which is what Node 22 here uses, returns U+0080. Your value is right for the reading §5.5 wants — the charset named is ISO-8859-1 — but the value you call a plausible mistake is what a browser computes while following a standard. The file should say it is choosing there, or it will fail a compliant implementation and name the wrong cause.
+
+Now the part that changes what we do. We chose today: SYCEE is an x402 extension, not a standalone format. That forced a change I should report because it corrects a claim I have been making to you.
+
+Our `attempt_identity` was `sha256(JCS({spec, payload: sha256(payload), requirements, presentation}))`. Nobody outside our repository can recompute that. So no row of ours could ever be matched to a settlement in anyone else's ledger — which is the one thing you built a verifier for. It is now §3.1's composition, which is §5.5's ingress identity under a fixed member order: `sha256("sycee/attempt/v1" | method | origin | path | query | payTo | asset | network | amount | scheme)`, with `presentation` moved out onto the row as an ordinal. A settled attempt and its refused replay now share one identity, which is what our repeat reasons were always describing.
+
+Two consequences for you. First, the refusal rows you read at §15 were internally consistent and unreconcilable with §5.5 by construction; that is fixed, at `5b53d06`, and `docs-parity` now compares the member list and the domain tag against the prose on every run. Second, and the reason I mention it at all: your extra-vector README says nobody outside the project has checked the eight values. Neither had we, until yesterday. Ours is a same-author reading of yours exactly as yours is of ours, and I would rather we both say that than let two same-author readings start reading as interop.
+
+So, the one outside user. Not a new one — the one you already have. Nirium's devlog for 13 August, updated 17 November: a 402 with an empty body to a retry, then the same payment settling thirty seconds later from another address in the relayer pool, the caller charged for a request it was told had failed. Their reconcile endpoint now reports 37 on-chain payments against 39 logged receipts, and the entry says one-to-one matching still needs the settlement hash on the paid path. That is the failure on both sides of the boundary, and they have written it down. If they will let it be cited and run their reconcile over a refusal row, that is worth more than a stranger who agrees with us.
+
+Which puts us on the same sentence from opposite ends. I can only see the seller who refused. I cannot see the buyer whose second authorization was not the one that settled, because that buyer is in another seller's log. Your verifier sees the buyer. So: you take the reader who arrives after something went wrong, and I will take the seller deciding whether to retry. Same failure, two ends of it.
+
+On your question about where the money lands: you guessed "wherever someone needs a neutral record after something went wrong", and you said it was a guess. It is not a guess any more. The articles on this are now quoting per-settlement averages of three cents to thirty-six dollars on one protocol in one week, and the sentence worth keeping is that at three cents a duplicate charge is unmeasurable and at thirty dollars it is a customer complaint with a transaction hash attached. The record is worth paying for at exactly the price points where the double charge is visible. That is where I would look.
+
+-- Rachel</pre></div>
+
+<div class="card"><div class="hd"><b>中文对照</b><button onclick="cp(this)">复制</button></div>
+<pre>标签我认了，也照此署名：同一作者的阅读，不是验证。但你落笔之前，我该替自己纠一处——往不利于我的方向纠。我先读了你的 README，而四条规则是 README 写的。没有它，四条里三条来自 RFC 9110 和 6839，第四条谁也不来自。所以我读到的是你的正文加上你对正文的解释，这离「§5.5 本身够用」还差得远。
+
+值是对的。按四条规则写的纯标准库 Python 实现，四个正确值全部复现，四个错误值也全部复现，每个都恰好等于它自己所说的那个错法算出来的结果，输入逐字节相同。八份全部通过 SHA256SUMS。详细写在仓库的 upstream/reading-attempt-identity-extra.md。
+
+关于文件本身三处，你可以随手忽略：
+
+1. `provenance` 只引 §5.5。这四条是 RFC 9110 和 6839 的，§5.5 里一条都没有。你的 README 说了，但 provenance 是别人不读 README 时会看的字段。
+2. `SHA256SUMS` 盖了八份 JSON，没盖 README，而 README 是唯一写着规则的地方。把规则改掉，`sha256sum -c` 照样过。那 22 份在目录外有个锚，这八份只有 README 和一个 tag。
+3. 字符集那对动了两个变量：`\x80A` 配小写名，对 `caf\xe9 \x80` 配大写。在这份上失败，归不到「只是大小写」。只测大小写的话：同一个 body，`charset=iso-8859-1`，`27d073d0`。
+
+然后是你让我纠的那处。这一对不是 RFC 2978 的。RFC 2978 管名字；映射是另一个问题，有两个公开答案。WHATWG 编码标准把 `iso-8859-1` 列为 windows-1252 的标签，并写明按它实现的软件会把 0x80 解成欧元符号。ICU（这里 Node 22 用的就是它）返回 U+0080。你的值对 §5.5 要的读法是对的——声明的字符集就是 ISO-8859-1——但你标记为「合理错误」的那个值，是浏览器按标准算出来的。文件应当写明它在这里做了选择，否则它会判一个合规实现失败，并且归错原因。
+
+下面是会改变我们做法的部分。我们今天定了：SYCEE 是 x402 的扩展层，不是独立格式。这逼出了一处改动，我得报告，因为它纠正的是我一直对你说的一个说法。
+
+我们的 `attempt_identity` 原来是 `sha256(JCS({spec, payload: sha256(payload), requirements, presentation}))`。仓库外面没人能重算这个值。所以我们任何一条行，都不可能对上别人账本里的某笔结算——而结算对账恰恰是你要验证器做的唯一一件事。现在它改成 §3.1 的配方，也就是 §5.5 的 ingress 身份加上固定成员次序：`sha256("sycee/attempt/v1" | method | origin | path | query | payTo | asset | network | amount | scheme)`，`presentation` 移出哈希，作为行上的序号字段。于是「已结算的那次」和「被拒的重放」共享同一个 identity——这正是我们的重复 reason 一直在描述的那一对。
+
+对你有两个后果。第一，你读的 §15 那些行原本内部自洽，但与 §5.5 在构造上就对不上；现在修了，提交 `5b53d06`，`docs-parity` 每次运行都会比对成员表和域标签。第二，也是我要提这件事的原因：你的 extra-vector README 说，项目外面还没人检查过这八个值。我们昨天之前也没有。我们对你的阅读是同一作者的阅读，正如你对我们是；两篇同一作者的阅读，别让它开始读起来像互操作。
+
+所以，那一个外部用户。不是新的——是你已经有的那个。Nirium 八月十三日那篇 devlog，十一月十七日更新：一次重试收到空 body 的 402，三十秒后同一笔款从 relayer 池另一个地址落链，调用方为一次被告知失败的请求付了钱。他们的对账端点现在报 37 笔链上付款对 39 条收据，文里说一对一匹配仍然需要把结算哈希记在付费路径上。这是边界两侧同一个故障，而且他们写下来了。如果他们愿意让这条被引用，并拿他们的对账端跑一行拒绝行，这比一个点头同意的陌生人值钱。
+
+于是我们站到了同一句话的两端。我只能看见那个拒绝了的卖家。我看不见那个买家——他签的第二次授权并不是落链的那一笔，因为他在另一个卖家的日志里。你的验证器看得见买家。所以：你拿「出事后才来的人」，我拿「正在决定要不要重试的卖家」。同一个故障，两端。
+
+至于你猜的钱落在哪：你猜「出事后需要一份中立记录的人」，还说这是猜的。现在不是猜了。关于这件事的文章已经在引用同一个协议同一周的单笔均值：三美分到三十六美元。值得留下的一句是：三美分时重复扣款无法测量，三十六美元时它就是一条带着交易哈希的客户投诉。记录恰好在那个人能看见双重扣款的价格点上才值得付钱。我会从那里找。
+
+—— Rachel</pre></div>
+
+<div class="note">对应提交 <code>5b53d06</code>；阅读报告 <code>upstream/reading-attempt-identity-extra.md</code>。</div>
+<script>
+function cp(btn){
+  const pre=btn.closest('.card').querySelector('pre');
+  const txt=pre.innerText;
+  const done = ()=>{const o=btn.textContent;btn.textContent='已复制';btn.classList.add('ok');setTimeout(()=>{btn.textContent=o;btn.classList.remove('ok')},1600);};
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(done).catch(()=>fallback(pre,btn,done));
+  } else { fallback(pre,btn,done); }
+}
+function fallback(pre,btn,done){
+  const r=document.createRange();r.selectNodeContents(pre);
+  const s=window.getSelection();s.removeAllRanges();s.addRange(r);
+  try{ document.execCommand('copy'); done(); }
+  catch(e){ alert('请按 Ctrl+C 复制'); }
+}
+</script></div></body></html>
