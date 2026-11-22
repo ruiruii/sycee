@@ -79,6 +79,13 @@ const gates = createGates({
   resourceId: 'search.v1',
   protocol: 'x402',
   price: { value: '0.010000', currency: 'USDC' },
+  // Payment terms the 402 challenge publishes and the attempt identity is
+  // composed over. payTo has no default: without it the identity cannot be
+  // computed and a paid request fails loudly. network/scheme default here only
+  // so the example is explicit; set them to your real chain and scheme.
+  payTo: '0x00000000000000000000000000000000000000bb',
+  network: 'eip155:8453',
+  scheme: 'exact',
   publicKey,
   privateKey,
   agentId: 'erc8004:8453:0xQUICKSTART',

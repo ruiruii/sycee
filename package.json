@@ -25,7 +25,8 @@
     "verify:py": "PYTHONPATH=python python3 -m sycee_verify conformance/vectors/*.json",
     "verify:docs": "node conformance/refusal/docs-parity.mjs",
     "try": "node bin/sycee-verify.mjs --example",
-    "verify:receipt": "node bin/sycee-verify.mjs"
+    "verify:receipt": "node bin/sycee-verify.mjs",
+    "test:examples": "node examples/walkthrough.mjs && node examples/bilateral-consumption.mjs && node examples/buyer-reconcile.mjs && node examples/refusal-walkthrough.mjs"
   },
   "bin": {
     "sycee-verify": "./bin/sycee-verify.mjs",

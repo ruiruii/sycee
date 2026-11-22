@@ -21,7 +21,7 @@ Verified against a local run (`PORT=3111`, `DEMO_FACILITATOR` unset, headers abr
 HTTP/1.1 402 Payment Required
 content-type: application/json
 
-{"error":"payment_required","gates_spec":"v0.1","resource":"search.v1","accepts":[{"protocol":"x402","price":{"value":"0.010000","currency":"USDC"},"note":"Include a payment proof. SYCEE only records its hash."}]}
+{"error":"payment_required","gates_spec":"v0.1","resource":"search.v1","accepts":[{"protocol":"x402","scheme":"exact","network":"eip155:8453","payTo":"0x00000000000000000000000000000000000000bb","asset":"USDC","amount":"0.010000","price":{"value":"0.010000","currency":"USDC"},"identity_spec":"sycee/attempt/v1","identity_members":["method","origin","path","query","payTo","asset","network","amount","scheme"],"note":"Include a payment proof. SYCEE only records its hash."}]}
 ```
 
 **2. First use of a proof → 200 with receipt**

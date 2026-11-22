@@ -28,7 +28,7 @@ git clone https://github.com/ruiruii/sycee.git
 cd sycee
 npm install
 npm run try                           # three receipts, one rule each — thirty seconds
-npm test                              # 228 tests
+npm test                              # 248 tests
 npm run verify:py                     # the same 12 vectors, verified in Python
 node examples/bilateral-consumption.mjs
 ```
@@ -62,7 +62,7 @@ To run it on a receipt of your own:
 
 ```bash
 node bin/sycee-verify.mjs receipt.json
-node bin/sycee-verify.mjs --dir conformance/refusal/vectors   # 61/61
+node bin/sycee-verify.mjs --dir conformance/refusal/vectors   # 76/76
 ```
 
 It takes a built row, a constructor input, or a conformance vector, and answers with the
@@ -84,8 +84,15 @@ Two payments, two deliveries, two signed receipts — and the seller cannot tell
 apart. Only the buyer's runtime knows which result entered a prompt, and only the buyer
 can sign that. **That signature is the product.**
 
+The other half of the product is that the two ledgers can be put beside each other. The
+buyer's entries and the seller's refusal rows share one identity (§3.1), so a dispute
+comes back as `match` / `status_disagrees` / `only_buyer` / `only_seller` — never a
+verdict. See [`examples/buyer-reconcile.mjs`](./examples/buyer-reconcile.mjs).
+
 Other entry points: `npm run demo` (a payable server and a buyer in one process),
+`npm run demo:bilateral` (buyer and seller ledgers reconciled per identity),
 `npm run demo:refusal` (four refused attempts, each claim verified offline),
+`node bin/sycee-doctor.mjs` (name the member a misconfigured proxy changed),
 `npm run verify` (the signed conformance vectors).
 
 ```mermaid
@@ -192,8 +199,8 @@ schema/vsr-v0.1.schema.json   JSON Schema for Verifiable Spend Receipts
 conformance/vectors/          signed conformance vectors + matrix
 packages/
   core/                       canonical JSON, Ed25519, VSR builder, offline verify
-  middleware/                 merchant-side HTTP guard (counts redemptions)
-  agent-sdk/                  agent-runtime SDK (records consumption, co-signs)
+  middleware/                 merchant-side HTTP guard (challenge, redemptions, refusal rows)
+  agent-sdk/                  agent-runtime SDK (composes identity, keeps refusals, co-signs)
   conformance/                validator and CLI
   adapter-automaton/          binds a hash-chained attestation ledger (RW-001)
   probe/                      evidence-layer CLI (probe / verify / batch)
@@ -218,6 +225,9 @@ const gates = createGates({
   resourceId: 'search.v1',
   protocol: 'x402',
   price: { value: '0.010000', currency: 'USDC' },
+  payTo: '0x00000000000000000000000000000000000000bb',  // required: the identity is over it
+  network: 'eip155:8453',
+  scheme: 'exact',
   publicKey, privateKey,
   store: memoryStore(),          // or redisStore(client) in production
 });

@@ -28,7 +28,7 @@ git clone https://github.com/ruiruii/sycee.git
 cd sycee
 npm install
 npm run try                           # 三十秒：三张收据，各查一条规则
-npm test                              # 228 个测试
+npm test                              # 248 个测试
 npm run verify:py                     # 同一批 12 个向量，用 Python 再验一遍
 node examples/bilateral-consumption.mjs
 ```
@@ -60,7 +60,7 @@ FAIL  a pending settlement presented as final
 
 ```bash
 node bin/sycee-verify.mjs receipt.json
-node bin/sycee-verify.mjs --dir conformance/refusal/vectors   # 61/61
+node bin/sycee-verify.mjs --dir conformance/refusal/vectors   # 76/76
 ```
 
 它吃三种输入：已经构造好的行、构造器的输入、一致性向量文件；输出的错误码和向量集用的
@@ -81,8 +81,14 @@ WHAT THE BUYER RECORDED
 两笔付款、两次交付、两张签名收据——**而商家分不出这两笔的区别**。只有买方的运行时知道
 哪份结果进了 prompt，也只有买方能签这个字。这个签名就是产品本身。
 
+产品的另一半，是两本账能摆在一起对。买方的条目和卖方的拒绝行共享同一个 identity（§3.1），
+所以一次纠纷只会得到 `match` / `status_disagrees` / `only_buyer` / `only_seller`——永远不是
+一个裁决。见 [`examples/buyer-reconcile.mjs`](./examples/buyer-reconcile.mjs)。
+
 其他入口：`npm run demo`（一个收款服务端 + 一个买家，同一进程）、
+`npm run demo:bilateral`（买方和卖方账本按 identity 对账）、
 `npm run demo:refusal`（四次被拒，每张拒付声明离线核验）、
+`node bin/sycee-doctor.mjs`（指出是哪一段被配错的反向代理改了）、
 `npm run verify`（12 个签名向量）。
 
 ## 问题在哪
@@ -158,8 +164,8 @@ schema/vsr-v0.1.schema.json   可验证消费收据的 JSON Schema
 conformance/vectors/          签名合规向量 + 矩阵
 packages/
   core/                       规范化 JSON、Ed25519、收据构造、离线校验
-  middleware/                 商家侧 HTTP 守卫（统计重复兑现）
-  agent-sdk/                  agent 运行时 SDK（记录消费、联签）
+  middleware/                 商家侧 HTTP 守卫（challenge、重复兑现、拒绝行）
+  agent-sdk/                  agent 运行时 SDK（算 identity、留拒绝凭证、联签）
   conformance/                校验器与 CLI
   adapter-automaton/          绑定哈希链存证账本（RW-001）
   probe/                      证据层 CLI（probe / verify / batch）
@@ -181,6 +187,9 @@ import { createGates, memoryStore } from '@sycee/middleware';
 const gates = createGates({
   resourceId: 'search.v1', protocol: 'x402',
   price: { value: '0.010000', currency: 'USDC' },
+  payTo: '0x00000000000000000000000000000000000000bb',  // 必填：identity 由它参与组成
+  network: 'eip155:8453',
+  scheme: 'exact',
   publicKey, privateKey,
   store: memoryStore(),        // 生产环境用 redisStore(client)
 });

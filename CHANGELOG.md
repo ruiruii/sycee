@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+### The examples carry the payment terms the identity needs
+
+The identity change made `payTo` a required member, and `createGates` fails loudly on a paid
+request when it is absent. Four entry points were still written without it, so `npm run demo`,
+`npm run demo:bilateral`, the minimal pair, and the Express quickstart all threw `payTo_required`
+on their first paid call while CI stayed green — `npm test` does not run the examples.
+
+- `examples/walkthrough.mjs`, `examples/bilateral-consumption.mjs`, `examples/minimal-server.mjs`
+  and `examples/quickstart-express/server.mjs` now pass `payTo`, `network` and `scheme` to
+  `createGates`, matching the terms the README's merchant snippet already names.
+- README (both languages) and `examples/README.md` now point at `buyer-reconcile.mjs` and
+  `bin/sycee-doctor.mjs`, and the quickstart README's 402 body matches what the challenge emits.
+- `package.json`: `test:examples` runs the four self-contained entry-point scripts, so the
+  breakage above can be reproduced with one command.
+
 ### A divergence says which member, not just that there is one
 
 Two keys that differ tell a buyer to contact the seller and a seller to ask for logs. Neither of those is a fix, and the actual cause is usually one member: a proxy that terminated TLS, or one that stripped a path prefix. The members are not secret, so there was no reason to make someone guess.

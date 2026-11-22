@@ -1,10 +1,11 @@
 # Examples
 
-Five ways in, depending on how much you want to read.
+Seven ways in, depending on how much you want to read.
 
 | File | What it shows | How to run |
 |---|---|---|
 | `bilateral-consumption.mjs` | **The core idea in one run.** The same search is bought twice: one result is used (`consumed=yes`), one is thrown away (`consumed=no`). The seller's record is identical for both. | `node examples/bilateral-consumption.mjs` |
+| `buyer-reconcile.mjs` | **The two ledgers, put side by side.** A buyer and a seller that never share state compute the same identity; every attempt comes back `match` / `status_disagrees` / `only_buyer` / `only_seller`. | `node examples/buyer-reconcile.mjs` |
 | `walkthrough.mjs` | A server and a buyer in one process: 402, payment, a counted replay, both sides linking. | `node examples/walkthrough.mjs` |
 | `minimal-server.mjs` + `minimal-client.mjs` | The same flow over real HTTP in two terminals, so you can poke it with `curl`. | see below |
 | `quickstart-express/` | A paid Express route in five minutes: the 402, the receipt, `redeem_count`, and `verifyPayment` wired to a facilitator. Own `npm install`. | [quickstart-express/README.md](./quickstart-express/README.md) |
