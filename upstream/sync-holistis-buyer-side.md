@@ -1,0 +1,59 @@
+# Sync to holistis — the buyer half
+
+Short on purpose. The last message was 5,200 characters and ended with "correct me if I'm wrong".
+This one is a status note, not a review.
+
+Status: draft, not sent. 2026-11-23.
+
+---
+
+## English
+
+I closed the loop I left open, and it changed one of the things I told you.
+
+You said: you take the reader who arrives after something went wrong, I take the seller deciding
+whether to retry. The seller half cannot produce a comparison by itself — one ledger has nothing to
+disagree with. So the buyer half exists now: an agent runtime that composes the attempt identity
+locally from the request it sent and the `accepts[]` element it received, keeps the 402 refusal
+receipt instead of discarding it, and reconciles the two ledgers into `match`, `status_disagrees`,
+`only_buyer`, `only_seller`. It reports the asymmetry. It does not say which side is right.
+
+Two corrections of my own, both of which you would have found:
+
+1. The 402 challenge now carries `scheme`, `network`, `payTo`, `asset`, `amount`. Before, the buyer
+   had no way to compute the identity the seller recorded — it could only be told one, and a told
+   identity makes every comparison pass by construction, which is the failure mode you are building
+   the verifier against, one level up.
+2. `presentation` was counted per proof, not per attempt. Two purchases of one URL both got
+   presentation 1, and a refusal under the second was dropped as a contradiction. That is the class
+   of bug your vectors exist to catch, and it was in my ledger.
+
+The honest part: the 4/4 our demo prints is our own buyer against our own seller, in one process.
+It shows the code path exists. It does not show two parties agreeing. Still one author. What changed
+is that a second party can now produce the other half without being trusted for it.
+
+One thing about your eight vectors, which I would rather say than have you find. They are at the
+payload-digest layer, and the identity no longer includes a payload digest. It is over the request
+— method, origin, path, query, and the payment terms — because a caller holding a settlement and
+the request, but not our serialisation, has to be able to recompute it. That is a deliberate move
+away from `sha256(payload)`, not a judgement on the work: if a row ever carries a body digest, your
+four rules are exactly what that digest would have to satisfy. One layer down, not wasted.
+
+-- Rachel
+
+## 中文
+
+我把上次留下的那个口子补上了，过程中改掉了一处我跟你说过的话。
+
+你说：你拿「出事后才来的人」，我拿「正在决定要不要重试的卖家」。卖家这一半自己凑不出比较——只有一本账，没有可对的东西。所以买家那一半现在有了：agent 运行时用「自己发出去的请求」加「收到的 `accepts[]`」在本地算 attempt identity，收到 402 时把那封拒绝凭证留下来（原来是直接扔掉的），再把两本账按 identity 和 presentation 对成 `match` / `status_disagrees` / `only_buyer` / `only_seller`。它只报不对称，不判谁对。
+
+我自己两处错，你迟早会挑出来：
+
+1. 402 账单现在带 `scheme`、`network`、`payTo`、`asset`、`amount`。之前买家没办法算出卖家记下的那个 identity，只能被告知一个——而被给的 identity 会让每一次比较都自动通过，这正是你验的东西的上一层版本。
+2. `presentation` 原来是按 proof 计数，不是按 attempt。同一个 URL 买两次，两行都是 presentation 1，第二笔如果被拒，那一行会被当成矛盾丢掉。你那套向量要抓的就是这类错，而它在我账本里。
+
+还有一句实话：demo 打出来的 4/4，是我们自己的买家对我们自己的卖家，同一个进程里。它证明代码路径存在，不证明两方一致。还是一只手。变的是：第二方现在能自己产出另一半，而且不需要被信任。
+
+关于你那八份向量，我宁愿自己说，也不想你后来发现。它们在 body 摘要那一层，而 identity 不再含 body 摘要了。它算在请求上——method、origin、path、query，加上付款条款——因为一个拿着结算记录和请求、但没有我们序列化方式的人，必须能自己重算出来。这是刻意从 `sha256(payload)` 走开，不是对那份工作的评价：如果哪天某一行要带 body 摘要，你那四条规则就是它必须满足的东西。往下移了一层，不是白做。
+
+—— Rachel
