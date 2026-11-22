@@ -655,6 +655,37 @@ Attempts whose identity could not be composed — a challenge missing a payment 
 proxied `origin` mismatch — MUST be reported as unidentified rather than paired by
 `proof_hash` alone. A near-match is not a match.
 
+### Locating a divergence
+
+Reporting `only_buyer` and `only_seller` for the same call states that exactly one member
+differed, and says nothing about which. A seller SHOULD take this as a requirement rather
+than an inconvenience: two hex strings that differ put the buyer in a position where the
+only available action is to contact the seller, and the seller in one where the only
+available action is to ask the buyer for logs neither party wants to ship.
+
+A response carrying an attempt identity SHOULD therefore publish `x-sycee-members`: a
+base64url JSON object whose keys are the members of §3.1 and whose values are
+`sha256:<64 hex>` over each member's value as composed. The buyer recomputes its own and
+compares. A member holding a credential — in practice `query` — MUST be published as
+`null` rather than as a digest: a short value is recoverable from its digest by trying the
+values a caller plausibly sends, and the buyer already knows what it sent.
+
+The header is a diagnostic, not a second identity. A buyer MUST compose its identity from
+the request and the challenge (§3.1.1) and MUST NOT adopt a published value; adopting one
+makes every comparison pass by construction, which is the failure the header exists to
+help locate. Publishing the members does not weaken that, because the buyer's key is
+computed before the response arrives.
+
+The success path alone is not enough. A refusal is the outcome an operator investigates
+first, and the one a proxy is most likely to have altered, so a refusal response SHOULD
+carry the header as well.
+
+Grouping results by member, not by attempt, is what makes a report actionable: a hundred
+unmatched rows that all differ on `origin` are one proxy configuration. A comparison MAY
+report such a grouping and MUST NOT present it as a verdict on either party — it names the
+member whose values disagree and stops there. Which side should change is a deployment
+question, and answering it from one ledger is the adjudication §10 already forbids.
+
 ### 10.1 Real-world vectors
 
 Synthetic vectors prove an implementation is self-consistent. They cannot prove the

@@ -282,10 +282,17 @@ export function createGates(config) {
     return `${proto}://${String(host).split(',')[0].trim()}`;
   }
 
-  function identityFor(req) {
+  /**
+   * The nine members the identity is composed over, as this process sees them.
+   *
+   * One function, so the value that is hashed and the value that is published for
+   * comparison cannot drift. A divergence report that is derived from the hash
+   * would be a second implementation of the composition.
+   */
+  function identityMembersFor(req) {
     const url = new URL(req.url ?? '/', originFor(req));
     const reqs = paymentRequirements();
-    return deriveAttemptIdentity({
+    return {
       method: req.method ?? 'GET',
       origin: url.origin,
       path: url.pathname,
@@ -295,7 +302,40 @@ export function createGates(config) {
       network: reqs.network,
       amount: reqs.amount,
       scheme: reqs.scheme,
-    });
+    };
+  }
+
+  function identityFor(req) {
+    return deriveAttemptIdentity(identityMembersFor(req));
+  }
+
+  /**
+   * The members, digested, for the buyer to compare against its own.
+   *
+   * Two hex strings that differ say only that something differs, and the buyer is
+   * the side that has to fix it. So each member is published as a digest of its
+   * value: a buyer can recompute its own and see which member it got wrong, and an
+   * operator reading a log learns which one to look at without being handed the
+   * values.
+   *
+   * `query` is reported as a match flag, not a digest. It can carry a credential,
+   * and a six-character query can be recovered from its digest by trying the ones
+   * a caller plausibly sends. The buyer already knows what it sent, so a flag is
+   * as much as it needs; anyone else needs nothing.
+   */
+  function memberDigests(req) {
+    const members = identityMembersFor(req);
+    const out = {};
+    for (const name of IDENTITY_MEMBERS) {
+      out[name] = name === 'query' ? null : sha256(members[name]);
+    }
+    return out;
+  }
+
+  /** Publish the digests so the buyer can locate a divergence without us in it. */
+  function attachMembers(req, res) {
+    if (typeof res?.setHeader !== 'function') return;
+    res.setHeader('x-sycee-members', Buffer.from(JSON.stringify(memberDigests(req)), 'utf8').toString('base64url'));
   }
 
   /** Record a refusal, and hand the caller the row so it can be surfaced. */
@@ -316,6 +356,10 @@ export function createGates(config) {
     const row = built.row;
     res?.setHeader?.('x-gates-refusal', Buffer.from(canonicalJSON(row), 'utf8').toString('base64url'));
     res?.setHeader?.('x-gates-refusal-reason', String(row.reason));
+    // The refused rows are the ones a proxy disagrees on most often, so this is
+    // the caller that matters most. Publishing the members only on the success
+    // path left the buyer able to diagnose the calls that already worked.
+    if (res) attachMembers(req, res);
     if (ledger.conflicts().length) {
       res?.setHeader?.('x-gates-refusal-conflict', 'true');
     }
@@ -357,6 +401,7 @@ export function createGates(config) {
     };
     res.statusCode = 402;
     res.setHeader('content-type', 'application/json');
+    attachMembers(req, res);
     res.end(JSON.stringify(body));
   }
 
@@ -585,6 +630,11 @@ export function createGates(config) {
       const encoded = Buffer.from(canonicalJSON(envelope), 'utf8').toString('base64url');
 
       res.setHeader('x-gates-receipt', encoded);
+      // The members this row was keyed over, so the buyer can compare against its
+      // own even when the call succeeded. A success that disagreed on `origin`
+      // would otherwise be rejected by the buyer as unmatched and reported by
+      // nobody as a disagreement.
+      attachMembers(req, res);
       // No route serves /v1/receipt on this server, so the header points at the
       // request's own origin rather than a host we do not own.
       res.setHeader('x-gates-receipt-url', receiptUrl(req, proofHash));

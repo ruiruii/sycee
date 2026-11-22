@@ -276,3 +276,125 @@ test('a first refusal under a new proof is kept, not dropped as a duplicate of t
   assert.equal(result.summary.match, 2);
   assert.equal(result.pairs[1].seller.reason, 'wrong_amount');
 });
+
+// --- locating a divergence, rather than only reporting one -------------------
+
+/**
+ * A `fetch` that lets the seller see a different request than the buyer sent.
+ *
+ * This is what a proxy in front of a seller does: it terminates TLS and forwards
+ * `https://api.example.test/x`, but the buyer addressed `http://localhost:3000/x`
+ * and has no idea. Before the members were published, the only thing either side
+ * could observe was "the keys differ".
+ */
+function wireThrough(mutate) {
+  return (gates, handlerFn) =>
+    async (url, init = {}) => {
+      const parsed = new URL(url);
+      const headers = {};
+      for (const [k, v] of new Headers(init.headers ?? {})) headers[k.toLowerCase()] = v;
+      let seen = { host: parsed.host, proto: parsed.protocol.replace(':', ''), path: parsed.pathname };
+      seen = mutate(seen) ?? seen;
+      headers.host = seen.host;
+      headers['x-forwarded-proto'] = seen.proto;
+
+      const req = {
+        method: init.method ?? 'GET',
+        url: `${seen.path}${parsed.search}`,
+        headers,
+        socket: {},
+      };
+      const res = fakeResponse();
+      await gates.guard(handlerFn)(req, res);
+      return asFetchResponse(res.state);
+    };
+}
+
+test('the seller publishes which members it hashed', async () => {
+  const gates = makeGates();
+  const spend = makeSpend(wireTo(gates, handler));
+  const res = await spend.fetch('https://api.example.test/paid?x=1');
+
+  const raw = res.headers.get('x-sycee-members');
+  assert.ok(raw, 'the seller says which members it used');
+
+  const published = JSON.parse(Buffer.from(raw, 'base64url').toString('utf8'));
+  assert.match(published.origin, /^sha256:[0-9a-f]{64}$/);
+  assert.equal(published.query, null, 'query is a flag, not a digest: it can carry a credential');
+});
+
+test('an agreeing pair reports no divergence', async () => {
+  const gates = makeGates();
+  const spend = makeSpend(wireTo(gates, handler));
+  await spend.fetch('https://api.example.test/paid?x=1');
+
+  assert.deepEqual(spend.ledger[0].divergedAt, []);
+});
+
+test('a proxy that rewrites the scheme names `origin`, not "the keys differ"', async () => {
+  const gates = makeGates();
+  // The buyer is on http; the proxy forwards to the app as https.
+  const spend = makeSpend(wireThrough((seen) => ({ ...seen, proto: 'https' }))(gates, handler));
+
+  await spend.fetch('http://localhost:3000/paid');
+
+  const [entry] = spend.ledger;
+  assert.equal(entry.divergedAt.length, 1, 'exactly one member is blamed');
+  assert.equal(entry.divergedAt[0].member, 'origin');
+  assert.notEqual(entry.divergedAt[0].ours, entry.divergedAt[0].theirs);
+
+  const result = reconcile({ agentEntries: spend.ledger, merchantRows: gates.ledger() });
+  assert.equal(result.summary.only_seller, 1, 'the two halves do not pair');
+  assert.equal(result.summary.only_buyer, 1, 'and the buyer half is unmatched too');
+  assert.deepEqual(result.summary.divergences_by_member, { origin: 1 });
+  // The divergence is filed under the side that holds the evidence. The seller
+  // recorded a different key; the buyer is the one that can say why.
+  assert.equal(result.summary.explained.only_buyer, 1, 'the unmatched row is accounted for');
+});
+
+test('a proxy that strips a path prefix names `path`', async () => {
+  const gates = makeGates();
+  const spend = makeSpend(wireThrough((seen) => ({ ...seen, path: '/paid' }))(gates, handler));
+
+  await spend.fetch('https://api.example.test/api/paid');
+
+  const [entry] = spend.ledger;
+  assert.equal(entry.divergedAt.length, 1);
+  assert.equal(entry.divergedAt[0].member, 'path');
+});
+
+test('a misconfigured proxy is one finding, not one per request', async () => {
+  const gates = makeGates();
+  const spend = makeSpend(wireThrough((seen) => ({ ...seen, proto: 'https' }))(gates, handler));
+
+  // Five different paths, because the subject is a proxy misconfiguration: five
+  // affected requests, one cause. The seller refuses from the second call on
+  // (the same proof, and `replayPolicy: 'refuse'`), which is also the path that
+  // most needs the members header -- a refusal is what an operator opens first.
+  for (let i = 0; i < 5; i++) await spend.fetch(`http://localhost:3000/paid/${i}`);
+
+  const result = reconcile({ agentEntries: spend.ledger, merchantRows: gates.ledger() });
+  assert.equal(result.summary.divergences_by_member.origin, 5);
+  assert.equal(
+    Object.keys(result.summary.divergences_by_member).length,
+    1,
+    'five rows, one configuration error',
+  );
+});
+
+test('a seller that sends no members header is not an error', async () => {
+  const gates = makeGates();
+  const spend = makeSpend(async (url, init) => {
+    const res = await wireTo(gates, handler)(url, init);
+    // Strip the header, as an older seller would never have sent it.
+    const headers = new Map(Object.entries(res.__headers ?? {}));
+    return {
+      ...res,
+      headers: { get: (k) => (k.toLowerCase() === 'x-sycee-members' ? null : res.headers.get(k)) },
+    };
+  });
+
+  await spend.fetch('https://api.example.test/paid');
+  assert.deepEqual(spend.ledger[0].divergedAt, []);
+  assert.ok(spend.ledger[0].attemptIdentity, 'the identity still composes without the header');
+});

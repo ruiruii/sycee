@@ -24,38 +24,93 @@ const CHALLENGE_MEMBERS = ['scheme', 'network', 'payTo', 'asset', 'amount'];
  *
  * @returns {{ id: string|null, unavailable: string|null }}
  */
-function identityFrom({ url, method, accept }) {
-  if (!accept || typeof accept !== 'object') return { id: null, unavailable: 'challenge_has_no_accepts' };
+/**
+ * The nine members as the buyer composes them, or the reason it cannot.
+ *
+ * Separate from `identityFrom` so the same values feed the hash and the
+ * comparison. Comparing against a second derivation would report a divergence
+ * produced by our own two code paths rather than by the seller.
+ */
+function membersFrom({ url, method, accept }) {
+  if (!accept || typeof accept !== 'object') return { members: null, unavailable: 'challenge_has_no_accepts' };
   const missing = CHALLENGE_MEMBERS.filter((m) => typeof accept[m] !== 'string' || accept[m] === '');
-  if (missing.length) return { id: null, unavailable: `challenge_missing_${missing.join('_')}` };
+  if (missing.length) return { members: null, unavailable: `challenge_missing_${missing.join('_')}` };
 
   let parsed;
   try {
     parsed = new URL(url);
   } catch {
-    return { id: null, unavailable: 'unparseable_url' };
+    return { members: null, unavailable: 'unparseable_url' };
   }
 
+  return {
+    members: {
+      method,
+      origin: parsed.origin,
+      path: parsed.pathname,
+      query: parsed.search.replace(/^\?/, ''),
+      payTo: accept.payTo,
+      asset: accept.asset,
+      network: accept.network,
+      amount: accept.amount,
+      scheme: accept.scheme,
+    },
+    unavailable: null,
+  };
+}
+
+function identityFrom({ url, method, accept }) {
+  const { members, unavailable } = membersFrom({ url, method, accept });
+  if (!members) return { id: null, unavailable };
   try {
-    return {
-      id: attemptIdentity({
-        method,
-        origin: parsed.origin,
-        path: parsed.pathname,
-        query: parsed.search.replace(/^\?/, ''),
-        payTo: accept.payTo,
-        asset: accept.asset,
-        network: accept.network,
-        amount: accept.amount,
-        scheme: accept.scheme,
-      }),
-      unavailable: null,
-    };
+    return { id: attemptIdentity(members), unavailable: null };
   } catch (err) {
     // A members value this runtime cannot normalise is not an identity. Saying
     // so is better than substituting one.
     return { id: null, unavailable: `identity_error_${err && err.message ? err.message : 'unknown'}` };
   }
+}
+
+/**
+ * Decode the seller's `x-sycee-members` header, if it sent one.
+ *
+ * Every member but `query` is published as a digest; `query` is a flag, because
+ * it can carry a credential and a short one is recoverable from its digest. A
+ * seller older than this header sends nothing, which is not an error.
+ */
+function publishedMembers(res) {
+  const raw = res.headers?.get?.('x-sycee-members');
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(Buffer.from(raw, 'base64url').toString('utf8'));
+    return parsed && typeof parsed === 'object' ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Which members the two sides disagree on, given both values.
+ *
+ * The buyer cannot see the seller's values, only their digests. So it hashes its
+ * own and compares. For `query` the seller sends no digest and there is nothing
+ * to compare; it is omitted here rather than listed as a divergence, because a
+ * member nobody can compare is not a member the two sides disagree on.
+ *
+ * @returns {Array<{member: string, ours: string, theirs: string}>}
+ */
+function divergences(members, published) {
+  if (!members || !published) return [];
+  const out = [];
+  for (const name of Object.keys(members)) {
+    const theirs = published[name];
+    // `null` is the seller's "I did not publish this one"; absent is the same
+    // statement made by an older seller. Neither is a disagreement.
+    if (theirs === null || theirs === undefined) continue;
+    const ours = sha256(String(members[name]));
+    if (ours !== theirs) out.push({ member: name, ours, theirs });
+  }
+  return out;
 }
 
 /**
@@ -133,11 +188,20 @@ export function createSpend(config) {
     // the two sides most often disagree.
     const refusal = await refusalFrom(res);
 
+    // Which members the seller says it hashed. Without this, a mismatch is one
+    // opaque pair of hex strings and the buyer has no way to find the member it
+    // got wrong — which is the buyer's own deployment half the time.
+    const composed = membersFrom({ url, method, accept });
+    const published = publishedMembers(res);
+
     const entry = {
       url,
       method,
       attemptIdentity: identity.id,
       identityUnavailable: identity.unavailable,
+      // Empty when the seller sends no header, or when the two sides agree. A
+      // non-empty list is the whole diagnosis: this member, these two digests.
+      divergedAt: divergences(composed.members, published),
       // What the buyer actually saw, in the buyer's own words. The seller's row
       // says what the seller decided; this says what arrived.
       observedHttp: res.status,
@@ -426,6 +490,40 @@ export function reconcile({ agentEntries = [], merchantRows = [] } = {}) {
     unidentified: unidentified.length,
   };
   for (const pair of pairs) summary[pair.verdict] += 1;
+
+  // Group the buyer's divergence reports by member, not by attempt.
+  //
+  // 412 unmatched rows that all disagree on `origin` are one proxy configuration,
+  // not 412 incidents. Reporting them as a count of rows sends an operator
+  // looking for a bug in the wrong place, and a per-row list is unreadable at
+  // that size. `query` has no digest to compare and is counted separately.
+  const byMember = {};
+  const explained = { only_buyer: 0, only_seller: 0 };
+  // A pair's buyer half is a brief, not the entry, so the divergences have to be
+  // looked up on the entry it came from. Keyed by identity *and* presentation,
+  // because one identity can carry several presentations in one ledger.
+  const entryByKey = new Map();
+  for (const entry of agentEntries) {
+    if (!entry.attemptIdentity) continue;
+    const list = entryByKey.get(entry.attemptIdentity) ?? [];
+    list.push(entry);
+    entryByKey.set(entry.attemptIdentity, list);
+  }
+  const taken = new Map();
+  for (const pair of pairs) {
+    if (pair.verdict !== 'only_buyer' && pair.verdict !== 'only_seller') continue;
+    const list = entryByKey.get(pair.attemptIdentity) ?? [];
+    const idx = taken.get(pair.attemptIdentity) ?? 0;
+    taken.set(pair.attemptIdentity, idx + 1);
+    const found = list[idx]?.divergedAt ?? [];
+    if (!found.length) continue;
+    explained[pair.verdict] += 1;
+    for (const d of found) byMember[d.member] = (byMember[d.member] ?? 0) + 1;
+  }
+  if (Object.keys(byMember).length) {
+    summary.divergences_by_member = byMember;
+    summary.explained = explained;
+  }
 
   return { pairs, summary, unidentified };
 }

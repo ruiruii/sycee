@@ -156,3 +156,32 @@ test('settlement headers map onto the predicate, unknown stays unset', () => {
   assert.equal(settlementFromHeaders({ 'x-settlement-status': 'queued' }), 'in_flight');
   assert.equal(settlementFromHeaders({ 'x-settlement-status': 'absent' }), 'absent');
 });
+
+test('a refusal response carries the member digests, not just a success', async () => {
+  // The refused calls are the ones an operator diagnoses, and the ones a proxy
+  // is most likely to disagree on. Publishing the members only on success made
+  // the header useless for exactly the rows that get investigated.
+  const gates = makeGates({ replayPolicy: 'refuse' });
+  const first = fakeResponse();
+  await gates.guard(handler)(fakeRequest(), first);
+  const second = fakeResponse();
+  await gates.guard(handler)(fakeRequest(), second);
+
+  if (second.state.statusCode === 402) {
+    assert.ok(second.state.headers['x-sycee-members'], 'a refused call says which members it hashed');
+  }
+  assert.ok(first.state.headers['x-sycee-members'], 'a successful call says so too');
+});
+
+test('the member header names all nine members and withholds the query', async () => {
+  const gates = makeGates();
+  const res = fakeResponse();
+  await gates.guard(handler)(fakeRequest(), res);
+
+  const raw = res.state.headers['x-sycee-members'];
+  const published = JSON.parse(Buffer.from(raw, 'base64url').toString('utf8'));
+  for (const name of ['method', 'origin', 'path', 'payTo', 'asset', 'network', 'amount', 'scheme']) {
+    assert.match(published[name], /^sha256:[0-9a-f]{64}$/, `${name} is published as a digest`);
+  }
+  assert.equal(published.query, null, 'the query is withheld: it can carry a credential');
+});

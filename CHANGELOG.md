@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+### A divergence says which member, not just that there is one
+
+Two keys that differ tell a buyer to contact the seller and a seller to ask for logs. Neither of those is a fix, and the actual cause is usually one member: a proxy that terminated TLS, or one that stripped a path prefix. The members are not secret, so there was no reason to make someone guess.
+
+- SPEC §10, *Locating a divergence*: a response carrying an attempt identity SHOULD publish `x-sycee-members` — base64url JSON, §3.1's members, each as `sha256:<64 hex>` over its composed value. A member that can hold a credential (`query`) MUST be published as `null`, not digested: a short query is recoverable from its digest, and the buyer already knows what it sent. Refusal responses carry it too, because a refusal is what gets investigated.
+- The header is a diagnostic, not a second identity. The buyer still composes its key from the request and the challenge, and MUST NOT adopt a published value. Publishing does not weaken that: the buyer's key exists before the response arrives.
+- `@sycee/agent-sdk`: each entry carries `divergedAt`, the members whose digests disagree, with both sides' values. `reconcile()` adds `summary.divergences_by_member` and `summary.explained`, grouping by member rather than by attempt — a hundred unmatched rows that all differ on `origin` are one configuration error. It names the member and stops; which side should change is a deployment question.
+- `bin/sycee-doctor.mjs`: runs a request through a simulated misconfiguration (`--rewrite proto|path|host|none`) and prints what a buyer can conclude from the response alone.
+- Fixed while testing it: the refusal path did not set the header, so the calls an operator opens first were the only ones that could not be diagnosed.
+- Tests 240 → 248.
+
 ### The buyer's half is computed, not copied
 
 The identity change made the two sides able to name the same attempt. Nothing used that: the 402 challenge did not carry the payment members the buyer needs, the buyer composed nothing, and the agent SDK dropped the seller's signed refusal on the floor. The result was a ledger with one side filled in, which is the state the whole record exists to leave behind.

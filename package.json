@@ -28,6 +28,7 @@
     "verify:receipt": "node bin/sycee-verify.mjs"
   },
   "bin": {
-    "sycee-verify": "./bin/sycee-verify.mjs"
+    "sycee-verify": "./bin/sycee-verify.mjs",
+    "sycee-doctor": "./bin/sycee-doctor.mjs"
   }
 }
