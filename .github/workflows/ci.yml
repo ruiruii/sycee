@@ -27,6 +27,13 @@ jobs:
       - name: Run test suite
         run: npm test
 
+      # The entry-point scripts a reader runs first. `npm test` does not touch
+      # them, so this is the only place a breaking change to the examples is
+      # caught before it ships. The identity change once left four of them
+      # throwing `payTo_required` on their first paid call while CI was green.
+      - name: Run the entry-point examples
+        run: npm run test:examples
+
       - name: Verify conformance vectors
         run: npm run verify
 
