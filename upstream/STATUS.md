@@ -116,27 +116,30 @@ State is one of: `已回` (they replied), `未回` (sent, no reply), `拒绝` (d
 
 ## Mentioned, not yet contacted directly
 
-### Nirium / `nirholas/x402-facilitator` — **未直接接触**
+### Nirium / `nirholas/x402-facilitator` — **未发（草稿已备 2026-11-23）**
 
-- **State:** not contacted as a person. We read their code
+- **State:** no thread opened yet. We read their code
   (`docs/observations.md` §1) and cited their devlog (37 on-chain vs 39 receipts)
-  in our holistis replies, but we have not opened a thread with them.
+  in our holistis replies. A new-issue draft is ready: `issue-nirium-facilitator.md`.
 - **What they are:** the closest thing to a real seller with a real problem — the
   split-leg settlement that reports one boolean, and the 37-vs-39 gap.
-- **What is owed / next move:** this is the highest-value *unopened* line. They
-  already wrote the problem down in their own words. If we open it, lead with their
-  finding, not with our spec.
-- **Files:** `docs/observations.md` §1.
+- **What is owed / next move:** send the draft as a new issue (chosen over replying
+  on #3, whose binding hole is closed and is a different question). It leads with
+  their own devlog, asks for citation permission and one reconcile run, and raises
+  the EIP-2612 reporting question without asking them to adopt our vocabulary.
+- **Files:** `issue-nirium-facilitator.md`, `docs/observations.md` §1.
 
-### vet402 — **未直接接触**
+### vet402 / `kzmttkc` — **未发（草稿已备 2026-11-23）**
 
-- **State:** mentioned (in `specs/extensions/refusal-row.md` §12 and in past
-  discussion) as a party with buyer-side logs, but no thread on record.
+- **State:** no thread of ours yet, but they are active in x402#4116 — maintainer
+  `kzmttkc` posted buyer-side data (16 settled-without-response attempts) and said
+  he is happy to be a test target. A reply draft is ready: `reply-x402-4116-vet402.md`.
 - **What they are:** the buyer-side counterpart we said would make the two-ledger
-  reconcile real.
-- **Next move:** open only after the buyer side can be installed (`npm` publish),
-  otherwise we ask them to clone and install for nothing.
-- **Files:** `specs/extensions/refusal-row.md` §12.
+  reconcile real. Prerequisite met — `npx sycee-verify` is published (0.2.0).
+- **Next move:** reply to their comment on x402#4116 (chosen over a cold email or a
+  new issue) — pick up their own observation that a response-carried receipt cannot
+  help when no response arrives. Do not pitch SYCEE as the RFC's receipt scheme.
+- **Files:** `reply-x402-4116-vet402.md`, `specs/extensions/refusal-row.md` §12.
 
 ---
 
@@ -152,5 +155,5 @@ State is one of: `已回` (they replied), `未回` (sent, no reply), `拒绝` (d
 | predge | 未回 | issue + PR | low; archive |
 | ERC-8004 | 未回 | issue | low; archive |
 | Counterra | 未回 | issue | low; archive |
-| Nirium | 未直接接触 | — | **highest unopened: a real seller with a real problem** |
-| vet402 | 未直接接触 | — | buyer-side counterpart; open after publish |
+| Nirium | 未发（草稿已备） | new-issue draft written | **highest unopened: a real seller with a real problem** |
+| vet402 | 未发（草稿已备） | x402#4116 reply draft written | buyer-side counterpart; publish prerequisite now met |
