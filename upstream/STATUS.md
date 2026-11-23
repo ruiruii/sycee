@@ -116,11 +116,13 @@ State is one of: `已回` (they replied), `未回` (sent, no reply), `拒绝` (d
 
 ## Mentioned, not yet contacted directly
 
-### Nirium / `nirholas/x402-facilitator` — **未发（草稿已备 2026-11-23）**
+### Nirium / `nirholas/x402-facilitator` — **已发（2026-11-24）**
 
-- **State:** no thread opened yet. We read their code
-  (`docs/observations.md` §1) and cited their devlog (37 on-chain vs 39 receipts)
-  in our holistis replies. A new-issue draft is ready: `issue-nirium-facilitator.md`.
+- **State:** issue opened 2026-11-24 at
+  https://github.com/nirholas/x402-facilitator/issues/21 — leads with their own
+  devlog (37 on-chain vs 39 receipts), asks for citation permission and one
+  reconcile run, and raises the narrow EIP-2612 reporting question. Draft:
+  `issue-nirium-facilitator.md`. Awaiting reply.
 - **What they are:** the closest thing to a real seller with a real problem — the
   split-leg settlement that reports one boolean, and the 37-vs-39 gap.
 - **What is owed / next move:** send the draft as a new issue (chosen over replying
@@ -129,11 +131,13 @@ State is one of: `已回` (they replied), `未回` (sent, no reply), `拒绝` (d
   the EIP-2612 reporting question without asking them to adopt our vocabulary.
 - **Files:** `issue-nirium-facilitator.md`, `docs/observations.md` §1.
 
-### vet402 / `kzmttkc` — **未发（草稿已备 2026-11-23）**
+### vet402 / `kzmttkc` — **已发（2026-11-24）**
 
-- **State:** no thread of ours yet, but they are active in x402#4116 — maintainer
-  `kzmttkc` posted buyer-side data (16 settled-without-response attempts) and said
-  he is happy to be a test target. A reply draft is ready: `reply-x402-4116-vet402.md`.
+- **State:** replied 2026-11-24 on x402#4116 at
+  https://github.com/x402-foundation/x402/issues/4116#issuecomment-7108861084 —
+  picked up kzmttkc's own observation that a response-carried receipt cannot help
+  when no response arrives; offered the buyer-side witness + four-outcome reconcile
+  as complement, not competitor. Draft: `reply-x402-4116-vet402.md`. Awaiting reply.
 - **What they are:** the buyer-side counterpart we said would make the two-ledger
   reconcile real. Prerequisite met — `npx sycee-verify` is published (0.2.0).
 - **Next move:** reply to their comment on x402#4116 (chosen over a cold email or a
@@ -155,5 +159,5 @@ State is one of: `已回` (they replied), `未回` (sent, no reply), `拒绝` (d
 | predge | 未回 | issue + PR | low; archive |
 | ERC-8004 | 未回 | issue | low; archive |
 | Counterra | 未回 | issue | low; archive |
-| Nirium | 未发（草稿已备） | new-issue draft written | **highest unopened: a real seller with a real problem** |
-| vet402 | 未发（草稿已备） | x402#4116 reply draft written | buyer-side counterpart; publish prerequisite now met |
+| Nirium | 已发（2026-11-24） | issue #21 opened | **highest-value line: a real seller with a real problem** |
+| vet402 | 已发（2026-11-24） | x402#4116 reply posted | buyer-side counterpart; publish prerequisite met |
