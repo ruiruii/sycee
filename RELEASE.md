@@ -1,8 +1,19 @@
 # SYCEE 发布清单（第三步）
 
-状态：**阶段一已落地、待发布**。文件名与版本已定：包名 `sycee-verify`（npm 不接受大写，`SciVerify` 会被拒绝），版本统一 `0.2.0`。阶段一的 12 个文件改动均已完成并验证；只差维护者提供 npm token 执行实际 `publish`。发布动作需要 token，须由维护者提供并在用后撤销。
+状态：**已发布并完成端到端验证（2026-11-23）**。
 
-发布前验证已完成（2026-11-23）：两个包 `npm pack --dry-run` 内容正确；全新临时目录安装两个 tarball 后，从 `node_modules/.bin/sycee-verify` 跑单文件 1/1、全量目录 76/76——即商家 `npx` 路径已演练通过。
+- 已发布到 npm 官方 registry：`@sycee/core@0.2.0`、`sycee-verify@0.2.0`（均 `--access public`，账号 `rachel131` 下的 `sycee` org）。发布顺序：core → verify。
+- `dist-tags.latest` 两者均为 `0.2.0`；首次发布时 registry 先建 `0.0.0-stage` 占位再异步处理出 `0.2.0`，属正常机制。
+- **真实 `npx` 验证（官方源、干净目录、无 clone）**：`npx --yes sycee-verify --example` → `1/3 passed`（两个内置违规样例故意 FAIL、一个合规 PASS，退出码 0，与本地一致）；`npx --yes sycee-verify --dir conformance/refusal/vectors --quiet` → **76/76 passed**，退出码 0。商家 `npx` 路径端到端成立。
+
+发布前验证（同日）：两个包 `npm pack --dry-run` 内容正确；全新目录安装两个 tarball 后从 `node_modules/.bin` 跑单文件 1/1、全量 76/76。
+
+**过程中的两个卡点及解法（记录备查）**：
+1. 网页登录被 GitHub 反机器人验证拦截。最终经 GitHub App 已登录会话唤起授权，成功登入 npmjs.com 并生成 token。
+2. 首批 token 未勾 `Bypass two-factor authentication`，发布报 403 要求 2FA。重新生成一个勾了 bypass 的 granular token 后通过。
+3. `@sycee` scope 起初不存在（`Scope not found`）。在 npmjs.com 网页新建名为 `sycee` 的免费 public org 后发布成功——**未改任何包名或代码**。
+
+**安全待办**：本次用过的三个 npm token（`npm_l9SR…`、`npm_4E3J…`、`npm_IZ4uX…`）及更早两个 GitHub PAT（`ghp_KHZ…`、`ghp_3Dmv…`）均应在使用后撤销。
 
 ## 一、三个先要拍板的决策
 
@@ -78,5 +89,5 @@ SPEC 已是 v0.2、refusal row 是 `sycee/refusal/v0.2`，但 npm 包还停在 0
 ## 五、仍不在本清单范围内
 
 - 拒绝行不记录 settlement transaction hash（已知缺口，未排期）。
-- 实际 `npm publish` 未执行（无 token）；本清单只做改动规划。
-- doctor 的 `npx` 发布（阶段二）。
+- doctor 的 `npx` 发布（阶段二）——仍用相对路径 import，需改包名 import 后才能进包。
+- 撤销用过的 token（见文首安全待办）。
