@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-16T12:54:22.293Z",
+  "generated_at": "2026-11-23T14:53:59.332Z",
   "tool": "gates-probe",
   "discovery": {
     "sources": [
@@ -15,12 +15,18 @@
       }
     ],
     "total_listed": 150,
-    "distinct_origins": 54,
+    "distinct_origins": 56,
     "sellers": [
       {
         "origin": "https://api.onesource.io",
-        "resourceCount": 30,
+        "resourceCount": 27,
         "sampleResource": "https://api.onesource.io/api/chain/erc20-balance",
+        "facilitators": []
+      },
+      {
+        "origin": "https://api.aisa.one",
+        "resourceCount": 22,
+        "sampleResource": "https://api.aisa.one/apis/v2/agentmail/drafts/{draft_id}",
         "facilitators": []
       },
       {
@@ -31,20 +37,8 @@
       },
       {
         "origin": "https://www.api-xpay.com",
-        "resourceCount": 13,
+        "resourceCount": 11,
         "sampleResource": "https://www.api-xpay.com/x402/quote",
-        "facilitators": []
-      },
-      {
-        "origin": "https://agents.allium.so",
-        "resourceCount": 12,
-        "sampleResource": "https://agents.allium.so/api/v1/developer/prices",
-        "facilitators": []
-      },
-      {
-        "origin": "https://api.aisa.one",
-        "resourceCount": 10,
-        "sampleResource": "https://api.aisa.one/apis/v2/agentmail/api-keys",
         "facilitators": []
       },
       {
@@ -55,7 +49,7 @@
       },
       {
         "origin": "https://agent.pocket.network",
-        "resourceCount": 4,
+        "resourceCount": 3,
         "sampleResource": "https://agent.pocket.network/v1/agentsearch-web-search-v1",
         "facilitators": []
       },
@@ -63,6 +57,18 @@
         "origin": "https://api.bitrefill.com",
         "resourceCount": 3,
         "sampleResource": "https://api.bitrefill.com/x402/gift-cards/search",
+        "facilitators": []
+      },
+      {
+        "origin": "https://x402.asterpay.io",
+        "resourceCount": 3,
+        "sampleResource": "https://x402.asterpay.io/v1/agent/deep-analysis/:address",
+        "facilitators": []
+      },
+      {
+        "origin": "https://api.clawfetch.ai",
+        "resourceCount": 2,
+        "sampleResource": "https://api.clawfetch.ai/fetch",
         "facilitators": []
       },
       {
@@ -114,9 +120,9 @@
         "facilitators": []
       },
       {
-        "origin": "https://x402.telnyx.com",
+        "origin": "https://win.oneshotagent.com",
         "resourceCount": 2,
-        "sampleResource": "https://x402.telnyx.com/v1/chat/completions/_t/deepseek-v4.1-flash",
+        "sampleResource": "https://win.oneshotagent.com/v1/tools/search",
         "facilitators": []
       },
       {
@@ -174,9 +180,9 @@
         "facilitators": []
       },
       {
-        "origin": "https://api.clawfetch.ai",
+        "origin": "https://api.flashpoint.ai",
         "resourceCount": 1,
-        "sampleResource": "https://api.clawfetch.ai/fetch",
+        "sampleResource": "https://api.flashpoint.ai/mcp",
         "facilitators": []
       },
       {
@@ -186,9 +192,9 @@
         "facilitators": []
       },
       {
-        "origin": "https://api.nansen.ai",
+        "origin": "https://ax1-new.vercel.app",
         "resourceCount": 1,
-        "sampleResource": "https://api.nansen.ai/api/v1/profiler/address/current-balance",
+        "sampleResource": "https://ax1-new.vercel.app/api/dashboard/q-verdict/resource",
         "facilitators": []
       },
       {
@@ -207,6 +213,12 @@
         "origin": "https://edgar.apitoll.cloud",
         "resourceCount": 1,
         "sampleResource": "https://edgar.apitoll.cloud/v1/edgar/filings",
+        "facilitators": []
+      },
+      {
+        "origin": "https://energy.halowerk.com",
+        "resourceCount": 1,
+        "sampleResource": "https://energy.halowerk.com/demo/paid-sample",
         "facilitators": []
       },
       {
@@ -246,12 +258,6 @@
         "facilitators": []
       },
       {
-        "origin": "https://nbu.navistri.com",
-        "resourceCount": 1,
-        "sampleResource": "https://nbu.navistri.com/v1/rates",
-        "facilitators": []
-      },
-      {
         "origin": "https://pro-api.coingecko.com",
         "resourceCount": 1,
         "sampleResource": "https://pro-api.coingecko.com/api/v3/x402/onchain/search/pools",
@@ -285,6 +291,12 @@
         "origin": "https://theartillerist.com",
         "resourceCount": 1,
         "sampleResource": "https://theartillerist.com/api/v1/x402-trial",
+        "facilitators": []
+      },
+      {
+        "origin": "https://tolca.tonbot.ca",
+        "resourceCount": 1,
+        "sampleResource": "https://tolca.tonbot.ca/v1/web-search",
         "facilitators": []
       },
       {
@@ -324,15 +336,15 @@
         "facilitators": []
       },
       {
-        "origin": "https://x402.ottoai.services",
-        "resourceCount": 1,
-        "sampleResource": "https://x402.ottoai.services/crypto-news",
-        "facilitators": []
-      },
-      {
         "origin": "https://x402.tbs-digital.com",
         "resourceCount": 1,
         "sampleResource": "https://x402.tbs-digital.com/weather/current",
+        "facilitators": []
+      },
+      {
+        "origin": "https://x402.telnyx.com",
+        "resourceCount": 1,
+        "sampleResource": "https://x402.telnyx.com/v1/chat/completions/_t/deepseek-v4.1-flash",
         "facilitators": []
       },
       {
@@ -350,18 +362,18 @@
     "results": [
       {
         "origin": "https://api.automaton-sovereign.workers.dev",
-        "posture": "attestation-ledger",
+        "posture": "settlement-only",
         "reachable": true,
         "surfaces": {
           "ledger": {
-            "present": true,
-            "status": 200,
+            "present": false,
+            "status": 404,
             "kind": "attestation-ledger",
             "responded": true
           },
           "keyring": {
-            "present": true,
-            "status": 200,
+            "present": false,
+            "status": 404,
             "kind": "attestation-ledger",
             "responded": true
           },
@@ -372,8 +384,8 @@
             "responded": true
           },
           "facilitatorSupported": {
-            "present": true,
-            "status": 200,
+            "present": false,
+            "status": 404,
             "kind": "settlement-only",
             "responded": true
           },
@@ -385,161 +397,9 @@
           }
         },
         "evidenceOnly": false,
-        "predicates": [
-          {
-            "id": "ledger.hashIntegrity",
-            "title": "Hash integrity — every entry recomputes from its inputs",
-            "status": "pass",
-            "level": "L0",
-            "message": "All 68 entries recompute.",
-            "evidence": {
-              "matched": 68,
-              "total": 68,
-              "badIndices": []
-            }
-          },
-          {
-            "id": "ledger.chainContinuity",
-            "title": "Chain continuity — prevHash links to predecessor; indices contiguous",
-            "status": "pass",
-            "level": "L0",
-            "message": "Indices 0..67 contiguous; all prevHash links hold.",
-            "evidence": {
-              "contiguous": true,
-              "brokenIndices": [],
-              "span": [
-                0,
-                67
-              ]
-            }
-          },
-          {
-            "id": "keyring.historyAware",
-            "title": "Key history published — verifier can resolve retired keys by id",
-            "status": "pass",
-            "level": "L0",
-            "message": "1 retired key(s) published alongside current 6db8674197d1601f.",
-            "evidence": {
-              "currentKeyId": "6db8674197d1601f",
-              "retiredCount": 1
-            }
-          },
-          {
-            "id": "evidence.contentBinding",
-            "title": "Content binding — entries carry a real payload, not sha256(\"{}\")",
-            "status": "gap",
-            "level": "L0",
-            "message": "55/68 entries sign an empty object (bound 13, ratio 0.191) at indices 12..67.",
-            "evidence": {
-              "total": 68,
-              "empty": 55,
-              "bound": 13,
-              "emptyIndices": [
-                12,
-                13,
-                14,
-                15,
-                16,
-                17,
-                18,
-                19,
-                20,
-                21,
-                22,
-                23,
-                24,
-                25,
-                26,
-                27,
-                28,
-                29,
-                30,
-                31,
-                32,
-                33,
-                34,
-                36,
-                37,
-                38,
-                39,
-                40,
-                41,
-                42,
-                43,
-                44,
-                45,
-                46,
-                47,
-                48,
-                49,
-                50,
-                51,
-                52,
-                53,
-                54,
-                55,
-                56,
-                57,
-                58,
-                59,
-                60,
-                61,
-                62,
-                63,
-                64,
-                65,
-                66,
-                67
-              ],
-              "ratio": 0.19117647058823528
-            }
-          },
-          {
-            "id": "evidence.settlementLinkage",
-            "title": "Settlement linkage — an entry binds this payment via a gates subject",
-            "status": "pending",
-            "level": "L2",
-            "message": "No request fingerprint supplied — the settlement-binding half cannot be tested. Provide --fingerprint or --binding.",
-            "evidence": {
-              "reason": "missing_fingerprint"
-            }
-          },
-          {
-            "id": "evidence.redeemCountDerivable",
-            "title": "Redeem-count derivability — counts are derived, not asserted",
-            "status": "pending",
-            "level": "L1",
-            "message": "No fingerprint in scope; cannot confirm a count is derivable for a concrete request. Provide --fingerprint to exercise it.",
-            "evidence": {
-              "reason": "missing_fingerprint"
-            }
-          },
-          {
-            "id": "evidence.settlementTrivalued",
-            "title": "Settlement trivaluation — a three-value settlement predicate is exposed",
-            "status": "info",
-            "level": "L1",
-            "message": "Ledger entries carry no settlement-status field; trivaluation is not observable here (common for signature ledgers).",
-            "evidence": {
-              "observedFields": []
-            }
-          }
-        ],
-        "summary": {
-          "total": 7,
-          "pass": 3,
-          "gap": 1,
-          "fail": 0,
-          "pending": 2,
-          "info": 1,
-          "levels": {
-            "L0": true,
-            "L1": true,
-            "L2": true
-          },
-          "headline": "1 known gap(s) reported; 3 predicate(s) hold."
-        },
-        "entryCount": 68
+        "predicates": null,
+        "summary": null,
+        "entryCount": null
       },
       {
         "origin": "https://inference.bsvkey.com",
@@ -753,31 +613,31 @@
         "surfaces": {
           "ledger": {
             "present": false,
-            "status": 200,
+            "status": 404,
             "kind": "attestation-ledger",
             "responded": true
           },
           "keyring": {
             "present": false,
-            "status": 200,
+            "status": 404,
             "kind": "attestation-ledger",
             "responded": true
           },
           "receiptKey": {
             "present": false,
-            "status": 200,
+            "status": 404,
             "kind": "signed-receipt",
             "responded": true
           },
           "facilitatorSupported": {
-            "present": true,
-            "status": 200,
+            "present": false,
+            "status": 404,
             "kind": "settlement-only",
             "responded": true
           },
           "facilitatorHealth": {
             "present": false,
-            "status": 200,
+            "status": 404,
             "kind": "settlement-only",
             "responded": true
           }
@@ -1200,8 +1060,8 @@
     ]
   },
   "seller": {
-    "origins_scanned": 54,
-    "reachable": 54,
+    "origins_scanned": 56,
+    "reachable": 56,
     "results": [
       {
         "origin": "https://api.onesource.io",
@@ -1223,6 +1083,32 @@
           "receiptKey": {
             "present": false,
             "status": 401,
+            "kind": "signed-receipt",
+            "responded": true
+          }
+        },
+        "evidenceOnly": true
+      },
+      {
+        "origin": "https://api.aisa.one",
+        "posture": "no-evidence",
+        "reachable": true,
+        "surfaces": {
+          "ledger": {
+            "present": false,
+            "status": 404,
+            "kind": "attestation-ledger",
+            "responded": true
+          },
+          "keyring": {
+            "present": false,
+            "status": 404,
+            "kind": "attestation-ledger",
+            "responded": true
+          },
+          "receiptKey": {
+            "present": false,
+            "status": 404,
             "kind": "signed-receipt",
             "responded": true
           }
@@ -1257,58 +1143,6 @@
       },
       {
         "origin": "https://www.api-xpay.com",
-        "posture": "no-evidence",
-        "reachable": true,
-        "surfaces": {
-          "ledger": {
-            "present": false,
-            "status": 404,
-            "kind": "attestation-ledger",
-            "responded": true
-          },
-          "keyring": {
-            "present": false,
-            "status": 404,
-            "kind": "attestation-ledger",
-            "responded": true
-          },
-          "receiptKey": {
-            "present": false,
-            "status": 404,
-            "kind": "signed-receipt",
-            "responded": true
-          }
-        },
-        "evidenceOnly": true
-      },
-      {
-        "origin": "https://agents.allium.so",
-        "posture": "no-evidence",
-        "reachable": true,
-        "surfaces": {
-          "ledger": {
-            "present": false,
-            "status": 503,
-            "kind": "attestation-ledger",
-            "responded": true
-          },
-          "keyring": {
-            "present": false,
-            "status": 503,
-            "kind": "attestation-ledger",
-            "responded": true
-          },
-          "receiptKey": {
-            "present": false,
-            "status": 503,
-            "kind": "signed-receipt",
-            "responded": true
-          }
-        },
-        "evidenceOnly": true
-      },
-      {
-        "origin": "https://api.aisa.one",
         "posture": "no-evidence",
         "reachable": true,
         "surfaces": {
@@ -1399,6 +1233,58 @@
           "keyring": {
             "present": false,
             "status": 401,
+            "kind": "attestation-ledger",
+            "responded": true
+          },
+          "receiptKey": {
+            "present": false,
+            "status": 404,
+            "kind": "signed-receipt",
+            "responded": true
+          }
+        },
+        "evidenceOnly": true
+      },
+      {
+        "origin": "https://x402.asterpay.io",
+        "posture": "no-evidence",
+        "reachable": true,
+        "surfaces": {
+          "ledger": {
+            "present": false,
+            "status": 404,
+            "kind": "attestation-ledger",
+            "responded": true
+          },
+          "keyring": {
+            "present": false,
+            "status": 404,
+            "kind": "attestation-ledger",
+            "responded": true
+          },
+          "receiptKey": {
+            "present": false,
+            "status": 404,
+            "kind": "signed-receipt",
+            "responded": true
+          }
+        },
+        "evidenceOnly": true
+      },
+      {
+        "origin": "https://api.clawfetch.ai",
+        "posture": "no-evidence",
+        "reachable": true,
+        "surfaces": {
+          "ledger": {
+            "present": false,
+            "status": 404,
+            "kind": "attestation-ledger",
+            "responded": true
+          },
+          "keyring": {
+            "present": false,
+            "status": 404,
             "kind": "attestation-ledger",
             "responded": true
           },
@@ -1620,7 +1506,7 @@
         "evidenceOnly": true
       },
       {
-        "origin": "https://x402.telnyx.com",
+        "origin": "https://win.oneshotagent.com",
         "posture": "no-evidence",
         "reachable": true,
         "surfaces": {
@@ -1880,7 +1766,7 @@
         "evidenceOnly": true
       },
       {
-        "origin": "https://api.clawfetch.ai",
+        "origin": "https://api.flashpoint.ai",
         "posture": "no-evidence",
         "reachable": true,
         "surfaces": {
@@ -1932,7 +1818,7 @@
         "evidenceOnly": true
       },
       {
-        "origin": "https://api.nansen.ai",
+        "origin": "https://ax1-new.vercel.app",
         "posture": "no-evidence",
         "reachable": true,
         "surfaces": {
@@ -2036,25 +1922,51 @@
         "evidenceOnly": true
       },
       {
+        "origin": "https://energy.halowerk.com",
+        "posture": "no-evidence",
+        "reachable": true,
+        "surfaces": {
+          "ledger": {
+            "present": false,
+            "status": 404,
+            "kind": "attestation-ledger",
+            "responded": true
+          },
+          "keyring": {
+            "present": false,
+            "status": 404,
+            "kind": "attestation-ledger",
+            "responded": true
+          },
+          "receiptKey": {
+            "present": false,
+            "status": 404,
+            "kind": "signed-receipt",
+            "responded": true
+          }
+        },
+        "evidenceOnly": true
+      },
+      {
         "origin": "https://glim.sh",
         "posture": "no-evidence",
         "reachable": true,
         "surfaces": {
           "ledger": {
             "present": false,
-            "status": 200,
+            "status": 404,
             "kind": "attestation-ledger",
             "responded": true
           },
           "keyring": {
             "present": false,
-            "status": 200,
+            "status": 404,
             "kind": "attestation-ledger",
             "responded": true
           },
           "receiptKey": {
             "present": false,
-            "status": 200,
+            "status": 404,
             "kind": "signed-receipt",
             "responded": true
           }
@@ -2192,32 +2104,6 @@
         "evidenceOnly": true
       },
       {
-        "origin": "https://nbu.navistri.com",
-        "posture": "no-evidence",
-        "reachable": true,
-        "surfaces": {
-          "ledger": {
-            "present": false,
-            "status": 404,
-            "kind": "attestation-ledger",
-            "responded": true
-          },
-          "keyring": {
-            "present": false,
-            "status": 404,
-            "kind": "attestation-ledger",
-            "responded": true
-          },
-          "receiptKey": {
-            "present": false,
-            "status": 404,
-            "kind": "signed-receipt",
-            "responded": true
-          }
-        },
-        "evidenceOnly": true
-      },
-      {
         "origin": "https://pro-api.coingecko.com",
         "posture": "no-evidence",
         "reachable": true,
@@ -2302,9 +2188,9 @@
         "surfaces": {
           "ledger": {
             "present": false,
-            "status": 404,
+            "status": 0,
             "kind": "attestation-ledger",
-            "responded": true
+            "responded": false
           },
           "keyring": {
             "present": false,
@@ -2349,6 +2235,32 @@
       },
       {
         "origin": "https://theartillerist.com",
+        "posture": "no-evidence",
+        "reachable": true,
+        "surfaces": {
+          "ledger": {
+            "present": false,
+            "status": 404,
+            "kind": "attestation-ledger",
+            "responded": true
+          },
+          "keyring": {
+            "present": false,
+            "status": 404,
+            "kind": "attestation-ledger",
+            "responded": true
+          },
+          "receiptKey": {
+            "present": false,
+            "status": 404,
+            "kind": "signed-receipt",
+            "responded": true
+          }
+        },
+        "evidenceOnly": true
+      },
+      {
+        "origin": "https://tolca.tonbot.ca",
         "posture": "no-evidence",
         "reachable": true,
         "surfaces": {
@@ -2530,7 +2442,7 @@
         "evidenceOnly": true
       },
       {
-        "origin": "https://x402.ottoai.services",
+        "origin": "https://x402.tbs-digital.com",
         "posture": "no-evidence",
         "reachable": true,
         "surfaces": {
@@ -2556,7 +2468,7 @@
         "evidenceOnly": true
       },
       {
-        "origin": "https://x402.tbs-digital.com",
+        "origin": "https://x402.telnyx.com",
         "posture": "no-evidence",
         "reachable": true,
         "surfaces": {

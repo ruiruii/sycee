@@ -12,12 +12,18 @@
     }
   ],
   "total_listed": 150,
-  "distinct_origins": 54,
+  "distinct_origins": 56,
   "sellers": [
     {
       "origin": "https://api.onesource.io",
-      "resourceCount": 30,
+      "resourceCount": 27,
       "sampleResource": "https://api.onesource.io/api/chain/erc20-balance",
+      "facilitators": []
+    },
+    {
+      "origin": "https://api.aisa.one",
+      "resourceCount": 22,
+      "sampleResource": "https://api.aisa.one/apis/v2/agentmail/drafts/{draft_id}",
       "facilitators": []
     },
     {
@@ -28,20 +34,8 @@
     },
     {
       "origin": "https://www.api-xpay.com",
-      "resourceCount": 13,
+      "resourceCount": 11,
       "sampleResource": "https://www.api-xpay.com/x402/quote",
-      "facilitators": []
-    },
-    {
-      "origin": "https://agents.allium.so",
-      "resourceCount": 12,
-      "sampleResource": "https://agents.allium.so/api/v1/developer/prices",
-      "facilitators": []
-    },
-    {
-      "origin": "https://api.aisa.one",
-      "resourceCount": 10,
-      "sampleResource": "https://api.aisa.one/apis/v2/agentmail/api-keys",
       "facilitators": []
     },
     {
@@ -52,7 +46,7 @@
     },
     {
       "origin": "https://agent.pocket.network",
-      "resourceCount": 4,
+      "resourceCount": 3,
       "sampleResource": "https://agent.pocket.network/v1/agentsearch-web-search-v1",
       "facilitators": []
     },
@@ -60,6 +54,18 @@
       "origin": "https://api.bitrefill.com",
       "resourceCount": 3,
       "sampleResource": "https://api.bitrefill.com/x402/gift-cards/search",
+      "facilitators": []
+    },
+    {
+      "origin": "https://x402.asterpay.io",
+      "resourceCount": 3,
+      "sampleResource": "https://x402.asterpay.io/v1/agent/deep-analysis/:address",
+      "facilitators": []
+    },
+    {
+      "origin": "https://api.clawfetch.ai",
+      "resourceCount": 2,
+      "sampleResource": "https://api.clawfetch.ai/fetch",
       "facilitators": []
     },
     {
@@ -111,9 +117,9 @@
       "facilitators": []
     },
     {
-      "origin": "https://x402.telnyx.com",
+      "origin": "https://win.oneshotagent.com",
       "resourceCount": 2,
-      "sampleResource": "https://x402.telnyx.com/v1/chat/completions/_t/deepseek-v4.1-flash",
+      "sampleResource": "https://win.oneshotagent.com/v1/tools/search",
       "facilitators": []
     },
     {
@@ -171,9 +177,9 @@
       "facilitators": []
     },
     {
-      "origin": "https://api.clawfetch.ai",
+      "origin": "https://api.flashpoint.ai",
       "resourceCount": 1,
-      "sampleResource": "https://api.clawfetch.ai/fetch",
+      "sampleResource": "https://api.flashpoint.ai/mcp",
       "facilitators": []
     },
     {
@@ -183,9 +189,9 @@
       "facilitators": []
     },
     {
-      "origin": "https://api.nansen.ai",
+      "origin": "https://ax1-new.vercel.app",
       "resourceCount": 1,
-      "sampleResource": "https://api.nansen.ai/api/v1/profiler/address/current-balance",
+      "sampleResource": "https://ax1-new.vercel.app/api/dashboard/q-verdict/resource",
       "facilitators": []
     },
     {
@@ -204,6 +210,12 @@
       "origin": "https://edgar.apitoll.cloud",
       "resourceCount": 1,
       "sampleResource": "https://edgar.apitoll.cloud/v1/edgar/filings",
+      "facilitators": []
+    },
+    {
+      "origin": "https://energy.halowerk.com",
+      "resourceCount": 1,
+      "sampleResource": "https://energy.halowerk.com/demo/paid-sample",
       "facilitators": []
     },
     {
@@ -243,12 +255,6 @@
       "facilitators": []
     },
     {
-      "origin": "https://nbu.navistri.com",
-      "resourceCount": 1,
-      "sampleResource": "https://nbu.navistri.com/v1/rates",
-      "facilitators": []
-    },
-    {
       "origin": "https://pro-api.coingecko.com",
       "resourceCount": 1,
       "sampleResource": "https://pro-api.coingecko.com/api/v3/x402/onchain/search/pools",
@@ -282,6 +288,12 @@
       "origin": "https://theartillerist.com",
       "resourceCount": 1,
       "sampleResource": "https://theartillerist.com/api/v1/x402-trial",
+      "facilitators": []
+    },
+    {
+      "origin": "https://tolca.tonbot.ca",
+      "resourceCount": 1,
+      "sampleResource": "https://tolca.tonbot.ca/v1/web-search",
       "facilitators": []
     },
     {
@@ -321,15 +333,15 @@
       "facilitators": []
     },
     {
-      "origin": "https://x402.ottoai.services",
-      "resourceCount": 1,
-      "sampleResource": "https://x402.ottoai.services/crypto-news",
-      "facilitators": []
-    },
-    {
       "origin": "https://x402.tbs-digital.com",
       "resourceCount": 1,
       "sampleResource": "https://x402.tbs-digital.com/weather/current",
+      "facilitators": []
+    },
+    {
+      "origin": "https://x402.telnyx.com",
+      "resourceCount": 1,
+      "sampleResource": "https://x402.telnyx.com/v1/chat/completions/_t/deepseek-v4.1-flash",
       "facilitators": []
     },
     {
