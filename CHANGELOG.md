@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.2.0 — first npm release (pending publish)
+
+The verifier is now installable: `npx sycee-verify receipt.json` runs the same
+checker as a checkout, with no clone and no second copy of the rules.
+
+- New publishable package `sycee-verify` (`packages/cli/`): a thin `bin` wrapper
+  whose only dependency is `@sycee/core@^0.2.0`. `bin/sycee-verify.mjs` becomes a
+  local forwarder so existing repo paths are unchanged.
+- Every `@sycee/*` package moves `0.1.0 → 0.2.0`, matching SPEC/refusal v0.2.
+  Internal dependencies move from `*` to `^0.2.0`. The VSR envelope stays
+  `sycee/v0.1` — its wire field set did not change.
+- Merchant staging note and both READMEs now lead with the `npx` command; the
+  "not yet shipped" notice is gone.
+- Publish order: `@sycee/core` first, then `sycee-verify`. Verified from a clean
+  directory: single file 1/1, full vector directory 76/76.
+
 ## Unreleased
 
 ### The version is now v0.2, in the title and in the refusal rows

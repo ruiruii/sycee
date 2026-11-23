@@ -1,6 +1,6 @@
 {
   "name": "@sycee/adapter-automaton",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Adapter binding an automaton-sovereign style hash-chained attestation ledger to SYCEE: subject-bound dataHash, bounded refusal attestations, and a derivable redeem_count.",
   "license": "Apache-2.0",
   "type": "module",
@@ -9,7 +9,7 @@
     ".": "./src/index.mjs"
   },
   "dependencies": {
-    "@sycee/core": "*"
+    "@sycee/core": "^0.2.0"
   },
   "files": [
     "src"

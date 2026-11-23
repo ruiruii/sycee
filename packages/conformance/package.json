@@ -1,6 +1,6 @@
 {
   "name": "@sycee/conformance",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "JSON Schema validator, conformance vectors and test suite for SYCEE v0.1.",
   "license": "Apache-2.0",
   "type": "module",
@@ -12,7 +12,7 @@
     "gates-conformance": "./src/cli.mjs"
   },
   "dependencies": {
-    "@sycee/core": "*"
+    "@sycee/core": "^0.2.0"
   },
   "files": [
     "src"

@@ -1,0 +1,26 @@
+{
+  "name": "sycee-verify",
+  "version": "0.2.0",
+  "description": "Offline verifier for SYCEE refusal receipts — npx sycee-verify receipt.json",
+  "license": "Apache-2.0",
+  "type": "module",
+  "bin": {
+    "sycee-verify": "./bin/sycee-verify.mjs"
+  },
+  "dependencies": {
+    "@sycee/core": "^0.2.0"
+  },
+  "files": [
+    "bin"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "SYCEE",
+    "x402",
+    "receipt",
+    "verify",
+    "offline"
+  ]
+}

@@ -1,6 +1,6 @@
 {
   "name": "sycee",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Agent spend semantics: consumption and redemption counting for machine payments.",
   "license": "Apache-2.0",

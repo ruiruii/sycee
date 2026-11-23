@@ -23,6 +23,14 @@ questions that x402 and the receipt formats around it do not yet define:
 Node.js 20 or newer. No wallet, no network, no accounts — the payment proof below is a
 string, and SYCEE only ever handles its hash.
 
+Just check a receipt, without cloning anything:
+
+```bash
+npx sycee-verify receipt.json          # or: npx sycee-verify --example
+```
+
+To work in the repository:
+
 ```bash
 git clone https://github.com/ruiruii/sycee.git
 cd sycee
@@ -58,11 +66,13 @@ Nothing was fetched, no key was consulted, no network was touched. The two failu
 what the format is for: a receipt whose reason and its own fields disagree is a receipt
 saying something untrue, and the checker names the rule that broke rather than scoring it.
 
-To run it on a receipt of your own:
+To run it on a receipt of your own — as a consumer (`npx`, no clone) or from a
+checkout:
 
 ```bash
-node bin/sycee-verify.mjs receipt.json
-node bin/sycee-verify.mjs --dir conformance/refusal/vectors   # 76/76
+npx sycee-verify receipt.json                                  # no clone needed
+node bin/sycee-verify.mjs receipt.json                         # from a checkout
+node bin/sycee-verify.mjs --dir conformance/refusal/vectors    # 76/76
 ```
 
 It takes a built row, a constructor input, or a conformance vector, and answers with the

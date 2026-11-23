@@ -23,6 +23,14 @@ SYCEE 记录这个差别，并统计同一份付款凭证被兑现了几次。
 Node 20 以上。不需要钱包、不需要联网、不需要账号——演示里的付款凭证只是一个字符串，
 SYCEE 全程只处理它的哈希。
 
+只想验一张收据，不用 clone 仓库：
+
+```bash
+npx sycee-verify receipt.json          # 或：npx sycee-verify --example
+```
+
+要在仓库里开发：
+
 ```bash
 git clone https://github.com/ruiruii/sycee.git
 cd sycee
@@ -56,11 +64,12 @@ FAIL  a pending settlement presented as final
 没联网、没读密钥、没碰任何服务。那两条失败正是这个格式存在的理由：一张收据如果理由
 和它自己的字段互相矛盾，它就说了不真的话；检查器给出它破了哪条规则，而不是给它打分。
 
-检查自己的收据：
+检查自己的收据——作为使用者（`npx`，不用 clone）或在仓库内：
 
 ```bash
-node bin/sycee-verify.mjs receipt.json
-node bin/sycee-verify.mjs --dir conformance/refusal/vectors   # 76/76
+npx sycee-verify receipt.json                                 # 不用 clone
+node bin/sycee-verify.mjs receipt.json                         # 在仓库内
+node bin/sycee-verify.mjs --dir conformance/refusal/vectors    # 76/76
 ```
 
 它吃三种输入：已经构造好的行、构造器的输入、一致性向量文件；输出的错误码和向量集用的
