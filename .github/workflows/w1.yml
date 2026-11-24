@@ -1,6 +1,6 @@
 name: w1-evidence-scan
 
-# Automated x402 evidence-layer status scan (route B / "裁判位" content asset).
+# Automated x402 evidence-layer status scan (route B / coverage-measurement content asset).
 # Runs weekly + on demand. Discovers public ledgers via CDP discovery, probes
 # each with gates-probe, and commits reports/w1.md and reports/w1.json.
 # report.mjs writes both of those from the raw scan. reports/w1-en.md is a

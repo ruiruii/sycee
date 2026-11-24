@@ -11,7 +11,7 @@
 
 ## 1. Why this document exists
 
-The value of a referee position comes from credibility, and credibility comes from being checkable. An outfit that publishes conclusions without publishing the measurements behind them, without naming its own blind spots, and without accepting challenges, is not a referee — it is a blogger.
+The value of a measurement comes from credibility, and credibility comes from being checkable. An outfit that publishes conclusions without publishing the measurements behind them, without naming its own blind spots, and without accepting challenges, is not measuring — it is blogging.
 
 So four rules apply to us as well:
 

@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.0 — first npm release (pending publish)
+## 0.2.0 — first npm release (published 2026-11-23)
 
 The verifier is now installable: `npx sycee-verify receipt.json` runs the same
 checker as a checkout, with no clone and no second copy of the rules.
@@ -13,8 +13,11 @@ checker as a checkout, with no clone and no second copy of the rules.
   `sycee/v0.1` — its wire field set did not change.
 - Merchant staging note and both READMEs now lead with the `npx` command; the
   "not yet shipped" notice is gone.
-- Publish order: `@sycee/core` first, then `sycee-verify`. Verified from a clean
-  directory: single file 1/1, full vector directory 76/76.
+- Publish order: `@sycee/core` first, then `sycee-verify`. Both published public
+  under the `sycee` org on 2026-11-23; `dist-tags.latest` is `0.2.0` for both.
+  Verified from a clean directory with the real registry: `npx --yes sycee-verify
+  --example` → 1/3 (two built-in failures are intentional), `--dir
+  conformance/refusal/vectors` → 76/76, exit code 0.
 
 ## Unreleased
 

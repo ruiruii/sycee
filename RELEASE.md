@@ -13,7 +13,7 @@
 2. 首批 token 未勾 `Bypass two-factor authentication`，发布报 403 要求 2FA。重新生成一个勾了 bypass 的 granular token 后通过。
 3. `@sycee` scope 起初不存在（`Scope not found`）。在 npmjs.com 网页新建名为 `sycee` 的免费 public org 后发布成功——**未改任何包名或代码**。
 
-**安全待办**：本次用过的三个 npm token（`npm_l9SR…`、`npm_4E3J…`、`npm_IZ4uX…`）及更早两个 GitHub PAT（`ghp_KHZ…`、`ghp_3Dmv…`）均应在使用后撤销。
+**凭据处理**：本次用过的三个 npm token 及更早两个 GitHub PAT 均为一次性发布凭据，按发布流程使用后即不再需要。撤销状态由维护者在私有渠道确认并记录，本清单不再公开 token 前缀。
 
 ## 一、三个先要拍板的决策
 
@@ -90,4 +90,4 @@ SPEC 已是 v0.2、refusal row 是 `sycee/refusal/v0.2`，但 npm 包还停在 0
 
 - 拒绝行不记录 settlement transaction hash（已知缺口，未排期）。
 - doctor 的 `npx` 发布（阶段二）——仍用相对路径 import，需改包名 import 后才能进包。
-- 撤销用过的 token（见文首安全待办）。
+- 发布凭据的撤销回执归档（在私有渠道完成，不在本清单记录前缀）。

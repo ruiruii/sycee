@@ -121,7 +121,14 @@ function render(bundle) {
   lines.push(`| 扫描时间 | ${gen} |`);
   lines.push(`| 原始扫描产物（含每个谓词的实测数值） | [\`${RAW_BUNDLE_PATH}\`](${RAW_BUNDLE_URL}) |`);
   lines.push(`| 机器可读输出 | \`${JSON_OUT_REL}\` |`);
-  lines.push(`| 本次发布判定数 | ${verdictsPublished}（其中无数值支撑而**主动标注**者：${unsubstantiated}） |`);
+  lines.push(`| 谓词级判定数 | ${verdictsPublished}（其中无数值支撑而**主动标注**者：${unsubstantiated}） |`);
+  lines.push(`| 覆盖度结论数 | 3（§1 生态覆盖、§2 权威层形态、§3 卖家层形态；支撑数值见各节计数表与 §5 逐端点明细） |`);
+  lines.push('');
+  lines.push(
+    ledgerResults.length
+      ? '谓词级判定逐条列于 §4.1；§1–§3 的覆盖度结论另计，两者不混在同一计数里。'
+      : '本次普查未发现哈希链账本形态的端点，因此谓词级判定为 0——这是实测结果，不是漏报。§1–§3 的覆盖度结论另计，支撑数值就在各节计数表和 §5 逐端点明细中。',
+  );
   lines.push('');
   lines.push('**判定纪律（对我们自己同样适用）：**');
   lines.push('');
@@ -142,7 +149,7 @@ function render(bundle) {
   lines.push('## 0.1 判定对象');
   lines.push('');
   lines.push(
-    '本报告只测量**已发布证据的覆盖度**，不对任何实现者打分。SYCEE 站在**裁判位**——持续判定"谁做了持久可验证存证、谁只结算不存证"，而非拥有标准或托管资产。',
+    '本报告只测量**已发布证据的覆盖度**，不对任何实现者打分，也不给实现者排名。SYCEE 在此是**测量方**——持续记录"哪个端点公开了持久可验证存证、哪个只结算不存证"，既不拥有标准，也不托管资产。',
   );
   lines.push('');
   lines.push('| 形态 | 含义 |');
@@ -186,7 +193,7 @@ function render(bundle) {
   }
   lines.push('');
   lines.push(
-    `**裁判结论**：在被普查的公开结算权威中，仅 ${(aCounts['attestation-ledger'] || 0)} 个暴露哈希链账本、${(aCounts['signed-receipt'] || 0)} 个暴露签名回执；其余 ${(aCounts['settlement-only'] || 0)} 个 facilitator 只结算、**不提供持久可验证存证**。`,
+    `**测量结果**：在被普查的公开结算权威中，仅 ${(aCounts['attestation-ledger'] || 0)} 个暴露哈希链账本、${(aCounts['signed-receipt'] || 0)} 个暴露签名回执；其余 ${(aCounts['settlement-only'] || 0)} 个 facilitator 只结算、**不提供持久可验证存证**。`,
   );
   lines.push('');
 
@@ -354,6 +361,10 @@ function machineReadable(bundle) {
     verdicts,
     verdicts_total: verdicts.length,
     verdicts_unsubstantiated: verdicts.filter((v) => !v.substantiated).length,
+    verdicts_note: aResults.some((r) => r.posture === 'attestation-ledger')
+      ? 'Predicate-level verdicts are listed above. Coverage conclusions are reported separately in reports/w1.md §1–§3.'
+      : 'No attestation-ledger posture was found in this scan, so the predicate-level verdict list is empty. Coverage conclusions are reported separately in reports/w1.md §1–§3 and backed by the posture tables and §5 per-endpoint detail.',
+    coverage_conclusions: 3,
     reproduce: 'node tools/w1/discover.mjs && node tools/w1/scan.mjs && node tools/w1/report.mjs',
   };
 }

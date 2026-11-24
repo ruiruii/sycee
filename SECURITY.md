@@ -4,9 +4,10 @@
 
 | Version | Supported |
 |---------|-----------|
+| 0.2.x   | Yes       |
 | 0.1.x   | Yes       |
 
-Older releases are not supported.
+Releases before 0.1.x are not supported.
 
 ## Reporting a vulnerability
 
