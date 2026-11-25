@@ -41,9 +41,21 @@ State is one of: `已回` (they replied), `未回` (sent, no reply), `拒绝` (d
   vectors we read and reproduced (see `reading-attempt-identity-extra.md`).
 - **What is owed:** we owe him the reciprocal run — his 22 + 8 vectors against our
   implementation — if he wants it. We offered; he has not confirmed.
-- **Next move:** he is a technical peer, not a customer and not a channel. A
-  buyer-side sync note is drafted (`sync-holistis-buyer-side.md`, **未发**). Send it
-  or let it sit; either is fine. Do not write another 5,000-character letter.
+- **New (2026-11-24):** he ran a **third independent read against sycee df240da**
+  (commit `7b9fd4a`, PR #115) — beyond the two he had already done. His repo also
+  added a vector-coverage tool with a profile for **our** refusal vectors
+  (`2f7a7fa`), Edition 2 conformance over all 1,703 hosts of the index, and a
+  Glama listing badge (2026-11-24). He is actively building around our vectors.
+- **TSC line:** on 2026-11-24 we posted a short author-side note on `tsc#19`
+  (https://github.com/x402-foundation/tsc/issues/19#issuecomment-7127785346),
+  confirming 91d5c05a and the buyer-side NEG-3 data point. Note: the 25 Nov TSC
+  meeting was **cancelled** (US Thanksgiving; next one 2026-12-09), and our agenda
+  topic was never explicitly scheduled — hence the comment was written to stand
+  without any meeting reference.
+- **Next move:** he is a technical peer, not a customer and not a channel. The
+  buyer-side sync note (`sync-holistis-buyer-side.md`) was finalised for Slack on
+  2026-11-24 and handed to the user to post (Slack has no agent send channel);
+  **not yet confirmed sent**. Do not write another 5,000-character letter.
 - **Files:** `comment-holistis-110.md`, `reply-holistis-*.md`,
   `reading-attempt-identity-extra.md`, `sync-holistis-buyer-side.md`.
 
@@ -152,7 +164,7 @@ State is one of: `已回` (they replied), `未回` (sent, no reply), `拒绝` (d
 | Party | State | Last action | Value |
 |---|---|---|---|
 | StelarDigital | 已回（多轮） | their real vector, verified | **highest: a stranger replied with data** |
-| holistis | 已回（多轮） | our buyer-side sync drafted | technical peer, not customer |
+| holistis | 已回（多轮） | 3rd independent read of our vectors; tsc#19 note posted | technical peer, not customer; gatekeeper of the conformance vectors |
 | Sasona | 未回 | one-line question | low; archive after one follow-up |
 | Vauban | 未回 | draft expiry pending | standards, time-boxed |
 | Brave | 未回 | issue | low; archive |
