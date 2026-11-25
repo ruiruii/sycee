@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" width="1200" height="675" role="img" aria-label="Diagnostic header must not become a second identity key">
+  <defs>
+    <style>
+      .bg { fill: #0f1115; }
+      .panel { fill: #171a21; stroke: #2b303b; stroke-width: 2; }
+      .bad { fill: #1c1416; stroke: #7a2b34; stroke-width: 2; }
+      .good { fill: #121a17; stroke: #276c4f; stroke-width: 2; }
+      .h1 { fill: #f2f4f8; font: 700 40px -apple-system, 'Segoe UI', Arial, sans-serif; }
+      .sub { fill: #9aa3b2; font: 400 20px -apple-system, 'Segoe UI', Arial, sans-serif; }
+      .tag { font: 700 22px -apple-system, 'Segoe UI', Arial, sans-serif; }
+      .badtag { fill: #e2697a; }
+      .goodtag { fill: #4fd191; }
+      .line { fill: #d7dce5; font: 400 19px -apple-system, 'Segoe UI', Arial, sans-serif; }
+      .badline { fill: #e8a0ac; font: 400 19px -apple-system, 'Segoe UI', Arial, sans-serif; }
+      .goodline { fill: #9fe0bf; font: 400 19px -apple-system, 'Segoe UI', Arial, sans-serif; }
+      .result-bad { fill: #e2697a; font: 700 18px -apple-system, 'Segoe UI', Arial, sans-serif; }
+      .result-good { fill: #4fd191; font: 700 18px -apple-system, 'Segoe UI', Arial, sans-serif; }
+      .foot { fill: #f2c866; font: 700 20px -apple-system, 'Segoe UI', Arial, sans-serif; }
+      .num { fill: #6b7484; font: 700 16px -apple-system, 'Segoe UI', Arial, sans-serif; }
+    </style>
+  </defs>
+
+  <rect class="bg" width="1200" height="675"/>
+
+  <text class="h1" x="600" y="66" text-anchor="middle">A diagnostic header is not a second identity key</text>
+  <text class="sub" x="600" y="100" text-anchor="middle">x-sycee-members publishes all nine members — the buyer still must recompute them itself</text>
+
+  <!-- LEFT: ADOPT -->
+  <rect class="bad" x="48" y="135" width="536" height="420" rx="14"/>
+  <text class="tag badtag" x="76" y="176">ADOPT the published members</text>
+  <text class="num" x="76" y="215">1</text>
+  <text class="badline" x="104" y="215">buyer copies the nine digests from the header</text>
+  <text class="num" x="76" y="258">2</text>
+  <text class="badline" x="104" y="258">compares the value against itself</text>
+  <text class="num" x="76" y="301">3</text>
+  <text class="badline" x="104" y="301">every row reports match</text>
+  <line x1="76" y1="326" x2="556" y2="326" stroke="#7a2b34" stroke-width="1"/>
+  <text class="sub" x="76" y="360" fill="#c98d97">Meanwhile, in the real request:</text>
+  <text class="badline" x="104" y="397">a proxy rewrote origin</text>
+  <text class="badline" x="104" y="432">a framework normalized path</text>
+  <text class="badline" x="104" y="467">a rounding step changed amount</text>
+  <text class="result-bad" x="76" y="522">Result: invisible — a match on a request never sent.</text>
+
+  <!-- RIGHT: COMPOSE -->
+  <rect class="good" x="616" y="135" width="536" height="420" rx="14"/>
+  <text class="tag goodtag" x="644" y="176">COMPOSE before the response arrives</text>
+  <text class="num" x="644" y="215">1</text>
+  <text class="goodline" x="672" y="215">buyer hashes the request it sent + the 402 challenge</text>
+  <text class="num" x="644" y="258">2</text>
+  <text class="goodline" x="672" y="258">key is locked in before the header exists</text>
+  <text class="num" x="644" y="301">3</text>
+  <text class="goodline" x="672" y="301">nine members compared independently</text>
+  <line x1="644" y1="326" x2="1124" y2="326" stroke="#276c4f" stroke-width="1"/>
+  <text class="sub" x="644" y="360" fill="#8fc7a9">Same proxy, same rewrite:</text>
+  <text class="goodline" x="672" y="397">status_disagrees</text>
+  <text class="goodline" x="672" y="432">divergence located at member: origin</text>
+  <text class="goodline" x="672" y="467">one proxy config, not 100 mystery rows</text>
+  <text class="result-good" x="644" y="522">Result: actionable. The two sides can reconcile.</text>
+
+  <text class="foot" x="600" y="615" text-anchor="middle">The header is a copy of the answer — handed over only after the answer is already locked in.</text>
+  <text class="sub" x="600" y="650" text-anchor="middle">query = null, never a digest · one identity, one computation, two representations</text>
+</svg>
