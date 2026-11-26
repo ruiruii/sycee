@@ -21,6 +21,71 @@ checker as a checkout, with no clone and no second copy of the rules.
 
 ## Unreleased
 
+### Auditor findings: eight held and are fixed, two did not hold
+
+A code review flagged twelve issues. Eight held, two did not, and two were a
+repeat of earlier points. The ones that held are fixed here; the two that did
+not are recorded so the same review does not reopen them.
+
+**Fixed, and it changes behaviour**
+
+- `@sycee/middleware`, verifier crash (`internal_error`): a `verifyPayment` that
+  *throws* used to record `settlement: absent` on the proof. `absent` means "not
+  found on the rail", but a crash means "the rail could not be read" — different
+  facts. A later presentation was then compared against `not_submitted` and
+  accepted as a first purchase, turning a crash into a double charge. A thrown
+  verifier no longer records a settlement, so the repeat comparison stays
+  fail-closed (`could_not_compare`).
+- `@sycee/core`, `buildVSR` vendor extensions: `Object.assign(vsr, extra)` copied
+  caller keys onto the top level, so an `extra` could overwrite `schema_version`
+  or the whole `payment` object *before* signing — the signature then attested
+  to a row the caller had altered. `extra` is now confined to `vsr._vendor`, as
+  SPEC red line 6 already required, and a key that collides with a core field is
+  rejected instead of silently overriding it.
+- `@sycee/middleware`, `redisStore` TTL: the default was a 90-day expiry on the
+  counter and on the settlement memory. After it lapsed, an old proof's
+  `redeem_count` read as 1 and a settled replay looked like a first purchase.
+  `redeem_count` is a historical fact, so keys are now persistent by default;
+  `ttlDays` remains an explicit opt-in for bounded deployments.
+- `@sycee/agent-sdk`, `receipt()` resource_id fallback: when the seller sent no
+  `resource_id`, the SDK used `entry.url` and `linkReceipts` then reported a
+  `resource_id mismatch` that the fallback itself had invented. The synthesised
+  value is now marked (`_vendor.resource_id_synthetic`) and the reconciliation
+  downgrades the comparison to a caveat instead of a disagreement.
+
+**Fixed, output-stable**
+
+- `@sycee/core`, red-line scan: it scanned `JSON.stringify` for three exact-case
+  strings, so `paymentProof`, `Payment-Signature` or `x_payment` slipped through.
+  It now scans the canonical form and matches case- and separator-insensitively
+  across the common credential field names.
+- `@sycee/agent-sdk`, object proof hashing: a non-string proof was hashed with
+  `JSON.stringify`, so key order changed the hash and two sides disagreed for no
+  reason. It now uses `canonicalJSON`, the same serialisation the signature path
+  uses.
+- `@sycee/core`, `REASON_CEILING`: `replay_already_settled`, `replay_in_flight`
+  and `could_not_compare` relied on `ceilingFor`'s fallback instead of an explicit
+  entry. Behaviour was already correct, but a change to the default would have
+  silently strengthened what a repeat row could claim. They are now written out.
+
+**Wire format: headers emitted under both names**
+
+- Every `x-gates-*` response header is now also emitted as `x-sycee-*`, and the
+  buyer reads `x-sycee-*` with an `x-gates-*` fallback. The `x-gates-*` names were
+  never package names — they are what already-integrated transports read — so
+  they remain as aliases until the next major version rather than being replaced
+  outright. Examples now read the current name; tests assert both are present.
+
+**Reviewed and rejected**
+
+- `sha256` with `update(buffer, 'utf8')`: Node ignores the encoding argument when
+  the input is a Buffer, so the digest is identical to `update(buffer)`. No bug.
+- `spendFetch` "unbounded 402 retry": it pays and retries exactly once, then
+  returns. There is no loop for a server to drive.
+- "The red-line scan misses keys because of key order": it scans for substrings,
+  and key order does not change whether a substring is present. Casing and field
+  spelling did matter, and that part is fixed above.
+
 ### The version is now v0.2, in the title and in the refusal rows
 
 The identity change was announced as "breaking, v0.1 → v0.2" while the title and the code still
