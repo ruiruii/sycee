@@ -19,25 +19,6 @@ Draft status: no conformance level references it, no VSR field changed, nothing 
 one that records a gap the schema cannot close — a `query` digest validates structurally but
 violates R3 — rather than pretending the schema enforces it.
 
-## 0.2.0 — first npm release (published 2026-11-23)
-
-The verifier is now installable: `npx sycee-verify receipt.json` runs the same
-checker as a checkout, with no clone and no second copy of the rules.
-
-- New publishable package `sycee-verify` (`packages/cli/`): a thin `bin` wrapper
-  whose only dependency is `@sycee/core@^0.2.0`. `bin/sycee-verify.mjs` becomes a
-  local forwarder so existing repo paths are unchanged.
-- Every `@sycee/*` package moves `0.1.0 → 0.2.0`, matching SPEC/refusal v0.2.
-  Internal dependencies move from `*` to `^0.2.0`. The VSR envelope stays
-  `sycee/v0.1` — its wire field set did not change.
-- Merchant staging note and both READMEs now lead with the `npx` command; the
-  "not yet shipped" notice is gone.
-- Publish order: `@sycee/core` first, then `sycee-verify`. Both published public
-  under the `sycee` org on 2026-11-23; `dist-tags.latest` is `0.2.0` for both.
-  Verified from a clean directory with the real registry: `npx --yes sycee-verify
-  --example` → 1/3 (two built-in failures are intentional), `--dir
-  conformance/refusal/vectors` → 76/76, exit code 0.
-
 ## 0.3.1 — published 2026-11-26
 
 ### `sycee-verify --conformance`: the vectors ship in the package
@@ -122,6 +103,25 @@ not are recorded so the same review does not reopen them.
   and key order does not change whether a substring is present. Casing and field
   spelling did matter, and that part is fixed above.
 
+## 0.2.0 — first npm release (published 2026-11-23)
+
+The verifier is now installable: `npx sycee-verify receipt.json` runs the same
+checker as a checkout, with no clone and no second copy of the rules.
+
+- New publishable package `sycee-verify` (`packages/cli/`): a thin `bin` wrapper
+  whose only dependency is `@sycee/core@^0.2.0`. `bin/sycee-verify.mjs` becomes a
+  local forwarder so existing repo paths are unchanged.
+- Every `@sycee/*` package moves `0.1.0 → 0.2.0`, matching SPEC/refusal v0.2.
+  Internal dependencies move from `*` to `^0.2.0`. The VSR envelope stays
+  `sycee/v0.1` — its wire field set did not change.
+- Merchant staging note and both READMEs now lead with the `npx` command; the
+  "not yet shipped" notice is gone.
+- Publish order: `@sycee/core` first, then `sycee-verify`. Both published public
+  under the `sycee` org on 2026-11-23; `dist-tags.latest` is `0.2.0` for both.
+  Verified from a clean directory with the real registry: `npx --yes sycee-verify
+  --example` → 1/3 (two built-in failures are intentional), `--dir
+  conformance/refusal/vectors` → 76/76, exit code 0.
+
 ### The version is now v0.2, in the title and in the refusal rows
 
 The identity change was announced as "breaking, v0.1 → v0.2" while the title and the code still
@@ -185,6 +185,8 @@ The identity change made the two sides able to name the same attempt. Nothing us
 - A member containing `|` is refused rather than escaped; an empty query and an absent query are one attempt; a paid route with no `payTo` has no identity and now fails loudly instead of composing one from an empty string.
 - The vectors are unaffected: they carry `attempt_identity` as a literal, not a computed value. Tests 231.
 
+### The leg table stops admitting rows that cannot be true
+
 - §15.4: the leg table no longer uses an em dash. A bare cell is a required leg; a bracketed cell is optional to record and bounded in value. Every `transfer` cell was rewritten, and `internal_error` / `facilitator_timeout` now admit only `not_reached` or `unknown` — the two positions §15.3 assigns them. Recording `transfer: failed` under `internal_error` is rejected with `leg_contradicts_reason`; that row used to be constructible, and the earlier repair narrowed the authorization leg instead of fixing the cell, which made the row legal without making it true.
 - §15.4 L4: the legs are ordered. A transfer status other than `not_reached` says the transfer was submitted, which requires the authorization leg to have run, so such a row may not record the authorization as `not_reached` or `failed`.
 - `@sycee/core`: `BOUNDED_LEG_STATUS` alongside `REQUIRED_LEG_STATUS`; `legSupport` checks both and then the order rule.
@@ -192,6 +194,8 @@ The identity change made the two sides able to name the same attempt. Nothing us
 - §15.4 L6: `legSettlementCheck` pairs a recorded leg with the settlement state it permits. `settled` appears only beside `executed`; a leg recorded as `failed`, `not_reached` or `unknown` cannot sit beside a settlement that landed or is in flight. Rejected with `settlement_contradicts_leg`.
 - §15.4 L6 includes `authorization`, not only `transfer`. The earlier argument for leaving it out — an allowance approved once lets a facilitator call `transferFrom` without re-running `permit` — describes an accepted attempt, and an accepted row records no legs. What the exception left standing was four constructible refusals (`risk_policy_rejected`, `commercial_refusal`, `malformed_payload`, `authorization_expired`) recording `settled` beside an authorization the row says never ran.
 - Conformance: 61 → 76 known-answer files (23 accepted with a wrong twin, 30 rejected with an accepted near miss). `legs.test.mjs` 18 → 23 tests, seven mutants; 228 tests overall.
+
+### A testnet anchor for receipt hashes
 
 - `examples/near-anchor`: a NEAR testnet contract that anchors SYCEE receipt hashes. It stores hashes only. No scoring, no custody, no fund movement. Deployed as `sycee-anchor.testnet` from commit `01b4e419` (wasm 159146 bytes). The sample receipt is anchored at block 277456711. `npm run demo:e2e` and `npm run demo:security` also ran on testnet (simulated payment; restricted key `ed25519:7G1L5eMc5pKCJcVNbHvv68j1THA6bxc9QDFg7sFN4Qjy`). The mainnet payout account is `locallemon5213.near`. The public demo is https://ruiruii.github.io/sycee/ (deployed from main). The demo video (2-min, posted as a reply under the demo post) is https://x.com/aking_z/status/2121175474265313681. The demo post on X is https://x.com/aking_z/status/2121175201778143394.
 
