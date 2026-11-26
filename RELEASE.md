@@ -1,6 +1,14 @@
 # SYCEE 发布清单（第三步）
 
-状态：**已发布并完成端到端验证（2026-11-23）**。
+## 0.3.0（2026-11-26，审计修复版）
+
+- 已发布：`@sycee/core@0.3.0` → `sycee-verify@0.3.0`，均 `--access public`，官方 registry，dist-tags.latest 已更新。发布顺序 core → verify，间隔数分钟内两者均可用。
+- 发布前 `npm pack --dry-run` 核对：core 4 文件（src 两个模块 + schema + package.json，77.6 kB unpacked）；cli 2 文件（bin + package.json，14.1 kB）。
+- 干净目录端到端（无 clone）：`npx --yes sycee-verify@0.3.0 --example` → `1/3 passed`（两个内置违规样例故意 FAIL，退出码 0，与 0.2.0 行为一致）；`npx --yes sycee-verify@0.3.0 --dir conformance/refusal/vectors --quiet` → **76/76 passed**。
+- 本次发布用的是此前发布凭据（`npm_IZ4u…`，账号 `rachel131`），未新建 token。
+- 注意：registry 上仍存在 `@sycee/core@0.2.0`，内含修复前的 `buildVSR`（extra 可覆盖签名边界）。依赖 0.2.0 的下游需显式升级到 `^0.3.0`。
+
+状态：**已发布并完成端到端验证（2026-11-23，0.2.0 首发记录如下）**。
 
 - 已发布到 npm 官方 registry：`@sycee/core@0.2.0`、`sycee-verify@0.2.0`（均 `--access public`，账号 `rachel131` 下的 `sycee` org）。发布顺序：core → verify。
 - `dist-tags.latest` 两者均为 `0.2.0`；首次发布时 registry 先建 `0.0.0-stage` 占位再异步处理出 `0.2.0`，属正常机制。
