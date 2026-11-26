@@ -70,6 +70,14 @@ export const REASON_CEILING = Object.freeze({
   risk_policy_rejected: 'issuer_asserted',
   commercial_refusal: 'issuer_asserted',
   internal_error: 'issuer_asserted',
+  // The three repeat reasons live in the same weak class by the spec's table
+  // (§6.1): a repeat claim is the seller's account of its own prior row, and no
+  // outside party can re-read it. They are written out here rather than left to
+  // `ceilingFor`'s fallback, so that changing that default can never silently
+  // strengthen what a repeat row is allowed to claim.
+  replay_already_settled: 'issuer_asserted',
+  replay_in_flight: 'issuer_asserted',
+  could_not_compare: 'issuer_asserted',
 });
 
 /** Ordered weakest to strongest, so "exceeds the ceiling" is a comparison. */

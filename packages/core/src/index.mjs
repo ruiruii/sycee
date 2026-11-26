@@ -211,7 +211,28 @@ export function buildVSR(input) {
   if (input.agentId) vsr.signer.agent_id = input.agentId;
   if (input.keyId) vsr.signer.key_id = input.keyId;
   if (input.completeness) vsr.completeness = input.completeness;
-  if (input.extra) Object.assign(vsr, input.extra);
+  if (input.extra) {
+    // Vendor extensions are confined to `_vendor.*` (SPEC red line 6). Copying
+    // them onto the top level would let a caller silently overwrite
+    // `schema_version`, `payment`, or any other core field right before the
+    // signature — the signature would then attest to a receipt the caller
+    // altered, not the one the constructor built. So: a key that already
+    // carries the `_vendor` namespace is kept under it, anything else is
+    // placed *inside* `_vendor`, and a key that collides with a core field is
+    // rejected rather than silently overriding it.
+    const core = new Set(Object.keys(vsr));
+    const vendor = { ...(vsr._vendor ?? {}) };
+    for (const [k, v] of Object.entries(input.extra)) {
+      if (k === '_vendor') {
+        Object.assign(vendor, v);
+      } else if (core.has(k)) {
+        throw new TypeError(`buildVSR: extra key "${k}" collides with a core field`);
+      } else {
+        vendor[k] = v;
+      }
+    }
+    if (Object.keys(vendor).length) vsr._vendor = vendor;
+  }
 
   // keep key order stable & canonical for signing
   return JSON.parse(canonicalJSON(vsr));
@@ -402,8 +423,13 @@ export function verifyVSR(envelope, opts = {}) {
   }
 
   // --- red line: proof bodies must never appear -------------------------
-  const raw = JSON.stringify(vsr);
-  for (const forbidden of ['PAYMENT-SIGNATURE', 'payment_proof', 'X-PAYMENT']) {
+  // Scan the canonical form (the same bytes the signature covers), then strip
+  // the separators a field name might use so that `payment-signature`,
+  // `payment_signature`, `paymentSignature`, and `Payment-Signature` all
+  // collapse to the same key. The earlier scan looked at `JSON.stringify` for
+  // three exact-case strings: casing and spelling hid the credential.
+  const raw = canonicalJSON(vsr).toLowerCase().replace(/[-_]/g, '');
+  for (const forbidden of ['paymentsignature', 'paymentproof', 'paymentpayload', 'xpayment']) {
     if (raw.includes(forbidden)) {
       errors.push(`red line: envelope appears to embed a raw payment credential (${forbidden})`);
     }
