@@ -1,0 +1,22 @@
+{
+ "id": "replay-settled-refused-wrong",
+ "note": "same input, one field answered wrongly: the earlier settlement is public ledger state, so this comparison can be checked from the ledger alone. It cannot \u2014 the row names no settlement reference.",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "refused",
+  "reason": "replay_already_settled",
+  "legs": {
+   "authorization": "executed"
+  },
+  "settlement": "settled"
+ },
+ "observed": {
+  "evidence_class": "chain_verifiable",
+  "settlement": "settled",
+  "final": true
+ },
+ "expected": {
+  "outcome": "ACCEPT"
+ }
+}

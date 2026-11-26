@@ -1,0 +1,22 @@
+{
+ "id": "wrong-amount-refused-wrong",
+ "note": "same input as wrong-amount-refused.json, one field answered wrongly: drops a client-checkable fact to the issuer's word",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "refused",
+  "reason": "wrong_amount",
+  "legs": {
+   "authorization": "failed"
+  },
+  "settlement": "not_submitted"
+ },
+ "observed": {
+  "evidence_class": "issuer_asserted",
+  "settlement": "not_submitted",
+  "final": true
+ },
+ "expected": {
+  "outcome": "ACCEPT"
+ }
+}

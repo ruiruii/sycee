@@ -1,0 +1,19 @@
+{
+ "id": "reject-risk-policy-after-submission",
+ "note": "a risk refusal happens instead of submitting, so the authorization leg cannot have executed. Recording it that way turns a policy decision into a payment attempt.",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "refused",
+  "reason": "risk_policy_rejected",
+  "legs": {
+   "authorization": "executed"
+  },
+  "settlement": "not_submitted"
+ },
+ "expected": {
+  "outcome": "REJECT",
+  "code": "leg_contradicts_reason"
+ },
+ "twin": "risk-policy-not-reached"
+}

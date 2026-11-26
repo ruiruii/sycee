@@ -1,0 +1,19 @@
+{
+ "id": "reject-settled-auth-never-ran",
+ "note": "\u00a715.4 L6, authorization. A risk refusal happens before the authorization leg runs, so the attempt cannot have settled. Recording `settled` beside it says the money moved for an attempt the row itself says was stopped first. The allowance that can predate an attempt belongs to an accepted row, and an accepted row records no legs \u2014 which is why the exception that used to justify leaving this leg out protected a row that cannot exist.",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "refused",
+  "reason": "risk_policy_rejected",
+  "legs": {
+   "authorization": "not_reached"
+  },
+  "settlement": "settled"
+ },
+ "expected": {
+  "outcome": "REJECT",
+  "code": "settlement_contradicts_leg"
+ },
+ "twin": "risk-policy-not-reached"
+}

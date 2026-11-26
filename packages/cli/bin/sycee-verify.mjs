@@ -13,13 +13,20 @@
 
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, basename, extname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { refusalRow, verifyClaim, REFUSAL_SCHEMA_VERSION } from '@sycee/core';
+
+// The full vector set ships inside this package. A reader deciding whether to
+// trust us should not have to clone a repository first — the cost of checking
+// a claim is the cost of making it.
+const BUILTIN_VECTORS = fileURLToPath(new URL('../vectors/', import.meta.url));
 
 const USAGE = `sycee-verify — check a refusal receipt
 
 usage
   sycee-verify <file.json>...
   sycee-verify --dir <directory>
+  sycee-verify --conformance
   sycee-verify --example
 
 options
@@ -28,6 +35,7 @@ options
   --pay-to <address>     pin the payee; a row signed by it is reported, not failed
   --signing-key <key>    pin the signer; a row signed by another key fails
   --no-color             plain text
+  --conformance          run the 76 bundled vectors, no files needed
   --example              run three built-in receipts, no files needed
 
 A receipt is checked by reconstructing it from its own claims. The receipt
@@ -43,6 +51,11 @@ for (let i = 0; i < args.length; i++) {
   if (a === '--json') opts.json = true;
   else if (a === '--quiet') opts.quiet = true;
   else if (a === '--example') opts.example = true;
+  else if (a === '--conformance') {
+    for (const name of readdirSync(BUILTIN_VECTORS).sort()) {
+      if (extname(name) === '.json') files.push(join(BUILTIN_VECTORS, name));
+    }
+  }
   else if (a === '--no-color') opts.color = false;
   else if (a === '--pay-to') opts.payTo = args[++i];
   else if (a === '--signing-key') opts.signingKey = args[++i];

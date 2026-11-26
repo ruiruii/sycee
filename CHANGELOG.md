@@ -19,6 +19,23 @@ checker as a checkout, with no clone and no second copy of the rules.
   --example` → 1/3 (two built-in failures are intentional), `--dir
   conformance/refusal/vectors` → 76/76, exit code 0.
 
+## 0.3.1 — published 2026-11-26
+
+### `sycee-verify --conformance`: the vectors ship in the package
+
+Checking a compatibility claim used to require cloning the repository first. The
+76 vectors are now bundled into `sycee-verify` (52 kB of JSON), so
+`npx sycee-verify --conformance` runs the full set with no install beyond the
+package itself and no clone.
+
+Two tests guard the copy: one asserts the bundled set is byte-identical to
+`conformance/refusal/vectors`, the other asserts it is 76 files and not a sample.
+Two copies of the same truth will drift unless something fails when they do.
+
+`docs/notes/compatibility-claims.md` accompanies it, defining three kinds of
+compatibility (verifier / issuer / reconciler) and the three things a claim must
+carry: which kind, which version, checked when.
+
 ## 0.3.0 — published 2026-11-26
 
 ### Auditor findings: eight held and are fixed, two did not hold

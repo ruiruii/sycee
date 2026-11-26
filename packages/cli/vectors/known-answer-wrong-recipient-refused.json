@@ -1,0 +1,22 @@
+{
+ "id": "wrong-recipient-refused",
+ "note": "the authorized recipient is in the payload the buyer signed, so the buyer can check the mismatch itself",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "refused",
+  "reason": "wrong_recipient",
+  "legs": {
+   "authorization": "failed"
+  },
+  "settlement": "not_submitted"
+ },
+ "observed": {
+  "evidence_class": "client_verifiable",
+  "settlement": "not_submitted",
+  "final": true
+ },
+ "expected": {
+  "outcome": "ACCEPT"
+ }
+}

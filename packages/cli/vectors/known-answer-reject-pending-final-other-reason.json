@@ -1,0 +1,20 @@
+{
+ "id": "reject-pending-final-other-reason",
+ "note": "settlement is pending, so the payment may still land, whatever the reason is. A rule that only fires for the one reason the earlier vectors used is a rule about the vectors, not about finality.",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "refused",
+  "reason": "internal_error",
+  "legs": {
+   "authorization": "unknown"
+  },
+  "settlement": "pending",
+  "final": true
+ },
+ "expected": {
+  "outcome": "REJECT",
+  "code": "finality_pending_is_not_final"
+ },
+ "twin": "replay-in-flight-refused"
+}

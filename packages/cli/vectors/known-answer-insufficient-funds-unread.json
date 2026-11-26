@@ -1,0 +1,22 @@
+{
+ "id": "insufficient-funds-unread",
+ "note": "a chain_verifiable-shaped reason whose check is not reproducible: the balance was a value at a block and the row carries no block reference. The row claims issuer_asserted, which is the most it can support.",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "refused",
+  "reason": "insufficient_funds",
+  "legs": {
+   "authorization": "unknown"
+  },
+  "settlement": "unknown"
+ },
+ "observed": {
+  "evidence_class": "issuer_asserted",
+  "settlement": "unknown",
+  "final": true
+ },
+ "expected": {
+  "outcome": "ACCEPT"
+ }
+}

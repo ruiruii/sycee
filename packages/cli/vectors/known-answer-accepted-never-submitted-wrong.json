@@ -1,0 +1,18 @@
+{
+ "id": "accepted-never-submitted-wrong",
+ "note": "same input, one field answered wrongly: an accepted row given an evidence class. The row asserts no reason, so there is nothing for a class to attach to.",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "accepted",
+  "settlement": "not_submitted"
+ },
+ "observed": {
+  "evidence_class": "issuer_asserted",
+  "settlement": "not_submitted",
+  "final": true
+ },
+ "expected": {
+  "outcome": "ACCEPT"
+ }
+}

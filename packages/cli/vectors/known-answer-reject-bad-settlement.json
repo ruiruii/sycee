@@ -1,0 +1,15 @@
+{
+ "id": "reject-bad-settlement",
+ "note": "settlement is a closed enum of four states. `refunded` is the seller's action, not a state of the payment, and admitting it would make the field unbounded.",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "accepted",
+  "settlement": "refunded"
+ },
+ "expected": {
+  "outcome": "REJECT",
+  "code": "bad_settlement"
+ },
+ "twin": "accepted-settled"
+}

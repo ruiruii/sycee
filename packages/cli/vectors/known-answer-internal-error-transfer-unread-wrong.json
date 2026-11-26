@@ -1,0 +1,23 @@
+{
+ "id": "internal-error-transfer-unread-wrong",
+ "note": "same input as internal-error-transfer-unread.json, one field answered wrongly: claims a class no third party can reproduce, for a reason whose whole meaning is that the seller does not know what happened",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "refused",
+  "reason": "internal_error",
+  "legs": {
+   "authorization": "executed",
+   "transfer": "unknown"
+  },
+  "settlement": "unknown"
+ },
+ "observed": {
+  "evidence_class": "chain_verifiable",
+  "settlement": "unknown",
+  "final": true
+ },
+ "expected": {
+  "outcome": "ACCEPT"
+ }
+}

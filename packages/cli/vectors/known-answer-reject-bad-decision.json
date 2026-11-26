@@ -1,0 +1,15 @@
+{
+ "id": "reject-bad-decision",
+ "note": "decision is a closed enum. A third value is a malformed row, and accepting it means a reader downstream has to guess what it meant.",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "maybe",
+  "settlement": "not_submitted"
+ },
+ "expected": {
+  "outcome": "REJECT",
+  "code": "bad_decision"
+ },
+ "twin": "accepted-settled"
+}

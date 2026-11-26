@@ -1,0 +1,18 @@
+{
+ "id": "accepted-never-submitted",
+ "note": "an accepted attempt whose payment never reached the rail. \u00a713 lists this pair as the output for a purchase_not_settled loser, and classifyRepeat produces it for a first presentation: decision describes the attempt, settlement describes the rail.",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "accepted",
+  "settlement": "not_submitted"
+ },
+ "observed": {
+  "evidence_class": null,
+  "settlement": "not_submitted",
+  "final": true
+ },
+ "expected": {
+  "outcome": "ACCEPT"
+ }
+}

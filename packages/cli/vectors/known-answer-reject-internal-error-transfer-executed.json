@@ -1,0 +1,20 @@
+{
+ "id": "reject-internal-error-transfer-executed",
+ "note": "a transfer leg that executed is a payment, not a refusal. No reason in the closed set names that state, and internal_error is the last one that could: it says the seller failed and does not know why.",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "refused",
+  "reason": "internal_error",
+  "legs": {
+   "authorization": "executed",
+   "transfer": "executed"
+  },
+  "settlement": "unknown"
+ },
+ "expected": {
+  "outcome": "REJECT",
+  "code": "leg_contradicts_reason"
+ },
+ "twin": "internal-error-transfer-unread"
+}

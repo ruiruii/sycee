@@ -1,0 +1,22 @@
+{
+ "id": "insufficient-funds-unread-wrong",
+ "note": "same input, one field answered wrongly: the reason's public-ledger reputation is claimed instead of the class it can actually support.",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "refused",
+  "reason": "insufficient_funds",
+  "legs": {
+   "authorization": "unknown"
+  },
+  "settlement": "unknown"
+ },
+ "observed": {
+  "evidence_class": "chain_verifiable",
+  "settlement": "unknown",
+  "final": true
+ },
+ "expected": {
+  "outcome": "ACCEPT"
+ }
+}

@@ -1,0 +1,19 @@
+{
+ "id": "internal-error-no-legs-wrong",
+ "note": "same input as internal-error-no-legs.json, one field answered wrongly: pushes an unmeasured row to a checkable class",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "refused",
+  "reason": "internal_error",
+  "settlement": "unknown"
+ },
+ "observed": {
+  "evidence_class": "chain_verifiable",
+  "settlement": "unknown",
+  "final": true
+ },
+ "expected": {
+  "outcome": "ACCEPT"
+ }
+}

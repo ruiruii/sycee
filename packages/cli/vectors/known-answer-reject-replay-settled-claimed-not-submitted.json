@@ -1,0 +1,19 @@
+{
+ "id": "reject-replay-settled-claimed-not-submitted",
+ "note": "\u00a75 says replay_already_settled claims settlement `settled`. Recording `not_submitted` beside it tells a buyer the retry never reached the rail while the reason says the earlier attempt landed. The row is constructible only if the reason's claim and the settlement field are allowed to disagree.",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "refused",
+  "reason": "replay_already_settled",
+  "legs": {
+   "authorization": "executed"
+  },
+  "settlement": "not_submitted"
+ },
+ "expected": {
+  "outcome": "REJECT",
+  "code": "settlement_contradicts_reason"
+ },
+ "twin": "replay-settled-refused"
+}

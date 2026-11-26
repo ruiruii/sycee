@@ -1,0 +1,20 @@
+{
+ "id": "reject-internal-error-transfer-failed",
+ "note": "internal_error is defined as not claiming a cause. A row that records the transfer leg as failed names the cause transfer_leg_failed exists to name, so the row contradicts its own reason. This input was constructible while the transfer cell said 'neither required nor forbidden'; narrowing the authorization leg to `unknown` made it legal without making it true, which is why the cell changed rather than the example.",
+ "input": {
+  "signing_public_key": "ed25519:MCowBQYDK2VwAyEAAj0cLopNEZIo4WTNp5tl9APja1mO9jTrvo8_OglWHoI",
+  "attempt_identity": "sha256:3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c3f1c",
+  "decision": "refused",
+  "reason": "internal_error",
+  "legs": {
+   "authorization": "unknown",
+   "transfer": "failed"
+  },
+  "settlement": "unknown"
+ },
+ "expected": {
+  "outcome": "REJECT",
+  "code": "leg_contradicts_reason"
+ },
+ "twin": "internal-error-transfer-unread"
+}
