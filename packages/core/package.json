@@ -1,6 +1,6 @@
 {
   "name": "@sycee/core",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Canonical JSON, hashing, Ed25519 signing and offline verification for Verifiable Spend Receipts (SYCEE v0.1).",
   "license": "Apache-2.0",
   "type": "module",

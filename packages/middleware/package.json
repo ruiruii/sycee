@@ -1,6 +1,6 @@
 {
   "name": "@sycee/middleware",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Merchant-side (resource-side) middleware that counts redemptions and issues signed Verifiable Spend Receipts.",
   "license": "Apache-2.0",
   "type": "module",
@@ -9,7 +9,7 @@
     ".": "./src/index.mjs"
   },
   "dependencies": {
-    "@sycee/core": "^0.2.0"
+    "@sycee/core": "^0.3.0"
   },
   "files": [
     "src"

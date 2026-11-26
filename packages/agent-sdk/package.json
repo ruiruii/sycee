@@ -1,6 +1,6 @@
 {
   "name": "@sycee/agent-sdk",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Buyer-side (agent runtime) instrumentation for consumption evidence and freshness, with co-signed receipts.",
   "license": "Apache-2.0",
   "type": "module",
@@ -9,7 +9,7 @@
     ".": "./src/index.mjs"
   },
   "dependencies": {
-    "@sycee/core": "^0.2.0"
+    "@sycee/core": "^0.3.0"
   },
   "files": [
     "src"

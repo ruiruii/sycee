@@ -19,7 +19,7 @@ checker as a checkout, with no clone and no second copy of the rules.
   --example` → 1/3 (two built-in failures are intentional), `--dir
   conformance/refusal/vectors` → 76/76, exit code 0.
 
-## Unreleased
+## 0.3.0 — published 2026-11-26
 
 ### Auditor findings: eight held and are fixed, two did not hold
 

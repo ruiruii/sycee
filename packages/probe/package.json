@@ -1,6 +1,6 @@
 {
   "name": "@sycee/probe",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Evidence-layer probe for x402 (and protocol-agnostic) payment ledgers. Runs a battery of coverage predicates against any public ledger and emits a signed, verifiable report.",
   "license": "Apache-2.0",
   "type": "module",
@@ -18,7 +18,7 @@
     "test": "node --test test/*.test.mjs"
   },
   "dependencies": {
-    "@sycee/core": "^0.2.0",
-    "@sycee/adapter-automaton": "^0.2.0"
+    "@sycee/core": "^0.3.0",
+    "@sycee/adapter-automaton": "^0.3.0"
   }
 }
