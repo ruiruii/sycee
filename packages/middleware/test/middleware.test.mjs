@@ -120,6 +120,32 @@ test('a different proof starts its own count', async () => {
   );
 });
 
+test('wire headers are emitted under both the current and legacy names', async () => {
+  const gates = makeGates();
+  const res = fakeResponse();
+  await gates.guard(handler)(fakeRequest({ proof: 'proof-alias' }), res);
+
+  const h = res.state.headers;
+  // Current names.
+  assert.ok(h['x-sycee-receipt'], 'x-sycee-receipt must be present');
+  assert.equal(h['x-sycee-redeem-count'], '1');
+  assert.ok(h['x-sycee-proof-hash']);
+  // Legacy aliases, still emitted so an already-integrated client keeps working.
+  assert.equal(h['x-gates-receipt'], h['x-sycee-receipt'], 'the alias must carry the same receipt');
+  assert.equal(h['x-gates-redeem-count'], h['x-sycee-redeem-count']);
+  assert.equal(h['x-gates-proof-hash'], h['x-sycee-proof-hash']);
+});
+
+test('a refusal emits the header alias too', async () => {
+  const gates = makeGates({ verifyPayment: async () => ({ ok: false, reason: 'wrong_amount' }) });
+  const res = fakeResponse();
+  await gates.guard(handler)(fakeRequest({ proof: 'proof-refuse' }), res);
+
+  assert.equal(res.state.statusCode, 402);
+  assert.ok(res.state.headers['x-sycee-refusal'], 'x-sycee-refusal must be present');
+  assert.equal(res.state.headers['x-gates-refusal'], res.state.headers['x-sycee-refusal']);
+});
+
 test('a merchant receipt never claims the buyer consumed the result', async () => {
   const res = fakeResponse();
   const envelope = await makeGates().guard(handler)(fakeRequest({ proof: 'proof-x' }), res);

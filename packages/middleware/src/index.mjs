@@ -96,25 +96,46 @@ export function memoryStore() {
 }
 
 /**
- * Redis-backed store. `client` must expose `incr`, `sadd`, `smembers`, `get`, `setnx`.
+ * Redis-backed store. `client` must expose `incr`, `sadd`, `smembers`, `get`, `set`.
+ *
+ * `redeem_count` is a historical fact — how many times one proof was presented —
+ * not a rolling window. Expiring it would let the count reset to 1 and make an
+ * old proof look new, which is exactly the replay a seller is trying to catch.
+ * So counts are kept **without** a TTL by default. Set `ttlDays` only when you
+ * have a reason to forget a proof that old (e.g. a bounded test deployment);
+ * a `ttlDays` of `null` (the default) means "keep it".
+ *
+ * `recordSettlement` remembers how an attempt settled, so a later presentation
+ * is compared against it rather than mistaken for a first purchase. Losing that
+ * memory turns a settled replay into a fresh charge, so it follows the same rule:
+ * persistent unless `ttlDays` is given.
+ *
  * @param {any} client
+ * @param {{prefix?: string, ttlDays?: number|null}} [options]
  */
-export function redisStore(client, { prefix = 'gates:proof:', ttlDays = 90 } = {}) {
-  const ttl = Math.round(ttlDays * 86400);
+export function redisStore(client, { prefix = 'gates:proof:', ttlDays = null } = {}) {
+  const ttl = ttlDays === null || ttlDays === undefined ? null : Math.round(ttlDays * 86400);
+  /** Set `key` to `value`, expiring only when a positive ttl was asked for. */
+  async function setMaybeExpire(key, value, exFlag = 'EX') {
+    if (ttl !== null && ttl > 0) await client.set(key, value, exFlag, ttl);
+    else await client.set(key, value);
+  }
   return {
     async incr(proofHash, resourceId) {
       const key = prefix + proofHash;
       const count = await client.incr(key);
-      if (count === 1) await client.expire(key, ttl);
+      // Only a bounded deployment expires the counter; by default it must not,
+      // or the twentieth presentation of an old proof reads as the first.
+      if (count === 1 && ttl !== null && ttl > 0) await client.expire(key, ttl);
       const resKey = `${key}:resources`;
       if (resourceId) {
         await client.sadd(resKey, resourceId);
-        await client.expire(resKey, ttl);
+        if (ttl !== null && ttl > 0) await client.expire(resKey, ttl);
       }
       const resources = await client.smembers(resKey);
       const firstSeen = (await client.get(`${key}:first`)) ?? nowISO();
       if (!(await client.get(`${key}:first`))) {
-        await client.set(`${key}:first`, firstSeen, 'EX', ttl);
+        await setMaybeExpire(`${key}:first`, firstSeen);
       }
       return { count: Number(count), resources, firstSeen };
     },
@@ -134,7 +155,7 @@ export function redisStore(client, { prefix = 'gates:proof:', ttlDays = 90 } = {
     },
     async recordSettlement(proofHash, settlement) {
       const key = prefix + proofHash;
-      await client.set(`${key}:settlement`, settlement, 'EX', ttl);
+      await setMaybeExpire(`${key}:settlement`, settlement);
     },
   };
 }
@@ -144,6 +165,27 @@ export function redisStore(client, { prefix = 'gates:proof:', ttlDays = 90 } = {
  * ------------------------------------------------------------------ */
 
 const PAYMENT_HEADERS = ['payment-signature', 'x-payment', 'x-payment-signature', 'payment-proof'];
+
+/**
+ * Emit a wire header under both names.
+ *
+ * The project published under `gates-spec` through v0.1 and is now SYCEE. The
+ * `x-gates-*` names were never package names — they are the names already-
+ * integrated transports read — so replacing them outright would break every
+ * existing client. Instead each header goes out under the current `x-sycee-*`
+ * name *and* the legacy `x-gates-*` alias; new code reads `x-sycee-*`, old code
+ * keeps working, and a later major version can drop the alias. See README
+ * "Wire-format headers".
+ *
+ * @param {any} res
+ * @param {string} suffix  the part after the prefix, e.g. `receipt`
+ * @param {string} value
+ */
+function setAliasedHeader(res, suffix, value) {
+  if (typeof res?.setHeader !== 'function') return;
+  res.setHeader(`x-sycee-${suffix}`, value);
+  res.setHeader(`x-gates-${suffix}`, value);
+}
 
 /**
  * Transport headers that may carry the settlement predicate on the wire (SPEC §5.1).
@@ -353,14 +395,14 @@ export function createGates(config) {
       payTo,
     });
     const row = built.row;
-    res?.setHeader?.('x-gates-refusal', Buffer.from(canonicalJSON(row), 'utf8').toString('base64url'));
-    res?.setHeader?.('x-gates-refusal-reason', String(row.reason));
+    setAliasedHeader(res, 'refusal', Buffer.from(canonicalJSON(row), 'utf8').toString('base64url'));
+    setAliasedHeader(res, 'refusal-reason', String(row.reason));
     // The refused rows are the ones a proxy disagrees on most often, so this is
     // the caller that matters most. Publishing the members only on the success
     // path left the buyer able to diagnose the calls that already worked.
     if (res) attachMembers(req, res);
     if (ledger.conflicts().length) {
-      res?.setHeader?.('x-gates-refusal-conflict', 'true');
+      setAliasedHeader(res, 'refusal-conflict', 'true');
     }
     return row;
   }
@@ -449,19 +491,26 @@ export function createGates(config) {
 
       if (config.verifyPayment) {
         let verdict;
+        let crashed = false;
         try {
           verdict = await config.verifyPayment(proof, req);
         } catch (err) {
           // A throwing verifier is a refusal with a cause the server cannot
           // state; it still gets recorded rather than escaping as a 500.
           verdict = { ok: false, reason: 'internal_error', detail: String(err && err.message) };
+          crashed = true;
         }
         if (!verdict.ok) {
           const reason = refusalReasonFor(verdict.reason);
-          // The attempt never reached the rail, and that is a fact about it
-          // worth keeping: a later presentation of this proof is a first
-          // purchase, not a replay of a settled one.
-          await store.recordSettlement?.(proofHash, 'absent');
+          // A verifier that returned `ok: false` did reach the rail and can
+          // state the attempt never settled, so `absent` is a fact worth
+          // keeping. A verifier that *threw* cannot: "the rail could not be
+          // read" is not "nothing was submitted". Recording `absent` there
+          // would make a later presentation of this proof look like a first
+          // purchase, when it may be a replay of an attempt whose settlement
+          // we never got to see. Leave the settlement unrecorded so the repeat
+          // comparison stays fail-closed (`could_not_compare`).
+          if (!crashed) await store.recordSettlement?.(proofHash, 'absent');
           const row = recordRefusal({
             req,
             presentation: nextPresentation(),
@@ -474,7 +523,7 @@ export function createGates(config) {
           });
           res.statusCode = 402;
           res.setHeader('content-type', 'application/json');
-          res.setHeader('x-gates-proof-hash', proofHash);
+          setAliasedHeader(res, 'proof-hash', proofHash);
           res.end(JSON.stringify({
             error: 'payment_rejected',
             reason: verdict.reason,
@@ -516,7 +565,7 @@ export function createGates(config) {
           });
           res.statusCode = 402;
           res.setHeader('content-type', 'application/json');
-          res.setHeader('x-gates-proof-hash', proofHash);
+          setAliasedHeader(res, 'proof-hash', proofHash);
           res.end(JSON.stringify({
             error: 'payment_rejected',
             reason: verdict.reason,
@@ -554,8 +603,8 @@ export function createGates(config) {
       const originalEnd = res.end.bind(res);
       let wrote = false;
       const outHeaders = {};
-      res.setHeader('x-gates-proof-hash', proofHash);
-      res.setHeader('x-gates-redeem-count', String(count));
+      setAliasedHeader(res, 'proof-hash', proofHash);
+      setAliasedHeader(res, 'redeem-count', String(count));
 
       const result = await handler(req, res);
 
@@ -629,7 +678,7 @@ export function createGates(config) {
       const envelope = signVSR(vsr, config.privateKey);
       const encoded = Buffer.from(canonicalJSON(envelope), 'utf8').toString('base64url');
 
-      res.setHeader('x-gates-receipt', encoded);
+      setAliasedHeader(res, 'receipt', encoded);
       // The members this row was keyed over, so the buyer can compare against its
       // own even when the call succeeded. A success that disagreed on `origin`
       // would otherwise be rejected by the buyer as unmatched and reported by
@@ -637,9 +686,9 @@ export function createGates(config) {
       attachMembers(req, res);
       // No route serves /v1/receipt on this server, so the header points at the
       // request's own origin rather than a host we do not own.
-      res.setHeader('x-gates-receipt-url', receiptUrl(req, proofHash));
-      res.setHeader('x-gates-settlement-status', settlementStatus);
-      if (consistency !== 'ok') res.setHeader('x-gates-settlement-consistency', consistency);
+      setAliasedHeader(res, 'receipt-url', receiptUrl(req, proofHash));
+      setAliasedHeader(res, 'settlement-status', settlementStatus);
+      if (consistency !== 'ok') setAliasedHeader(res, 'settlement-consistency', consistency);
       for (const [k, v] of Object.entries(outHeaders)) res.setHeader(k, v);
 
       config.onSpan?.(toSpanAttributes(vsr));

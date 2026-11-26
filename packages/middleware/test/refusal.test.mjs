@@ -107,6 +107,35 @@ test('a verifier that throws is recorded as a refusal instead of escaping as a 5
   assert.equal(row.evidence_class, 'issuer_asserted', 'a server failure proves nothing to the buyer');
 });
 
+test('a verifier that threw leaves settlement unrecorded, so a replay is fail-closed', async () => {
+  let calls = 0;
+  const gates = makeGates({
+    replayPolicy: 'refuse',
+    verifyPayment: async () => {
+      calls += 1;
+      if (calls === 1) throw new Error('facilitator unreachable');
+      return { ok: true };
+    },
+  });
+  const handler = gates.guard(async () => ({ status: 200, body: {} }));
+
+  // First presentation: the verifier crashes. It must NOT be recorded as
+  // "never reached the rail", because the rail was never readable.
+  await handler(req({ 'payment-signature': 'crashed-proof' }), fakeResponse());
+
+  // Second presentation: the verifier now passes, so the repeat comparison
+  // runs. Because the first attempt left no settlement claim, the replay must
+  // be fail-closed (could_not_compare), not misread as a first purchase.
+  const second = fakeResponse();
+  await handler(req({ 'payment-signature': 'crashed-proof' }), second);
+  assert.equal(second.state.statusCode, 402);
+
+  const rows = gates.refusals();
+  assert.equal(rows[0].reason, 'internal_error', 'the crash itself is a refusal, not a 500');
+  assert.equal(rows[1].reason, 'could_not_compare', 'the replay cannot be compared, so it must not be accepted');
+  assert.equal(rows[1].settlement, 'unknown');
+});
+
 test('an unrecognised verifier reason is recorded at the weakest class, not dropped', async () => {
   const gates = makeGates({ verifyPayment: async () => ({ ok: false, reason: 'some_vendor_code' }) });
   const res = fakeResponse();
