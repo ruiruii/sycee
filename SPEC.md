@@ -686,6 +686,10 @@ report such a grouping and MUST NOT present it as a verdict on either party — 
 member whose values disagree and stops there. Which side should change is a deployment
 question, and answering it from one ledger is the adjudication §10 already forbids.
 
+A signed form of a comparison — issued by the buyer, expiring, and carrying its own boundary
+— is drafted in [`docs/notes/reconciliation-attestation.md`](./docs/notes/reconciliation-attestation.md).
+It adds no verdict, no field to the VSR envelope, and no conformance level.
+
 ### 10.1 Real-world vectors
 
 Synthetic vectors prove an implementation is self-consistent. They cannot prove the

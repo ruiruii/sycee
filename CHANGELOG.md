@@ -1,5 +1,24 @@
 # Changelog
 
+## Unreleased
+
+### Reconciliation attestation (draft)
+
+`docs/notes/reconciliation-attestation.md` and
+`schema/reconcile-attestation-v0.1.schema.json`: a buyer-signed artifact that records which
+members of one attempt diverged, so a `status_disagrees` verdict can leave one machine
+without becoming prose.
+
+It carries four prohibitions inside the document (`settlement`, `delivery`, `fault`,
+`amount_received`) rather than in a footnote, because the first attestation used as evidence
+of wrongdoing ends the practice for everyone. `scope.does_not_assert` is a closed enum; there
+is no free-text field for the accusation to migrate into.
+
+Draft status: no conformance level references it, no VSR field changed, nothing in
+`packages/*` imports it. Guarded by 10 tests in `conformance/attestation/test/`, including
+one that records a gap the schema cannot close — a `query` digest validates structurally but
+violates R3 — rather than pretending the schema enforces it.
+
 ## 0.2.0 — first npm release (published 2026-11-23)
 
 The verifier is now installable: `npx sycee-verify receipt.json` runs the same

@@ -1,0 +1,302 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:sycee:schema:reconcile-attestation:v0.1",
+  "title": "Reconciliation Attestation v0.1",
+  "description": "A buyer-signed statement that two ledgers were compared for one attempt, which members diverged, and nothing about who is right. Contains no request bodies, response bodies, credentials, or settlement claims.",
+  "type": "object",
+  "required": [
+    "attestation",
+    "signature"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "attestation": {
+      "$ref": "#/$defs/attestation"
+    },
+    "signature": {
+      "type": "string",
+      "description": "base64url-encoded Ed25519 signature over the canonical JSON of the attestation object (RFC 4648 section 5, no padding).",
+      "pattern": "^[A-Za-z0-9_-]+$"
+    }
+  },
+  "$defs": {
+    "hash": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "SHA-256 hex digest with sha256: prefix."
+    },
+    "timestamp": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$",
+      "description": "ISO 8601 UTC, millisecond precision."
+    },
+    "member": {
+      "type": "string",
+      "enum": [
+        "method",
+        "origin",
+        "path",
+        "query",
+        "payTo",
+        "asset",
+        "network",
+        "amount",
+        "scheme"
+      ]
+    },
+    "signer": {
+      "type": "object",
+      "required": [
+        "public_key",
+        "role"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "agent_id": {
+          "type": "string",
+          "description": "Legal-entity-stable identifier, e.g. erc8004:8453:0x... Never a natural person."
+        },
+        "public_key": {
+          "type": "string",
+          "pattern": "^ed25519:[A-Za-z0-9_-]+$"
+        },
+        "key_id": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string",
+          "const": "agent",
+          "description": "Only the party that sent the request may sign this document. A seller signature over a buyer observation asserts something the seller cannot see."
+        }
+      }
+    },
+    "attestation": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "attestation_id",
+        "issued_at",
+        "expires_at",
+        "signer",
+        "subject",
+        "observation",
+        "divergence",
+        "scope"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "string",
+          "const": "sycee/reconcile-attestation/v0.1"
+        },
+        "attestation_id": {
+          "$ref": "#/$defs/hash",
+          "description": "sha256 over the canonical JSON of this object with attestation_id and the envelope signature removed."
+        },
+        "issued_at": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "expires_at": {
+          "$ref": "#/$defs/timestamp",
+          "description": "After this instant the attestation is stale: the signature still verifies, the claim stops being current. SHOULD be at most 90 days after issued_at."
+        },
+        "signer": {
+          "$ref": "#/$defs/signer"
+        },
+        "subject": {
+          "type": "object",
+          "required": [
+            "attempt_identity",
+            "resource_id",
+            "proof_hash",
+            "seller_receipt_hash",
+            "receipt_status"
+          ],
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "receipt_status": {
+                    "const": "absent"
+                  }
+                },
+                "required": [
+                  "receipt_status"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "seller_receipt_hash": {
+                    "type": "null"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "receipt_status": {
+                    "enum": [
+                      "verified",
+                      "unverifiable"
+                    ]
+                  }
+                },
+                "required": [
+                  "receipt_status"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "seller_receipt_hash": {
+                    "$ref": "#/$defs/hash"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "attempt_identity": {
+              "$ref": "#/$defs/hash",
+              "description": "Composed by the buyer at ingress per SPEC 3.1, never adopted from the seller."
+            },
+            "resource_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "proof_hash": {
+              "$ref": "#/$defs/hash"
+            },
+            "seller_receipt_hash": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/hash"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "sha256 over the canonical JSON of the seller's VSR envelope as received. Null only when receipt_status is not verified."
+            },
+            "receipt_status": {
+              "type": "string",
+              "enum": [
+                "verified",
+                "absent",
+                "unverifiable"
+              ],
+              "description": "verified = the referenced envelope passes signature and schema checks; absent = the seller returned no receipt; unverifiable = a receipt exists but does not verify."
+            }
+          }
+        },
+        "observation": {
+          "type": "object",
+          "required": [
+            "outcome",
+            "members"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "outcome": {
+              "type": "string",
+              "enum": [
+                "served",
+                "refused",
+                "no_response"
+              ],
+              "description": "What arrived at the buyer. served = a response body was delivered; refused = a 402 or a signed refusal; no_response = nothing arrived."
+            },
+            "http_status": {
+              "type": "integer",
+              "minimum": 100,
+              "maximum": 599
+            },
+            "members": {
+              "type": "object",
+              "description": "The buyer's own composition, one digest per member. A credential-bearing member MUST be null. Keys absent here are members the buyer could not compose.",
+              "propertyNames": {
+                "$ref": "#/$defs/member"
+              },
+              "additionalProperties": {
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/hash"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "divergence": {
+          "type": "object",
+          "required": [
+            "verdict",
+            "members"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "verdict": {
+              "type": "string",
+              "enum": [
+                "match",
+                "status_disagrees",
+                "only_buyer",
+                "only_seller",
+                "unidentified"
+              ]
+            },
+            "members": {
+              "type": "array",
+              "description": "Members whose values were observed to differ. Empty means either nothing differed or the divergence could not be located; verdict distinguishes the two.",
+              "items": {
+                "$ref": "#/$defs/member"
+              },
+              "uniqueItems": true
+            }
+          }
+        },
+        "scope": {
+          "type": "object",
+          "required": [
+            "asserts",
+            "does_not_assert"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "asserts": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "enum": [
+                  "buyer_observation",
+                  "member_digests",
+                  "identity_composition"
+                ]
+              }
+            },
+            "does_not_assert": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "enum": [
+                  "settlement",
+                  "delivery",
+                  "fault",
+                  "amount_received"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

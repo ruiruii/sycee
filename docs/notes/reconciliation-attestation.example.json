@@ -1,0 +1,55 @@
+{
+  "attestation": {
+    "schema_version": "sycee/reconcile-attestation/v0.1",
+    "issued_at": "2026-11-26T14:40:00.000Z",
+    "expires_at": "2027-02-24T14:40:00.000Z",
+    "signer": {
+      "public_key": "ed25519:MCowBQYDK2VwAyEALGoolcSz_OiTymYmwVydCNz0qaGz99Qtk0bo3UIDr9E",
+      "key_id": "buyer-2026-11",
+      "role": "agent"
+    },
+    "subject": {
+      "attempt_identity": "sha256:6ba0725745f5e93d7eeae0d66d6e5858ff77f8cde0ee2ecd3d54698361878aec",
+      "resource_id": "search.v1",
+      "proof_hash": "sha256:cd042fa0b71b9d8e68ed7ec1fa1d9acc0b498cac9d1404f87004d2234afefc0d",
+      "seller_receipt_hash": "sha256:d5741b24064a7964b513c47370e40a00de14f3ce7af8e8aa0b9b5c54c402f1cb",
+      "receipt_status": "verified"
+    },
+    "observation": {
+      "outcome": "served",
+      "http_status": 200,
+      "members": {
+        "method": "sha256:14e30cd163c732912e048c4c837e15c4e90c062ebb795ab947d57706e2d10dd8",
+        "origin": "sha256:137b9e5e4e13211ce3487cb1f3148ad0ef4147e2a4647ca12191bd2c8528b646",
+        "path": "sha256:07fdf377db11ab7691b360afc8ee5e6542c27b6e2bd904c7049d460f79b5a517",
+        "query": null,
+        "payTo": "sha256:0cb1bc59ac88b16c190be9e4c813f2d1c50217dfc0be0707919152fdde53350d",
+        "asset": "sha256:8591ee9090c0c02ca1f103cb637131d8f358870aba145245ff083e138fdd705b",
+        "network": "sha256:cae662172fd450bb0cd710a769079c05bfc5d8e35efa6576edc7d0377afdd4a2",
+        "amount": "sha256:39e5b4830d4d9c14db7368a95b65d5463ea3d09520373723430c03a5a453b5df",
+        "scheme": "sha256:fa79d4746c21cd960a17b92db8976ddef95a7e20b590721f8e0fa7847a05e486"
+      }
+    },
+    "divergence": {
+      "verdict": "only_seller",
+      "members": [
+        "origin"
+      ]
+    },
+    "scope": {
+      "asserts": [
+        "buyer_observation",
+        "member_digests",
+        "identity_composition"
+      ],
+      "does_not_assert": [
+        "settlement",
+        "delivery",
+        "fault",
+        "amount_received"
+      ]
+    },
+    "attestation_id": "sha256:e286e0033e7470bd90584a7e767bf9c161f6dcfd57a916f63d372ebba5c62d40"
+  },
+  "signature": "3neRIB6PMReuxjpT9ktDBDC-ffXqC0HDVnIE7_8SuNtP2xBHE1WqCw01Dh4M2u355dEwYQ_SlfeTv71EfzuCAQ"
+}
