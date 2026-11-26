@@ -102,13 +102,13 @@ app.get('/health', (req, res) => {
 });
 
 // The guarded handler returns { status, body }; createGates writes the response
-// and adds x-gates-receipt / x-gates-redeem-count headers.
+// and adds x-sycee-receipt / x-sycee-redeem-count headers.
 app.get(
   '/search',
   gates.guard(async (req, res) => {
     const q = typeof req.query.q === 'string' ? req.query.q : '';
-    const redeemCount = res.getHeader('x-gates-redeem-count');
-    const proofHash = String(res.getHeader('x-gates-proof-hash') ?? '');
+    const redeemCount = res.getHeader('x-sycee-redeem-count');
+    const proofHash = String(res.getHeader('x-sycee-proof-hash') ?? '');
 
     console.log(
       `[search] q=${JSON.stringify(q)} proof=${proofHash.slice(0, 19)}… redeem_count=${redeemCount}`,

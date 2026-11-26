@@ -74,7 +74,7 @@ export function envelopesFromEvidence(evidence) {
     const truncated = doc.recent.filter((row) => typeof row?.proof_hash === 'string' && !/^sha256:[0-9a-f]{64}$/.test(row.proof_hash));
     if (truncated.length && found.length === 0) {
       const err = new Error(
-        'evidence.json truncates proof hashes. Pass the VSR envelope (the x-gates-receipt value), not the public dashboard row.',
+        'evidence.json truncates proof hashes. Pass the VSR envelope (the x-sycee-receipt value), not the public dashboard row.',
       );
       err.truncated = truncated.length;
       throw err;

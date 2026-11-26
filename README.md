@@ -36,7 +36,7 @@ git clone https://github.com/ruiruii/sycee.git
 cd sycee
 npm install
 npm run try                           # three receipts, one rule each — thirty seconds
-npm test                              # 248 tests
+npm test                              # 272 tests
 npm run verify:py                     # the same 12 vectors, verified in Python
 node examples/bilateral-consumption.mjs
 ```
@@ -271,8 +271,11 @@ import { linkReceipts } from '@sycee/agent-sdk';
 linkReceipts(merchantEnvelope, agentEnvelope);   // { level: 'L2', completeness: 'bilateral', ... }
 ```
 
-Wire-format headers keep the `x-gates-*` prefix and the receipt carries a `gates_spec`
-field; both are compatibility names for already-integrated transports, not package names.
+Wire-format headers are emitted under both names: `x-sycee-*` (current) and
+`x-gates-*` (legacy alias for transports integrated before the rename). New code
+should read and write `x-sycee-*`; the alias stays until the next major version so
+nothing that already reads `x-gates-*` breaks. The receipt body still carries a
+`gates_spec` field for the same reason.
 
 ---
 

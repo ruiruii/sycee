@@ -8,7 +8,7 @@ The slide file is [architecture.svg](./architecture.svg). A raster copy is [arch
 
 ## Pay
 
-The buyer runtime is [`@sycee/agent-sdk`](../packages/agent-sdk/src/index.mjs). `createSpend` calls an API. On a `402` it pays, retries, and keeps the merchant receipt from the `x-gates-receipt` header.
+The buyer runtime is [`@sycee/agent-sdk`](../packages/agent-sdk/src/index.mjs). `createSpend` calls an API. On a `402` it pays, retries, and keeps the merchant receipt from the `x-sycee-receipt` header.
 
 The demo merchant speaks x402 v2. An unpaid `GET /v1/base/tip` returns `402` with `PAYMENT-REQUIRED`. A paid retry is handled by [`@sycee/middleware`](../packages/middleware/src/index.mjs). The facilitator’s `/verify` and `/settle` are what submit the payment. That code lives in [`examples/demo-merchant/src/x402.mjs`](../examples/demo-merchant/src/x402.mjs). The raw payment payload is sent to the facilitator and is not stored.
 
@@ -18,7 +18,7 @@ The local NEAR walkthrough does not call a live facilitator. [`examples/near-anc
 
 On a completed call the middleware builds a Verifiable Spend Receipt and signs it with Ed25519 (`signVSR`). The signer role is `merchant`. `result.consumed` is `unknown`, because the seller cannot see whether the buyer used the result. `payment.redeem_count` counts presentations of the same proof hash, including a later presentation that is refused.
 
-The signed envelope is returned as `x-gates-receipt` (base64url of the canonical JSON). The demo merchant is wired in [`examples/demo-merchant/src/merchant.mjs`](../examples/demo-merchant/src/merchant.mjs).
+The signed envelope is returned as `x-sycee-receipt` (base64url of the canonical JSON). The demo merchant is wired in [`examples/demo-merchant/src/merchant.mjs`](../examples/demo-merchant/src/merchant.mjs).
 
 ## Agent receipt
 

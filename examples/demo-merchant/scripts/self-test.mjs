@@ -94,18 +94,18 @@ console.log('label self-test');
 
 const yesRes = await spend.fetch(tip, { headers: selfHeaders });
 const yesBody = await yesRes.json().catch(() => null);
-console.log(`pay status=${yesRes.status} redeem_count=${yesRes.headers.get('x-gates-redeem-count')} block=${yesBody?.block_number ?? '?'}`);
+console.log(`pay status=${yesRes.status} redeem_count=${yesRes.headers.get('x-sycee-redeem-count')} block=${yesBody?.block_number ?? '?'}`);
 if (yesRes.status !== 200) fail('first payment was not accepted');
 
 const paidHeader = lastHeader;
-const proofHash = yesRes.headers.get('x-gates-proof-hash');
+const proofHash = yesRes.headers.get('x-sycee-proof-hash');
 const replay = await fetch(tip, { headers: { ...selfHeaders, 'payment-signature': paidHeader } });
 const replayBody = await replay.json().catch(() => ({}));
 console.log(`replay status=${replay.status} reason=${replayBody.reason ?? replayBody.error ?? '?'}`);
 if (replay.status !== 402) fail('replay was not refused');
 
 const yesReceipt = yesRes.gates.consumedBy('task_self_test_yes');
-const merchantYes = JSON.parse(Buffer.from(yesRes.headers.get('x-gates-receipt'), 'base64url').toString('utf8'));
+const merchantYes = JSON.parse(Buffer.from(yesRes.headers.get('x-sycee-receipt'), 'base64url').toString('utf8'));
 const yesLink = linkReceipts(merchantYes, yesReceipt);
 if (!yesLink.complete) fail(`consumed=yes did not link: ${yesLink.problems.join('; ')}`);
 const postYes = await postReceipt(yesReceipt);
@@ -113,10 +113,10 @@ console.log(`consumed=yes posted status=${postYes.status}`);
 if (postYes.status !== 200) fail('consumed=yes was not accepted');
 
 const noRes = await spend.fetch(tip, { headers: selfHeaders });
-console.log(`second pay status=${noRes.status} redeem_count=${noRes.headers.get('x-gates-redeem-count')}`);
+console.log(`second pay status=${noRes.status} redeem_count=${noRes.headers.get('x-sycee-redeem-count')}`);
 if (noRes.status !== 200) fail('second payment was not accepted');
 const noReceipt = noRes.gates.notConsumed();
-const merchantNo = JSON.parse(Buffer.from(noRes.headers.get('x-gates-receipt'), 'base64url').toString('utf8'));
+const merchantNo = JSON.parse(Buffer.from(noRes.headers.get('x-sycee-receipt'), 'base64url').toString('utf8'));
 const noLink = linkReceipts(merchantNo, noReceipt);
 if (!noLink.complete) fail(`consumed=no did not link: ${noLink.problems.join('; ')}`);
 const postNo = await postReceipt(noReceipt);

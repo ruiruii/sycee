@@ -52,7 +52,7 @@ try {
   rule('1. a request with no payment proof');
   const bare = await fetch(`${base}/paid`);
   line(`   status ${bare.status} — ${(await bare.clone().json()).error}`);
-  line(`   no receipt issued: ${bare.headers.get('x-gates-receipt') === null}`);
+  line(`   no receipt issued: ${bare.headers.get('x-sycee-receipt') === null}`);
 
   rule('2. the buyer pays');
   const spend = createSpend({
@@ -64,20 +64,20 @@ try {
 
   const first = await spend.fetch(`${base}/paid`);
   line(`   status ${first.status}`);
-  line(`   proof hash        ${first.headers.get('x-gates-proof-hash')}`);
-  line(`   redeem_count      ${first.headers.get('x-gates-redeem-count')}`);
+  line(`   proof hash        ${first.headers.get('x-sycee-proof-hash')}`);
+  line(`   redeem_count      ${first.headers.get('x-sycee-redeem-count')}`);
 
   rule('3. the same proof is presented again');
   const second = await spend.fetch(`${base}/paid`);
   line(`   status ${second.status}`);
-  line(`   redeem_count      ${second.headers.get('x-gates-redeem-count')}  <- counted, not hidden`);
+  line(`   redeem_count      ${second.headers.get('x-sycee-redeem-count')}  <- counted, not hidden`);
   line(`   same proof hash   ${
-    first.headers.get('x-gates-proof-hash') === second.headers.get('x-gates-proof-hash')
+    first.headers.get('x-sycee-proof-hash') === second.headers.get('x-sycee-proof-hash')
   }`);
 
   rule('4. what each side has on record');
   const merchantEnvelope = JSON.parse(
-    Buffer.from(second.headers.get('x-gates-receipt'), 'base64url').toString('utf8'),
+    Buffer.from(second.headers.get('x-sycee-receipt'), 'base64url').toString('utf8'),
   );
   second.gates.consumedBy('task-demo');
   const agentEnvelope = spend.receipts().at(-1);

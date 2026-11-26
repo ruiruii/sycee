@@ -40,13 +40,13 @@ const spend = createSpend({
 
 // --- First call: challenge, pay, consume ---
 const r1 = await spend.fetch(`${BASE}/paid`);
-process.stdout.write(`[call 1] status=${r1.status} redeem_count=${r1.headers.get('x-gates-redeem-count')}\n`);
+process.stdout.write(`[call 1] status=${r1.status} redeem_count=${r1.headers.get('x-sycee-redeem-count')}\n`);
 
 r1.gates.consumedBy('task_demo_1'); // agent attests consumption
 
 // --- Second call with same proof: should show redeem_count = 2 ---
 const r2 = await spend.fetch(`${BASE}/paid`);
-process.stdout.write(`[call 2] status=${r2.status} redeem_count=${r2.headers.get('x-gates-redeem-count')}\n`);
+process.stdout.write(`[call 2] status=${r2.status} redeem_count=${r2.headers.get('x-sycee-redeem-count')}\n`);
 r2.gates.consumedBy('task_demo_2');
 
 // --- Final receipts ---
@@ -62,7 +62,7 @@ for (const env of receipts) {
 }
 
 // --- Cross-check the two signed perspectives ---
-const merchantEnv = Buffer.from(r2.headers.get('x-gates-receipt'), 'base64url').toString('utf8');
+const merchantEnv = Buffer.from(r2.headers.get('x-sycee-receipt'), 'base64url').toString('utf8');
 const agentEnv = receipts[receipts.length - 1];
 const link = linkReceipts(JSON.parse(merchantEnv), agentEnv);
 process.stdout.write(`\nBilateral check: ${link.complete ? 'OK' : 'FAILED'} (${link.completeness})\n`);

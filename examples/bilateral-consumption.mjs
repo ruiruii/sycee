@@ -68,7 +68,7 @@ function makeAgent(proof) {
 }
 
 const receiptFrom = (res) =>
-  JSON.parse(Buffer.from(res.headers.get('x-gates-receipt'), 'base64url').toString('utf8'));
+  JSON.parse(Buffer.from(res.headers.get('x-sycee-receipt'), 'base64url').toString('utf8'));
 
 try {
   head('CALL 1 — the result is used');

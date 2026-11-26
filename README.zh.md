@@ -36,7 +36,7 @@ git clone https://github.com/ruiruii/sycee.git
 cd sycee
 npm install
 npm run try                           # 三十秒：三张收据，各查一条规则
-npm test                              # 248 个测试
+npm test                              # 272 个测试
 npm run verify:py                     # 同一批 12 个向量，用 Python 再验一遍
 node examples/bilateral-consumption.mjs
 ```
@@ -221,8 +221,9 @@ import { linkReceipts } from '@sycee/agent-sdk';
 linkReceipts(merchantEnvelope, agentEnvelope);  // { level: 'L2', completeness: 'bilateral', ... }
 ```
 
-线格式里的 `x-gates-*` 头和收据里的 `gates_spec` 字段是给已接入的传输层留的兼容名，
-不是包名。
+线格式里的头现在双写：`x-sycee-*`（当前名）和 `x-gates-*`（改名之前已接入的传输层
+用的历史别名）。新代码请读写 `x-sycee-*`；别名保留到下一个主版本，确保已经在读
+`x-gates-*` 的实现不会断。收据里的 `gates_spec` 字段同理。
 
 ---
 

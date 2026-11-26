@@ -8,7 +8,7 @@
  * The seller cannot observe either. This SDK instruments them and co-signs.
  */
 
-import { buildVSR, sha256, signVSR, toSpanAttributes, verifyVSR, nowISO, SCHEMA_VERSION, attemptIdentity } from '@sycee/core';
+import { buildVSR, sha256, canonicalJSON, signVSR, toSpanAttributes, verifyVSR, nowISO, SCHEMA_VERSION, attemptIdentity } from '@sycee/core';
 
 /** The members of the attempt identity that live in the 402 challenge. */
 const CHALLENGE_MEMBERS = ['scheme', 'network', 'payTo', 'asset', 'amount'];
@@ -170,9 +170,17 @@ export function createSpend(config) {
     }
 
     res = await fetchImpl(url, { ...init, headers });
-    const proofHash = sha256(typeof proof === 'string' ? proof : JSON.stringify(proof));
+    // Hash the proof the way the signature path hashes everything: canonical
+    // JSON, so two structurally identical proofs cannot hash differently just
+    // because their keys were inserted in a different order. The seller hashes
+    // the wire bytes it received; a buyer-side object must match on content,
+    // not on property order, or the two sides disagree for no real reason.
+    const proofHash = sha256(typeof proof === 'string' ? proof : canonicalJSON(proof));
 
-    const receiptHeader = res.headers.get('x-gates-receipt');
+    // Read the current header name, falling back to the legacy `x-gates-*` one
+    // so a buyer keeps working against a seller that has not moved yet. New code
+    // emits both (see middleware `setAliasedHeader`); this side prefers sycee.
+    const receiptHeader = res.headers.get('x-sycee-receipt') ?? res.headers.get('x-gates-receipt');
     let merchantReceipt = null;
     if (receiptHeader) {
       try {
@@ -251,9 +259,17 @@ export function createSpend(config) {
    * @param {any} entry
    */
   function receipt(entry) {
+    // When the seller's receipt carries a resource_id, use it — both sides then
+    // describe the same resource and a mismatch means a real disagreement. When
+    // it does not, `entry.url` is a stand-in, not something the seller asserted:
+    // pairing it against the seller's own resource_id would raise a mismatch
+    // that our fallback invented. So the fallback is marked synthetic, and the
+    // reconciliation skips that comparison instead of reporting noise.
+    const sellerResourceId = entry.merchantReceipt?.vsr?.resource_id;
+    const resourceIdSynthetic = sellerResourceId === undefined || sellerResourceId === null;
     const vsr = buildVSR({
       protocol: entry.merchantReceipt?.vsr?.protocol ?? 'x402',
-      resourceId: entry.merchantReceipt?.vsr?.resource_id ?? entry.url,
+      resourceId: sellerResourceId ?? entry.url,
       proofHash: entry.proofHash,
       redeemCount: entry.merchantReceipt?.vsr?.payment?.redeem_count ?? 1,
       redeemResources: entry.merchantReceipt?.vsr?.payment?.redeem_resources,
@@ -269,6 +285,7 @@ export function createSpend(config) {
       keyId: config.keyId,
       role: 'agent',
       completeness: entry.merchantReceipt ? 'bilateral' : 'unilateral_agent',
+      extra: resourceIdSynthetic ? { _vendor: { resource_id_synthetic: true } } : undefined,
     });
     const envelope = signVSR(vsr, config.privateKey);
     config.onSpan?.(toSpanAttributes(vsr));
@@ -345,10 +362,20 @@ export function linkReceipts(merchantEnvelope, agentEnvelope) {
   const a = verifyVSR(agentEnvelope);
   const problems = [...m.errors, ...a.errors];
 
+  const warnings = [...m.warnings, ...a.warnings];
+
   if (merchantEnvelope?.vsr?.payment?.proof_hash !== agentEnvelope?.vsr?.payment?.proof_hash) {
     problems.push('proof_hash mismatch: the two receipts describe different payments');
   }
-  if (merchantEnvelope?.vsr?.resource_id !== agentEnvelope?.vsr?.resource_id) {
+  // A resource_id the agent's SDK had to synthesise from the URL is not a claim
+  // the seller ever made, so comparing it would manufacture a mismatch. Report
+  // it as a caveat, not a disagreement.
+  const agentResourceSynthetic = agentEnvelope?.vsr?._vendor?.resource_id_synthetic === true;
+  if (agentResourceSynthetic) {
+    if (merchantEnvelope?.vsr?.resource_id !== agentEnvelope?.vsr?.resource_id) {
+      warnings.push('resource_id: the agent side used a synthesised value (from the URL), not one the seller asserted — not a real divergence');
+    }
+  } else if (merchantEnvelope?.vsr?.resource_id !== agentEnvelope?.vsr?.resource_id) {
     problems.push('resource_id mismatch');
   }
 
@@ -373,7 +400,7 @@ export function linkReceipts(merchantEnvelope, agentEnvelope) {
     completeness: complete ? 'bilateral' : 'unilateral',
     level: complete ? 'L2' : 'L1',
     problems,
-    warnings: [...m.warnings, ...a.warnings],
+    warnings,
   };
 }
 

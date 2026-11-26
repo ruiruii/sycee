@@ -398,3 +398,25 @@ test('a seller that sends no members header is not an error', async () => {
   assert.deepEqual(spend.ledger[0].divergedAt, []);
   assert.ok(spend.ledger[0].attemptIdentity, 'the identity still composes without the header');
 });
+
+test('an object proof hashes the same regardless of key order', async () => {
+  const gates = makeGates();
+  const handler200 = async () => ({ status: 200, body: { ok: true } });
+
+  // Two runs pay with the same proof object built in different key orders.
+  const run = async (proofObj) => {
+    const spend = createSpend({
+      agentId: 'test:agent',
+      publicKey: AGENT_KEYS.publicKey,
+      privateKey: AGENT_KEYS.privateKey,
+      fetchImpl: wireTo(gates, handler200),
+      pay: async () => proofObj,
+    });
+    await spend.fetch('https://api.example.test/paid');
+    return spend.ledger[0].proofHash;
+  };
+
+  const a = await run({ scheme: 'exact', nonce: '0x01', value: '1000' });
+  const b = await run({ value: '1000', nonce: '0x01', scheme: 'exact' });
+  assert.equal(a, b, 'key order must not change the proof hash — otherwise the two sides disagree for no reason');
+});

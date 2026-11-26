@@ -31,7 +31,7 @@ test('receipt hash is sha256 of the canonical envelope', () => {
   assert.match(digestHex(expected), /^[0-9a-f]{64}$/);
 });
 
-test('the x-gates-receipt base64url form hashes to the same value', () => {
+test('the x-sycee-receipt base64url form hashes to the same value', () => {
   const env = envelope();
   const header = Buffer.from(canonicalJSON(env), 'utf8').toString('base64url');
   const parsed = parseReceiptInput(header);

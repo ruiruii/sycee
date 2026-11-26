@@ -98,3 +98,35 @@ test('an unsigned counterpart cannot complete a pair', () => {
   assert.equal(link.complete, false);
   assert.equal(link.level, 'L1');
 });
+
+test('a synthesised agent resource_id is a caveat, not a manufactured mismatch', () => {
+  const merchant = envelope({ role: 'merchant', keys: merchantKeys });
+  // The agent side had no seller resource_id, so the SDK fell back to the URL
+  // and marked it synthetic. The value differs from the seller's; that is our
+  // fallback, not the seller's claim, so it must not read as a disagreement.
+  // The marker has to be present at signing time, or the signature breaks.
+  const agentVsr = buildVSR({
+    protocol: 'x402',
+    resourceId: 'https://seller.example/paid',
+    proofHash: PROOF,
+    redeemCount: 1,
+    deliveryStatus: 'delivered',
+    consumed: 'yes',
+    consumedBy: ['task_1'],
+    publicKey: agentKeys.publicKey,
+    role: 'agent',
+    extra: { _vendor: { resource_id_synthetic: true } },
+  });
+  const agent = signVSR(agentVsr, agentKeys.privateKey);
+
+  const link = linkReceipts(merchant, agent);
+  assert.equal(link.complete, true, 'the synthesised value must not block the pair');
+  assert.ok(
+    !link.problems.some((p) => p.includes('resource_id mismatch')),
+    'no real mismatch was observed, so none may be reported',
+  );
+  assert.ok(
+    link.warnings.some((w) => w.includes('synthesised')),
+    'the caveat still has to be visible',
+  );
+});

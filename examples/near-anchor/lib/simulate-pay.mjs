@@ -84,7 +84,7 @@ export async function simulatedPurchase() {
     const text = await response.text();
     throw new Error(`local merchant returned ${response.status}: ${text.slice(0, 180)}`);
   }
-  const raw = response.headers.get('x-gates-receipt');
+  const raw = response.headers.get('x-sycee-receipt');
   if (!raw) throw new Error('local merchant did not return a receipt');
   const envelope = JSON.parse(Buffer.from(raw, 'base64url').toString('utf8'));
   return { envelope, httpStatus: response.status, simulated: true, payTo: PAY_TO };

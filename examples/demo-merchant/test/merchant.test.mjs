@@ -114,8 +114,8 @@ async function get(merchant, path, headers = {}) {
 }
 
 function merchantEnvelope(response) {
-  const raw = response.headers.get('x-gates-receipt');
-  assert.ok(raw, 'missing x-gates-receipt');
+  const raw = response.headers.get('x-sycee-receipt');
+  assert.ok(raw, 'missing x-sycee-receipt');
   return JSON.parse(Buffer.from(raw, 'base64url').toString('utf8'));
 }
 
@@ -174,7 +174,7 @@ test('an unpaid GET is a standard x402 402, not a gates_spec challenge', async (
   assert.equal(body.accepts[0].amount, '1000');
   assert.equal(JSON.stringify(body).includes('gates_spec'), false);
   assert.equal(JSON.stringify(required).includes('gates_spec'), false);
-  assert.equal(res.headers.get('x-gates-receipt'), null);
+  assert.equal(res.headers.get('x-sycee-receipt'), null);
 });
 
 test('a paid request verifies, settles, and returns the block plus a merchant receipt', async () => {
@@ -187,9 +187,9 @@ test('a paid request verifies, settles, and returns the block plus a merchant re
   assert.equal(body.base_fee_per_gas, '1000000000');
   assert.equal(body.timestamp, new Date(0x67400000 * 1000).toISOString());
   assert.equal(body.network, 'eip155:84532');
-  assert.equal(res.headers.get('x-gates-redeem-count'), '1');
-  assert.match(res.headers.get('x-gates-proof-hash'), /^sha256:[0-9a-f]{64}$/);
-  assert.equal(res.headers.get('x-gates-settlement-status'), 'settled');
+  assert.equal(res.headers.get('x-sycee-redeem-count'), '1');
+  assert.match(res.headers.get('x-sycee-proof-hash'), /^sha256:[0-9a-f]{64}$/);
+  assert.equal(res.headers.get('x-sycee-settlement-status'), 'settled');
 
   const envelope = merchantEnvelope(res);
   const verdict = verifyVSR(envelope);
@@ -225,7 +225,7 @@ test('a replay is refused and redeem_count becomes 2, including the refusal', as
     'x-sycee-traffic': 'self-test',
   });
   assert.equal(first.status, 200);
-  const proofHash = first.headers.get('x-gates-proof-hash');
+  const proofHash = first.headers.get('x-sycee-proof-hash');
 
   const replay = await get(merchant, '/v1/base/tip', {
     'payment-signature': paid.header,
@@ -234,7 +234,7 @@ test('a replay is refused and redeem_count becomes 2, including the refusal', as
   assert.equal(replay.status, 402);
   const replayBody = await replay.json();
   assert.equal(replayBody.reason, 'duplicate_payment');
-  assert.equal(replay.headers.get('x-gates-proof-hash'), proofHash);
+  assert.equal(replay.headers.get('x-sycee-proof-hash'), proofHash);
   assert.ok(replay.headers.get('payment-required'));
   const responseHeader = decodeJsonHeader(replay.headers.get('payment-response'));
   assert.equal(responseHeader.success, false);

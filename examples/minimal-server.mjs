@@ -10,7 +10,7 @@
  *     -> 402 Payment Required
  *
  *   curl -i -H 'payment-signature: demo-proof-1234' http://localhost:4000/paid
- *     -> 200 OK + x-gates-receipt header
+ *     -> 200 OK + x-sycee-receipt header
  */
 
 import http from 'node:http';
