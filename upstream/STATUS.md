@@ -146,13 +146,56 @@ State is one of: `已回` (they replied), `未回` (sent, no reply), `拒绝` (d
   do not spend another round on it.
 - **Files:** `issue-brave-redeem-count.md`.
 
-### predgeAI — `erc8004-outcome-validator#13/#14` — **未回**
+### predgeAI — `erc8004-outcome-validator` — #13/#14 **未回**；#17 **已合并（我们做了两次独立审查）**
+
+**#13/#14（我们发起）**
 
 - **State:** issue + PR raised, no reply on record.
 - **What we asked:** reserve the receipt fields; the PR is small.
 - **What we got:** nothing back.
 - **Next move:** archive. The PR is a nice-to-have, not a dependency.
 - **Files:** `issue-predge-receipt-fields.md`, `pr-predge-13.md`.
+
+**#17（septagos 发起，2026-11-27 10:23 UTC 由 predge-ai 合并）**
+
+`Add preflight-verdict method row and Subcento vectors (external, pinned by commit)` —
+not our PR. We were an outside reviewer, twice, and the maintainer named both runs
+in the merge-thread ping.
+
+- **Run 1, at `5f58712`:** 5/5 fixtures, exit 0; README's `FIELDS` list matched the
+  verifier's; `verify_key` matched `GET /health` independently (not staged inside
+  the files — I retracted my earlier "circular" doubt on the thread). Found and
+  reported that only twelve fields are signed: editing `confidence` 0.1 → 0.99
+  left the signature valid. Asked that the row name the out-of-band trust anchor,
+  since "verifies against the embedded key" stops one step short.
+- **Run 2, at `c308436` (their requested re-pin):** trust key passed explicitly via
+  `--expected-verify-key` from `/health`, not the README. 5/5. A fresh Ed25519
+  key produced byte-identical payloads once `signature` / `verify_key` were
+  dropped (5/5 digests matched), and replicas under my key were rejected by their
+  verifier against the production key. Also raised that the harness moved to
+  `96cbff4` / `c32c0a3` after the pin.
+- **What changed on their side:** septagos rewrote the verifier to take no default
+  key and fail closed on three conditions (key mismatch, bad signature over the
+  canonical twelve fields, bad structure), added a "Signed vs informational"
+  section naming `confidence` / `latency_ms` / `ofac_hits` / `jev.*` / `goplus.*`
+  as never signed, corrected two fixtures whose names did not match their
+  contents, and rewrote the reviewer row along our suggested structure.
+  predge-ai then re-verified with a **separately written Node verifier**: 5/5,
+  five distinct signatures, unsigned-field edits still verify, flipping `verdict`
+  fails. He also resolved the pin question — `c32c0a3` is a commit on the PR
+  branch, not on subcento, so `c308436` already holds both fixtures and harness.
+  Merged as-is.
+- **Weight:** a small peripheral repo — 2 stars, 0 watchers, 2 contributors, not
+  x402 core and not an ERC-8004 official implementation. Value is **evidence**:
+  the second documented case of a third party changing a shipped artifact from
+  our critique, and the first where our verification *method* (out-of-band key,
+  fixed signed list, named informational fields) was adopted, not just a field.
+  It is not standard adoption, not a channel, not revenue, and gives us no merge
+  right in x402 core (#3776 remains blocked — different thread).
+- **Next move:** a closing note is drafted at `/workspace/reply-predge-17-merge.md`
+  and **not posted** (no "send" instruction). Do not post without one. Do not
+  re-run the fixtures or re-raise the pin — both were resolved by the maintainer.
+- **Files:** `/workspace/reply-predge-17-merge.md`, `/workspace/sycee-evidence-onepager.md`.
 
 ### ERC-8004 — `erc-8004-contracts#102` — **未回**
 
@@ -216,7 +259,7 @@ State is one of: `已回` (they replied), `未回` (sent, no reply), `拒绝` (d
 | Sasona | 未回 | one-line question | low; archive after one follow-up |
 | Vauban | 未回 | draft expiry pending | standards, time-boxed |
 | Brave | 未回 | issue | low; archive |
-| predge | 未回 | issue + PR | low; archive |
+| predge | #13/#14 未回；#17 已合并（我们两次外部审查） | verifier 重写为 fail-closed + 外部 key；predge-ai 独立复核后合并 | **2nd case of a third party changing a shipped artifact; peripheral repo, evidence not channel** |
 | ERC-8004 | 未回 | issue | low; archive |
 | Counterra | 未回 | issue | low; archive |
 | Nirium | 已发（2026-11-24） | issue #21 opened | **highest-value line: a real seller with a real problem** |
