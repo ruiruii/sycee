@@ -95,6 +95,10 @@ State is one of: `已回` (they replied), `未回` (sent, no reply), `拒绝` (d
   declined the two that were ours alone. This line is a **reference and a
   case study**, not a channel; any future contact should start from something
   new he has shipped, not from a follow-up on this.
+- **Closed out (2026-11-27):** posted the final note on #15
+  (`issuecomment-7213572844`) — no request, no reply expected. It does one thing
+  only: puts on the public record that he changed three shipped fields on the
+  evidence while holding his format independent. Do not post again on #15 or #60.
 - **What it is worth as evidence:** one documented instance of a third party
   changing their shipped format in response to a SPEC critique. That is the
   strongest thing we have for a compatibility story, and it costs nothing to cite.
