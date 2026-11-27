@@ -59,6 +59,36 @@ State is one of: `已回` (they replied), `未回` (sent, no reply), `拒绝` (d
 - **Files:** `comment-holistis-110.md`, `reply-holistis-*.md`,
   `reading-attempt-identity-extra.md`, `sync-holistis-buyer-side.md`.
 
+### Book0fEli / Lumière PayCheck — `lumiere-paycheck#60` — **已关（对方关闭，completed）**
+
+- **State:** two rounds each way, then Elijah closed the issue himself
+  (2026-11-26T18:27:16Z, `state_reason: completed`). Our reply to his closing note
+  was posted **sixteen minutes after** the close (2026-11-27T03:52Z) and has not
+  been answered. Treat this as a closed thread, not a pending one.
+- **What we asked:** where the boundary between his signed test receipts and a
+  post-payment reconciliation layer belongs; whether the per-member divergence
+  idea was worth anything to him.
+- **What we got:** the only case where a counterparty **changed their product**
+  from our feedback. `responseBasis` (`body` / `async_result` / `empty`, null hash
+  when no body, binary hashed as bytes) shipped in his release on 2026-11-26;
+  per-member request digests followed. Both were our points.
+- **What we found, and it held:** against a live receipt (2026-11-18,
+  `marketintelligenceapi.com`) verified with his JWKS `paycheck-receipts-1`,
+  `termsHash` does **not** recompute from the payload — the formula includes
+  `scheme`, the payload carries no `scheme`, and inserting `scheme: "exact"`
+  reproduces the digest exactly. So "compare with the live 402 to see terms haven't
+  changed" needs a formula and a member the artifact does not contain.
+- **What is owed:** nothing. Our fields and his do not interoperate yet, and the
+  most we can claim honestly is that the feedback closed.
+- **Next move:** none. Do not reopen, do not email. If he ships the fields
+  publicly at https://lumierepaycheck.org/docs/receipts, that is a signal to pick
+  up; until then this line is a **reference**, not a channel.
+- **What it is worth as evidence:** one documented instance of a third party
+  changing their shipped format in response to a SPEC critique. That is the
+  strongest thing we have for a compatibility story, and it costs nothing to cite.
+- **Files:** `/workspace/reply-bookofeli-final.md` (round 1),
+  `/workspace/reply-bookofeli-r2.md` (round 2, includes the recompute check).
+
 ---
 
 ## Sent, no reply
@@ -165,6 +195,7 @@ State is one of: `已回` (they replied), `未回` (sent, no reply), `拒绝` (d
 |---|---|---|---|
 | StelarDigital | 已回（多轮） | their real vector, verified | **highest: a stranger replied with data** |
 | holistis | 已回（多轮） | 3rd independent read of our vectors; tsc#19 note posted | technical peer, not customer; gatekeeper of the conformance vectors |
+| Book0fEli / Lumière | 已关（completed，对方关闭） | they shipped `responseBasis` + per-member digests from our critique | **only party who changed their product — evidence, not a channel** |
 | Sasona | 未回 | one-line question | low; archive after one follow-up |
 | Vauban | 未回 | draft expiry pending | standards, time-boxed |
 | Brave | 未回 | issue | low; archive |
