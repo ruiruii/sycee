@@ -63,30 +63,38 @@ State is one of: `已回` (they replied), `未回` (sent, no reply), `拒绝` (d
 
 - **State:** two rounds each way, then Elijah closed the issue himself
   (2026-11-26T18:27:16Z, `state_reason: completed`). Our reply to his closing note
-  was posted **sixteen minutes after** the close (2026-11-27T03:52Z) and has not
-  been answered. Treat this as a closed thread, not a pending one.
+  was posted **sixteen minutes after** the close (2026-11-27T03:52Z) and was not
+  answered there — but he **did** respond three hours later on our `sycee#15`
+  (2026-11-27T07:32Z). Treat #60 as closed and #15 as the live line.
 - **What we asked:** where the boundary between his signed test receipts and a
   post-payment reconciliation layer belongs; whether the per-member divergence
   idea was worth anything to him.
 - **What we got:** the only case where a counterparty **changed their product**
-  from our feedback. `responseBasis` (`body` / `async_result` / `empty`, null hash
-  when no body, binary hashed as bytes) shipped in his release on 2026-11-26;
-  per-member request digests followed. Both were our points.
-- **What we found, and it held:** against a live receipt (2026-11-18,
+  from our feedback, **three times**. `responseBasis` (`body` / `async_result` /
+  `empty`, null hash when no body, binary hashed as bytes) and per-member request
+  digests shipped 2026-11-26. On 2026-11-27, in reply to `sycee#15`, he added
+  `scheme` + `termsVersion` to newly signed receipts and a `termsHashRecomputes`
+  result to `POST /v1/test-receipts/verify` — the exact fix we had proposed.
+  Older receipts are checked with `exact`.
+- **What we found, and it was fixed:** against a live receipt (2026-11-18,
   `marketintelligenceapi.com`) verified with his JWKS `paycheck-receipts-1`,
-  `termsHash` does **not** recompute from the payload — the formula includes
-  `scheme`, the payload carries no `scheme`, and inserting `scheme: "exact"`
-  reproduces the digest exactly. So "compare with the live 402 to see terms haven't
-  changed" needs a formula and a member the artifact does not contain.
-- **What is owed:** nothing. Our fields and his do not interoperate yet, and the
-  most we can claim honestly is that the feedback closed.
-- **Next move:** none on his repo. We opened `ruiruii/sycee#15` (2026-11-27) as a
-  field map from his receipt to our attestation, with `@Book0fEli` invited to
-  correct any line — that mention is the only nudge, and the issue says no reply
-  is needed. Do not email (no prior email thread; the address on his GitHub
-  profile is the only one we have). If he ships the fields publicly at
-  https://lumierepaycheck.org/docs/receipts, that is a signal to pick up; until
-  then this line is a **reference**, not a channel.
+  `termsHash` did not recompute from the payload: `scheme` was a formula input
+  absent from the body. We sent the evidence and the smallest fix; he shipped it.
+  That is now a closed loop, recorded in `issue-field-map-paycheck.md` caveat 1.
+- **What he declined:** our attempt-identity field and a long/short split for
+  `query`. His reasons stand — different prices already differ in `termsHash` and
+  `amountQuoted`, and query strings often carry API keys. Caveats 2 and 3 are
+  **withdrawn**; they were our design preferences, not defects in his receipt.
+- **The boundary he drew:** PayCheck's format is Lumière's own, not aligned with
+  or built to the SYCEE spec; do not describe this as an integration or as agreed.
+  The field-map page now says that at the top and ends with "no action requested".
+- **What is owed:** nothing. Do not email (no prior email thread; the address on
+  his GitHub profile is only public information). Do not reopen #60. Do not ask
+  him to review the field map — he explicitly declined line-by-line review.
+- **Next move:** none. He has answered every technical point we raised and
+  declined the two that were ours alone. This line is a **reference and a
+  case study**, not a channel; any future contact should start from something
+  new he has shipped, not from a follow-up on this.
 - **What it is worth as evidence:** one documented instance of a third party
   changing their shipped format in response to a SPEC critique. That is the
   strongest thing we have for a compatibility story, and it costs nothing to cite.
@@ -200,7 +208,7 @@ State is one of: `已回` (they replied), `未回` (sent, no reply), `拒绝` (d
 |---|---|---|---|
 | StelarDigital | 已回（多轮） | their real vector, verified | **highest: a stranger replied with data** |
 | holistis | 已回（多轮） | 3rd independent read of our vectors; tsc#19 note posted | technical peer, not customer; gatekeeper of the conformance vectors |
-| Book0fEli / Lumière | 已关（completed，对方关闭） | they shipped `responseBasis` + per-member digests from our critique | **only party who changed their product — evidence, not a channel** |
+| Book0fEli / Lumière | #60 已关；#15 他已回复并再次改产品 | 3 shipped fixes: `responseBasis`, per-member digests, `scheme` + `termsVersion` + `termsHashRecomputes`; declined 2 of our design preferences | **only party who changed their product three times — evidence, not a channel** |
 | Sasona | 未回 | one-line question | low; archive after one follow-up |
 | Vauban | 未回 | draft expiry pending | standards, time-boxed |
 | Brave | 未回 | issue | low; archive |
