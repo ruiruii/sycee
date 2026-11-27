@@ -1,0 +1,31 @@
+{
+  "view_type": "sycee/consumption-view/0.1",
+  "payment_anchor": {
+    "tx_hash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "network": "eip155:84532",
+    "payer": "0x0000000000000000000000000000000000000000",
+    "pay_to": "0x0000000000000000000000000000000000000000",
+    "amount_atomic": "10000",
+    "issued_at": "2026-11-24T16:05:00Z"
+  },
+  "delivery": {
+    "output_hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "classification": "signed_nothing_delivered"
+  },
+  "attempt": {
+    "attempt_identity": "sha256:88ef65f1c45b0c2611caaefaae00617555a3fdf87fd112b43220002036d07e85",
+    "presentation": 1,
+    "consumed": "no",
+    "consumed_by": [],
+    "redeem_count": 1
+  },
+  "reconciliation": {
+    "settled": true,
+    "delivery_class": "signed_nothing_delivered",
+    "consumed": "no",
+    "settlement_amount_matches_request": true,
+    "settlement_payee_matches_request": true,
+    "reconciled": true,
+    "arn_schema_changed": false
+  }
+}
