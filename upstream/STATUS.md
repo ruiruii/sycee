@@ -192,10 +192,12 @@ in the merge-thread ping.
   fixed signed list, named informational fields) was adopted, not just a field.
   It is not standard adoption, not a channel, not revenue, and gives us no merge
   right in x402 core (#3776 remains blocked — different thread).
-- **Next move:** a closing note is drafted at `/workspace/reply-predge-17-merge.md`
-  and **not posted** (no "send" instruction). Do not post without one. Do not
-  re-run the fixtures or re-raise the pin — both were resolved by the maintainer.
-- **Files:** `/workspace/reply-predge-17-merge.md`, `/workspace/sycee-evidence-onepager.md`.
+- **Next move:** none — line closed. We decided **not** to post a closing note:
+  the PR is merged, the maintainer's own comment is the close, and a third comment
+  from us on a merged PR would read as a chase. The drafted note was **deleted**,
+  not left pending; there is nothing to send. Do not re-run the fixtures or
+  re-raise the pin — both were resolved by the maintainer.
+- **Files:** `/workspace/sycee-evidence-onepager.md`.
 
 ### ERC-8004 — `erc-8004-contracts#102` — **未回**
 
