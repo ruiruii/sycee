@@ -80,14 +80,19 @@ State is one of: `已回` (they replied), `未回` (sent, no reply), `拒绝` (d
   changed" needs a formula and a member the artifact does not contain.
 - **What is owed:** nothing. Our fields and his do not interoperate yet, and the
   most we can claim honestly is that the feedback closed.
-- **Next move:** none. Do not reopen, do not email. If he ships the fields
-  publicly at https://lumierepaycheck.org/docs/receipts, that is a signal to pick
-  up; until then this line is a **reference**, not a channel.
+- **Next move:** none on his repo. We opened `ruiruii/sycee#15` (2026-11-27) as a
+  field map from his receipt to our attestation, with `@Book0fEli` invited to
+  correct any line — that mention is the only nudge, and the issue says no reply
+  is needed. Do not email (no prior email thread; the address on his GitHub
+  profile is the only one we have). If he ships the fields publicly at
+  https://lumierepaycheck.org/docs/receipts, that is a signal to pick up; until
+  then this line is a **reference**, not a channel.
 - **What it is worth as evidence:** one documented instance of a third party
   changing their shipped format in response to a SPEC critique. That is the
   strongest thing we have for a compatibility story, and it costs nothing to cite.
 - **Files:** `/workspace/reply-bookofeli-final.md` (round 1),
-  `/workspace/reply-bookofeli-r2.md` (round 2, includes the recompute check).
+  `/workspace/reply-bookofeli-r2.md` (round 2, includes the recompute check),
+  `issue-field-map-paycheck.md` → `ruiruii/sycee#15`.
 
 ---
 
